@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to fill the window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.9;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- DNA Parameters ---
+        const NUM_NODES = 20;
+        const RADIUS = canvas.width / 2;
+        const CENTER_X = canvas.width / 2;
+        const CENTER_Y = canvas.height / 2;
+        const SPIRAL_HEIGHT = canvas.height * 0.7; // How far the helix extends vertically
+        const ROTATION_SPEED = 0.005; // Radians per frame
+        const RUNG_THICKNESS = 2;
+        const NODE_RADIUS = 4;
+
+        let angle = 0; // Global rotation angle
+        let t = 0; // Time variable for animation
+        let colors = [
+            { r: 0, g: 150, b: 255 }, // Blueish strand
+            { r: 255, g: 100, b: 150 }  // Reddish strand
+        ];
+
+        // --- Node Structure ---
+        class Node {
+            constructor(index, strandIndex) {
+                this.index = index;
+                this.strand = strandIndex;
+                this.angleOffset = (index / NUM_NODES) * Math.PI * 2; // Initial angular spacing
+            }
+
+            getPos() {
+                // Calculate position based on spiral and rotation
+                const currentAngle = this.angleOffset + angle;
+                const y = CENTER_Y - (this.index / NUM_NODES) * (SPIRAL_HEIGHT / NUM_NODES);
+                const x = CENTER_X + RADIUS * Math.cos(currentAngle);
+                return { x, y };
+            }
+        }
+
+        const nodes = [];
+        for (let i = 0; i < NUM_NODES; i++) {
+            nodes.push(new Node(i, 0)); // Strand 0
+            nodes.push(new Node(i, 1)); // Strand 1
+        }
+
+        // --- Drawing Functions ---
+
+        function drawDNA() {
+            // Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw the connecting rungs (horizontal lines)
+            ctx.lineWidth = RUNG_THICKNESS;
+            for (let i = 0; i < NUM_NODES; i++) {
+                const nodeA = nodes[2 * i]; // Node on strand 0
+                const nodeB = nodes[2 * i + 1]; // Node on strand 1
+
+                const posA = nodeA.getPos();
+                const posB = nodeB.getPos();
+
+                // Draw the rung between the two strands
+                ctx.beginPath();
+                ctx.moveTo(posA.x, posA.y);
+                ctx.lineTo(posB.x, posB.y);
+
+                // Apply subtle color variation based on index
+                const colorIndex = i % colors.length;
+                ctx.strokeStyle = `rgba(${colors[colorIndex].r}, ${colors[colorIndex].g}, ${colors[colorIndex].b}, 0.3)`;
+                ctx.stroke();
+            }
+
+            // 2. Draw the nodes (spiraling points)
+            nodes.forEach(node => {
+                const pos = node.getPos();
+
+                // Determine color based on strand
+                ctx.fillStyle = node.strand === 0 ? `rgba(0, 150, 255, 1)` : `rgba(255, 100, 150, 1)`;
+
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, NODE_RADIUS, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // --- Animation Loop ---
+
+        function animate(timestamp) {
+            t = timestamp / 1000; // Time in seconds
+
+            // Update rotation angle
+            angle += ROTATION_SPEED;
+
+            drawDNA();
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start the animation
+        animate(0);
+
+    </script>
+</body>
+</html>

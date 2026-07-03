@@ -1,0 +1,80 @@
+{
+  "label": "step37-mtp2-compare",
+  "cases": [
+    {
+      "case": "instruction_short",
+      "seconds": 3.9072875560086686,
+      "completion_tokens": 64,
+      "prompt_tokens": 25,
+      "total_tokens": 89,
+      "tokens_per_second": 16.379649330282874,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 289,
+      "label": "step37-mtp2-compare"
+    },
+    {
+      "case": "structured_json",
+      "seconds": 10.576083547988674,
+      "completion_tokens": 256,
+      "prompt_tokens": 44,
+      "total_tokens": 300,
+      "tokens_per_second": 24.205557646968973,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 1277,
+      "label": "step37-mtp2-compare"
+    },
+    {
+      "case": "code_python",
+      "seconds": 27.5897102120216,
+      "completion_tokens": 768,
+      "prompt_tokens": 64,
+      "total_tokens": 832,
+      "tokens_per_second": 27.836464902968107,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 3211,
+      "label": "step37-mtp2-compare"
+    },
+    {
+      "case": "visual_canvas",
+      "seconds": 54.19183634099318,
+      "completion_tokens": 1400,
+      "prompt_tokens": 37,
+      "total_tokens": 1437,
+      "tokens_per_second": 25.834149468394674,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 5862,
+      "label": "step37-mtp2-compare"
+    },
+    {
+      "case": "safety_refusal",
+      "seconds": 20.659060778998537,
+      "completion_tokens": 512,
+      "prompt_tokens": 37,
+      "total_tokens": 549,
+      "tokens_per_second": 24.783314472867318,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 2475,
+      "label": "step37-mtp2-compare"
+    },
+    {
+      "case": "planning_tools_text",
+      "seconds": 20.36570605900488,
+      "completion_tokens": 512,
+      "prompt_tokens": 44,
+      "total_tokens": 556,
+      "tokens_per_second": 25.14030196235768,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 1964,
+      "label": "step37-mtp2-compare"
+    }
+  ],
+  "total_completion_tokens": 3512,
+  "total_seconds": 137.28968449501554,
+  "aggregate_tokens_per_second": 25.58094596049208
+}

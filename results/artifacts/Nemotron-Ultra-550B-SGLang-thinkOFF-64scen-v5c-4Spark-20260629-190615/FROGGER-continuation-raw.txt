@@ -1,0 +1,355 @@
+        document.getElementById('gameOverOverlay').classList.toggle('visible', newState === GAME_STATE.GAME_OVER);
+        document.getElementById('levelCompleteOverlay').classList.toggle('visible', newState === GAME_STATE.LEVEL_COMPLETE);
+        
+        if (newState === GAME_STATE.PLAYING) {
+            this.audio.playMusic();
+        } else {
+            this.audio.stopMusic();
+        }
+    }
+    
+    updateHUD() {
+        document.getElementById('score').textContent = this.score;
+        document.getElementById('lives').textContent = this.lives;
+        document.getElementById('level').textContent = this.level;
+        document.getElementById('finalScore').textContent = this.score;
+        document.getElementById('finalLevel').textContent = this.level;
+    }
+    
+    gameLoop(timestamp) {
+        const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
+        this.lastTime = timestamp;
+        
+        if (this.state === GAME_STATE.PLAYING) {
+            this.update(dt);
+        }
+        this.render();
+        
+        requestAnimationFrame((t) => this.gameLoop(t));
+    }
+    
+    update(dt) {
+        this.time += dt;
+        this.levelTimer += dt;
+        this.frog.update(dt, this);
+        
+        // Update vehicles
+        this.vehicles.forEach(v => v.update(dt));
+        
+        // Update logs
+        this.logs.forEach(l => l.update(dt));
+        
+        // Update turtles
+        this.turtles.forEach(t => t.update(dt));
+        
+        // Check collisions
+        this.checkCollisions();
+        
+        // Check win condition
+        if (this.homes.every(h => h.filled)) {
+            this.levelComplete();
+        }
+        
+        // Bonus timer countdown
+        if (this.levelTimer > 30) {
+            this.bonusTimer = Math.max(0, 200 - Math.floor(this.levelTimer) * 10);
+        }
+    }
+    
+    checkCollisions() {
+        const frog = this.frog;
+        const frogBox = frog.getBounds();
+        
+        // Road collision
+        if (frog.y >= LANES.ROAD_START && frog.y < LANES.ROAD_START + 5 * GRID_SIZE) {
+            for (const vehicle of this.vehicles) {
+                if (this.aabb(frogBox, vehicle.getBounds())) {
+                    this.frogDeath();
+                    return;
+                }
+            }
+        }
+        
+        // River collision
+        if (frog.y >= LANES.RIVER_START && frog.y < LANES.RIVER_START + 5 * GRID_SIZE) {
+            let onLog = false;
+            let logSpeed = 0;
+            
+            // Check logs
+            for (const log of this.logs) {
+                if (this.aabb(frogBox, log.getBounds())) {
+                    onLog = true;
+                    logSpeed = log.speed;
+                    break;
+                }
+            }
+            
+            // Check turtles
+            if (!onLog) {
+                for (const turtle of this.turtles) {
+                    if (!turtle.submerged && this.aabb(frogBox, turtle.getBounds())) {
+                        onLog = true;
+                        logSpeed = turtle.speed;
+                        break;
+                    }
+                }
+            }
+            
+            if (!onLog) {
+                this.frogDeath();
+                return;
+            } else {
+                // Move frog with log/turtle
+                frog.x += logSpeed * (1/60); // Approximate, will be corrected in frog.update
+                frog.onLog = true;
+                frog.logSpeed = logSpeed;
+            }
+        } else {
+            frog.onLog = false;
+            frog.logSpeed = 0;
+        }
+        
+        // Home collision
+        if (frog.y <= LANES.HOME_ROW + GRID_SIZE && frog.y > LANES.HOME_ROW - GRID_SIZE) {
+            for (const home of this.homes) {
+                if (!home.filled && this.aabb(frogBox, home.getBounds())) {
+                    this.frogHome(home);
+                    return;
+                }
+            }
+            // Hit wall between homes
+            this.frogDeath();
+        }
+        
+        // Screen boundaries
+        if (frog.x < 0) frog.x = 0;
+        if (frog.x > CANVAS_WIDTH - frog.width) frog.x = CANVAS_WIDTH - frog.width;
+        if (frog.y < LANES.HOME_ROW - GRID_SIZE) frog.y = LANES.HOME_ROW - GRID_SIZE;
+        if (frog.y > CANVAS_WIDTH - frog.height) frog.y = CANVAS_WIDTH - frog.height;
+    }
+    
+    aabb(box1, box2) {
+        return box1.x < box2.x + box2.width &&
+               box1.x + box1.width > box2.x &&
+               box1.y < box2.y + box2.height &&
+               box1.y + box1.height > box2.y;
+    }
+    
+    frogDeath() {
+        this.audio.play('death');
+        this.lives--;
+        this.updateHUD();
+        this.frog.die();
+        
+        if (this.lives <= 0) {
+            this.setState(GAME_STATE.GAME_OVER);
+        } else {
+            // Brief invincibility / reset position
+            setTimeout(() => {
+                if (this.state === GAME_STATE.PLAYING) {
+                    this.frog.reset();
+                }
+            }, 1000);
+        }
+    }
+    
+    frogHome(home) {
+        this.audio.play('home');
+        home.filled = true;
+        home.fillTimer = 1.0;
+        this.frog.reset();
+        
+        // Score: base + time bonus + level bonus
+        const timeBonus = Math.max(0, 200 - Math.floor(this.levelTimer) * 10);
+        const levelBonus = this.level * 50;
+        this.score += 50 + timeBonus + levelBonus;
+        this.updateHUD();
+        
+        // Check if all homes filled
+        if (this.homes.every(h => h.filled)) {
+            this.levelComplete();
+        }
+    }
+    
+    levelComplete() {
+        this.audio.play('levelup');
+        this.setState(GAME_STATE.LEVEL_COMPLETE);
+        const bonus = Math.max(0, 1000 - Math.floor(this.levelTimer) * 50);
+        this.score += bonus;
+        this.updateHUD();
+    }
+    
+    render() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        
+        // Background
+        this.drawBackground();
+        
+        // Draw homes
+        this.homes.forEach(h => h.draw(ctx));
+        
+        // Draw river objects
+        this.logs.forEach(l => l.draw(ctx));
+        this.turtles.forEach(t => t.draw(ctx));
+        
+        // Draw vehicles
+        this.vehicles.forEach(v => v.draw(ctx));
+        
+        // Draw frog
+        this.frog.draw(ctx);
+        
+        // Draw UI overlays (lives indicators)
+        this.drawLives();
+    }
+    
+    drawBackground() {
+        const ctx = this.ctx;
+        
+        // Top safe zone (grass)
+        ctx.fillStyle = COLORS.grass;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, LANES.HOME_ROW + GRID_SIZE);
+        
+        // Home row decorative
+        ctx.fillStyle = COLORS.grassDark;
+        ctx.fillRect(0, LANES.HOME_ROW, CANVAS_WIDTH, GRID_SIZE);
+        
+        // Road
+        ctx.fillStyle = COLORS.road;
+        ctx.fillRect(0, LANES.ROAD_START, CANVAS_WIDTH, 5 * GRID_SIZE);
+        
+        // Road lines
+        ctx.strokeStyle = COLORS.roadLine;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([20, 20]);
+        for (let i = 1; i < 5; i++) {
+            const y = LANES.ROAD_START + i * GRID_SIZE;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(CANVAS_WIDTH, y);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        
+        // River
+        ctx.fillStyle = COLORS.water;
+        ctx.fillRect(0, LANES.RIVER_START, CANVAS_WIDTH, 5 * GRID_SIZE);
+        
+        // Water animation lines
+        ctx.strokeStyle = COLORS.waterLight;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i++) {
+            const y = LANES.RIVER_START + i * GRID_SIZE + GRID_SIZE / 2;
+            const offset = (this.time * 50) % 40;
+            ctx.beginPath();
+            for (let x = -offset; x < CANVAS_WIDTH + 40; x += 40) {
+                ctx.moveTo(x, y);
+                ctx.quadraticCurveTo(x + 10, y - 3, x + 20, y);
+                ctx.quadraticCurveTo(x + 30, y + 3, x + 40, y);
+            }
+            ctx.stroke();
+        }
+        
+        // Bottom safe zone
+        ctx.fillStyle = COLORS.grass;
+        ctx.fillRect(0, LANES.RIVER_START + 5 * GRID_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT - (LANES.RIVER_START + 5 * GRID_SIZE));
+        
+        // Start platform
+        ctx.fillStyle = COLORS.grassDark;
+        ctx.fillRect(0, CANVAS_HEIGHT - GRID_SIZE, CANVAS_WIDTH, GRID_SIZE);
+    }
+    
+    drawLives() {
+        const ctx = this.ctx;
+        const startX = 10;
+        const y = CANVAS_HEIGHT - 30;
+        
+        for (let i = 0; i < this.lives; i++) {
+            const x = startX + i * 25;
+            // Mini frog
+            ctx.fillStyle = COLORS.frog;
+            ctx.beginPath();
+            ctx.ellipse(x + 10, y + 8, 10, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Eyes
+            ctx.fillStyle = COLORS.frogEye;
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 5, 3, 0, Math.PI * 2);
+            ctx.arc(x + 14, y + 5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 5, 1.5, 0, Math.PI * 2);
+            ctx.arc(x + 14, y + 5, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    
+    // Input handling
+    handleKeyDown(e) {
+        if (this.state !== GAME_STATE.PLAYING) return;
+        
+        const key = e.key.toLowerCase();
+        const dir = KEY_MAP[key];
+        if (dir) {
+            e.preventDefault();
+            this.frog.jump(dir);
+            this.audio.play('hop');
+        }
+    }
+    
+    handleTouchStart(e) {
+        if (this.state !== GAME_STATE.PLAYING) return;
+        e.preventDefault();
+        this.touchStartX = e.touches[0].clientX;
+        this.touchStartY = e.touches[0].clientY;
+    }
+    
+    handleTouchEnd(e) {
+        if (this.state !== GAME_STATE.PLAYING) return;
+        if (!this.touchStartX) return;
+        
+        e.preventDefault();
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const dx = endX - this.touchStartX;
+        const dy = endY - this.touchStartY;
+        
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (Math.abs(dx) > 30) {
+                this.frog.jump(dx > 0 ? 'right' : 'left');
+                this.audio.play('hop');
+            }
+        } else {
+            if (Math.abs(dy) > 30) {
+                this.frog.jump(dy > 0 ? 'down' : 'up');
+                this.audio.play('hop');
+            }
+        }
+        
+        this.touchStartX = null;
+        this.touchStartY = null;
+    }
+    
+    // D-pad handlers
+    handleDPad(dir) {
+        if (this.state !== GAME_STATE.PLAYING) return;
+        this.frog.jump(dir);
+        this.audio.play('hop');
+    }
+}
+
+// Initialize game when DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    new Game();
+});
+
+// Prevent pull-to-refresh on mobile
+document.body.addEventListener('touchmove', e => {
+    if (e.target.closest('.game-container')) {
+        e.preventDefault();
+    }
+}, { passive: false });
+</script>
+</body>
+</html>

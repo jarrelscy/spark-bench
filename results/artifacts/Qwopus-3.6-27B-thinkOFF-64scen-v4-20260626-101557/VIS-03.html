@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050508; /* Dark background */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotationAngle = 0;
+
+        // DNA Configuration
+        const config = {
+            strandColor1: 'rgba(200, 80, 255, 0.8)', // Purple
+            strandColor2: 'rgba(80, 200, 255, 0.8)', // Blue
+            rungColor: 'rgba(255, 255, 255, 0.3)',
+            nodeSize: 5,
+            radius: 120,       // Distance from center axis
+            amplitude: 150,    // Height of the sine wave
+            frequency: 0.02,   // How tight the spiral is
+            nodeSpacing: 4,    // Distance between nodes along the Z axis
+            speed: 0.03        // Rotation speed
+        };
+
+        // Resize handling
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear screen
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, width, height);
+
+            // Center of the screen
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Calculate total nodes needed to cover the screen height with some padding
+            const totalNodes = Math.ceil(height / config.nodeSpacing) + 10;
+            const halfNodes = Math.floor(totalNodes / 2);
+
+            // Store points to draw connections later
+            const strand1Points = [];
+            const strand2Points = [];
+
+            for (let i = -halfNodes; i < halfNodes; i++) {
+                const z = i * config.nodeSpacing; // Position along the helix axis
+                
+                // Calculate base sine wave positions (X offset from center, Y offset from center)
+                const theta = z * config.frequency;
+                const baseX = Math.cos(theta + rotationAngle) * config.radius;
+                const baseY = Math.sin(theta + rotationAngle) * config.radius;
+
+                // Strand 1 (0 degrees)
+                const x1 = centerX + baseX;
+                const y1 = centerY + z;
+
+                // Strand 2 (180 degrees / PI radians offset)
+                const x2 = centerX - baseX;
+                const y2 = centerY + z;
+
+                // Push to arrays for rendering connections
+                strand1Points.push({ x: x1, y: y1 });
+                strand2Points.push({ x: x2, y: y2 });
+
+                // Draw Rungs (Horizontal connections)
+                // We draw them slightly behind the nodes
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = config.rungColor;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw Nodes
+                ctx.beginPath();
+                ctx.arc(x1, y1, config.nodeSize, 0, Math.PI * 2);
+                ctx.fillStyle = config.strandColor1;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(x2, y2, config.nodeSize, 0, Math.PI * 2);
+                ctx.fillStyle = config.strandColor2;
+                ctx.fill();
+            }
+
+            // Draw the connecting lines (Strands)
+            // We draw these after the nodes so the lines connect underneath the dots
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Draw Strand 1
+            ctx.beginPath();
+            ctx.strokeStyle = config.strandColor1;
+            ctx.lineWidth = 3;
+            for (let i = 0; i < strand1Points.length; i++) {
+                if (i === 0) ctx.moveTo(strand1Points[i].x, strand1Points[i].y);
+                else ctx.lineTo(strand1Points[i].x, strand1Points[i].y);
+            }
+            ctx.stroke();
+
+            // Draw Strand 2
+            ctx.beginPath();
+            ctx.strokeStyle = config.strandColor2;
+            ctx.lineWidth = 3;
+            for (let i = 0; i < strand2Points.length; i++) {
+                if (i === 0) ctx.moveTo(strand2Points[i].x, strand2Points[i].y);
+                else ctx.lineTo(strand2Points[i].x, strand2Points[i].y);
+            }
+            ctx.stroke();
+
+            // Increment rotation angle for animation
+            rotationAngle += config.speed;
+
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+    </script>
+</body>
+</html>

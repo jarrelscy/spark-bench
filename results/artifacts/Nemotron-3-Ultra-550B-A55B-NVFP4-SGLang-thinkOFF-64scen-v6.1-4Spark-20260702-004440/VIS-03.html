@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            background: #0a0a0f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="info">DNA Double Helix</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let animationId;
+        let time = 0;
+
+        // Configuration
+        const CONFIG = {
+            helixHeight: 0.7,        // Fraction of canvas height
+            radius: 0.12,            // Fraction of canvas min dimension
+            turns: 3.5,              // Number of helical turns
+            nodesPerTurn: 14,        // Nodes per full turn (must be even for rung alignment)
+            rotationSpeed: 0.0015,   // Radians per ms
+            strandThickness: 3,
+            nodeRadius: 4,
+            rungThickness: 1.5,
+            perspective: 0.85,       // Perspective factor for depth
+            colorA: { r: 0, g: 210, b: 255 },    // Cyan strand
+            colorB: { r: 255, g: 80, b: 180 },   // Magenta strand
+            bgColor: '#0a0a0f',
+            glowIntensity: 0.3
+        };
+
+        const totalNodes = Math.round(CONFIG.turns * CONFIG.nodesPerTurn);
+        const strandA = [];
+        const strandB = [];
+        const rungs = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * devicePixelRatio;
+            canvas.height = height * devicePixelRatio;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+
+            centerX = width / 2;
+            centerY = height / 2;
+            initGeometry();
+        }
+
+        function initGeometry() {
+            const helixHeight = height * CONFIG.helixHeight;
+            const radius = Math.min(width, height) * CONFIG.radius;
+            const verticalSpacing = helixHeight / (totalNodes - 1);
+            const angleStep = (Math.PI * 2) / CONFIG.nodesPerTurn;
+
+            strandA.length = 0;
+            strandB.length = 0;
+            rungs.length = 0;
+
+            for (let i = 0; i < totalNodes; i++) {
+                const y = -helixHeight / 2 + i * verticalSpacing;
+                const baseAngle = i * angleStep;
+
+                // Strand A
+                strandA.push({
+                    index: i,
+                    y: y,
+                    baseAngle: baseAngle,
+                    radius: radius,
+                    verticalSpacing: verticalSpacing
+                });
+
+                // Strand B (offset by half turn = PI)
+                strandB.push({
+                    index: i,
+                    y: y,
+                    baseAngle: baseAngle + Math.PI,
+                    radius: radius,
+                    verticalSpacing: verticalSpacing
+                });
+
+                // Rung connecting corresponding nodes
+                rungs.push({
+                    index: i,
+                    y: y,
+                    baseAngle: baseAngle,
+                    radius: radius
+                });
+            }
+        }
+
+        function projectNode(node, rotation) {
+            const angle = node.baseAngle + rotation;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+
+            // 3D position
+            const x3d = node.radius * cos;
+            const z3d = node.radius * sin;
+
+            // Perspective projection
+            const scale = 1 / (1 - z3d * CONFIG.perspective / 400);
+            const x = centerX + x3d * scale;
+            const y = centerY + node.y * scale;
+            const depth = z3d; // For depth sorting and shading
+
+            return { x, y, scale, depth, cos, sin, angle };
+        }
+
+        function interpolateColor(color1, color2, factor) {
+            return {
+                r: Math.round(color1.r + (color2.r - color1.r) * factor),
+                g: Math.round(color1.g + (color2.g - color1.g) * factor),
+                b: Math.round(color1.b + (color2.b - color1.b) * factor)
+            };
+        }
+
+        function rgbToString(color, alpha = 1) {
+            return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+        }
+
+        function drawStrand(strand, color, rotation, isBackPass) {
+            const projected = strand.map(node => projectNode(node, rotation));
+
+            // Draw connections between nodes (strand backbone)
+            ctx.beginPath();
+            ctx.lineWidth = CONFIG.strandThickness;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            for (let i = 0; i < projected.length - 1; i++) {
+                const p1 = projected[i];
+                const p2 = projected[i + 1];
+
+                // Only draw if both nodes are on the same depth pass
+                const p1Back = p1.depth > 0;
+                const p2Back = p2.depth > 0;
+                if (p1Back !== isBackPass || p2Back !== isBackPass) continue;
+
+                // Depth-based color variation
+                const avgDepth = (p1.depth + p2.depth) / 2;
+                const depthFactor = (avgDepth + CONFIG.radius) / (2 * CONFIG.radius);
+                const strandColor = interpolateColor(color, { r: 255, g: 255, b: 255 }, 0.15 + depthFactor * 0.15);
+                const alpha = isBackPass ? 0.4 : 1;
+
+                ctx.strokeStyle = rgbToString(strandColor, alpha);
+
+                if (i === 0 || !ctx._lastPoint) {
+                    ctx.moveTo(p1.x, p1.y);
+                } else {
+                    ctx.lineTo(p1.x, p1.y);
+                }
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx._lastPoint = p2;
+            }
+            ctx._lastPoint = null;
+        }
+
+        function drawNodes(strand, color, rotation, isBackPass) {
+            const projected = strand.map(node => projectNode(node, rotation));
+
+            for (let i = 0; i < projected.length; i++) {
+                const p = projected[i];
+                const isBack = p.depth > 0;
+                if (isBack !== isBackPass) continue;
+
+                const depthFactor = (p.depth + CONFIG.radius) / (2 * CONFIG.radius);
+                const nodeColor = interpolateColor(color, { r: 255, g: 255, b: 255 }, 0.2 + depthFactor * 0.2);
+                const alpha = isBackPass ? 0.5 : 1;
+                const radius = CONFIG.nodeRadius * p.scale;
+
+                // Glow effect for front nodes
+                if (!isBackPass) {
+                    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 2.5);
+                    gradient.addColorStop(0, rgbToString(nodeColor, 0.4 * CONFIG.glowIntensity));
+                    gradient.addColorStop(1, rgbToString(nodeColor, 0));
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, radius * 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Node body
+                ctx.fillStyle = rgbToString(nodeColor, alpha);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Highlight
+                if (!isBackPass) {
+                    ctx.fillStyle = rgbToString({ r: 255, g: 255, b: 255 }, 0.3 * alpha);
+                    ctx.beginPath();
+                    ctx.arc(p.x - radius * 0.3, p.y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawRungs(rotation, isBackPass) {
+            for (let i = 0; i < rungs.length; i++) {
+                const rung = rungs[i];
+                const angle = rung.baseAngle + rotation;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+
+                // Endpoints of rung (strand A and strand B positions)
+                const x3d = rung.radius * cos;
+                const z3d = rung.radius * sin;
+                const scale = 1 / (1 - z3d * CONFIG.perspective / 400);
+
+                const xA = centerX + x3d * scale;
+                const xB = centerX - x3d * scale;
+                const y = centerY + rung.y * scale;
+                const depth = z3d;
+
+                const isBack = depth > 0;
+                if (isBack !== isBackPass) continue;
+
+                const depthFactor = (depth + CONFIG.radius) / (2 * CONFIG.radius);
+                const alpha = isBackPass ? 0.25 : 0.6;
+
+                // Rung color - subtle gradient between strand colors
+                const rungColor = interpolateColor(CONFIG.colorA, CONFIG.colorB, 0.5);
+                const finalColor = interpolateColor(rungColor, { r: 255, g: 255, b: 255 }, 0.1 + depthFactor * 0.15);
+
+                ctx.strokeStyle = rgbToString(finalColor, alpha);
+                ctx.lineWidth = CONFIG.rungThickness * scale;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(xA, y);
+                ctx.lineTo(xB, y);
+                ctx.stroke();
+
+                // Small connector nodes at rung ends
+                const endRadius = Math.max(1.5, CONFIG.nodeRadius * 0.4 * scale);
+                ctx.fillStyle = rgbToString(finalColor, alpha);
+                ctx.beginPath();
+                ctx.arc(xA, y, endRadius, 0, Math.PI * 2);
+                ctx.arc(xB, y, endRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function render(timestamp) {
+            if (!animationId) return;
+
+            const dt = timestamp - (render.lastTime || timestamp);
+            render.lastTime = timestamp;
+            time += dt * CONFIG.rotationSpeed;
+
+            // Clear
+            ctx.fillStyle = CONFIG.bgColor;
+            ctx.fillRect(0, 0, width, height);
+
+            // Subtle background grid/depth cues
+            drawBackgroundGrid(time);
+
+            // Render order: back strands -> back rungs -> front rungs -> front strands
+            // This ensures proper depth layering
+
+            // Back pass (depth > 0)
+            drawStrand(strandA, CONFIG.colorA, time, true);
+            drawStrand(strandB, CONFIG.colorB, time, true);
+            drawRungs(time, true);
+            drawNodes(strandA, CONFIG.colorA, time, true);
+            drawNodes(strandB, CONFIG.colorB, time, true);
+
+            // Front pass (depth <= 0)
+            drawStrand(strandA, CONFIG.colorA, time, false);
+            drawStrand(strandB, CONFIG.colorB, time, false);
+            drawRungs(time, false);
+            drawNodes(strandA, CONFIG.colorA, time, false);
+            drawNodes(strandB, CONFIG.colorB, time, false);
+
+            animationId = requestAnimationFrame(render);
+        }
+
+        function drawBackgroundGrid(rotation) {
+            // Very subtle rotating grid lines for depth perception
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation * 0.3);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+            ctx.lineWidth = 0.5;
+
+            const gridSize = Math.max(width, height);
+            const spacing = 40;
+
+            ctx.beginPath();
+            for (let x = -gridSize; x <= gridSize; x += spacing) {
+                ctx.moveTo(x, -gridSize);
+                ctx.lineTo(x, gridSize);
+            }
+            for (let y = -gridSize; y <= gridSize; y += spacing) {
+                ctx.moveTo(-gridSize, y);
+                ctx.lineTo(gridSize, y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function start() {
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(render);
+        }
+
+        function stop() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stop();
+            else start();
+        });
+
+        // Resize handler
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resize, 100);
+        });
+
+        // Initialize
+        resize();
+        start();
+    </script>
+</body>
+</html>

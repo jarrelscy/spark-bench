@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas dimensions to fill the viewport nicely
+        canvas.width = window.innerWidth * 0.9;
+        canvas.height = window.innerHeight * 0.9;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // DNA parameters
+        const numNodes = 100; // Number of points per strand
+        const helixRadius = 100; // Radius of the helix
+        const pitch = 40; // How fast the helix rises per full rotation (in units)
+        const rotationSpeed = 0.005; // Speed of rotation in radians per frame
+
+        // Colors
+        const colorA = 'rgb(100, 150, 255)'; // Blueish
+        const colorB = 'rgb(255, 100, 150)'; // Pinkish
+
+        let rotationAngle = 0;
+
+        /**
+         * Calculates the position of a node on a strand based on its index.
+         * @param {number} i - Node index (0 to numNodes-1)
+         * @param {number} strandOffset - Offset to distinguish strand A from B (0 or 1)
+         * @returns {{x: number, y: number, z: number}} 3D coordinates (though we project to 2D)
+         */
+        function getNodePosition(i, strandOffset) {
+            // Parameter 't' goes from 0 to 2*PI * 3 (3 full turns for a visible helix)
+            // We use i/numNodes to normalize the position along the strand length (0 to 1)
+            const t = (i / numNodes) * 6 * Math.PI; 
+            
+            // Introduce a slight offset for the two strands to separate them visually
+            const radius = helixRadius + (strandOffset === 0 ? 10 : -10);
+
+            // X and Y coordinates for the helix shape
+            const x = radius * Math.cos(t + rotationAngle);
+            const y = radius * Math.sin(t + rotationAngle);
+
+            // Z coordinate (controls the vertical rise/pitch)
+            // Z increases linearly with the parameter t (which is related to 'i')
+            const z = (i / numNodes) * (pitch * 6 * Math.PI / (2 * Math.PI)); // Z scales with number of turns
+
+            return { x, y, z };
+        }
+
+        /**
+         * Projects 3D coordinates (x, y, z) onto the 2D canvas plane.
+         * Simple perspective projection (assuming Z is depth).
+         * @param {number} x - X coordinate
+         * @param {number} y - Y coordinate
+         * @param {number} z - Z coordinate
+         * @returns {{px: number, py: number}} Screen coordinates
+         */
+        function project(x, y, z) {
+            // Simple scaling factor based on distance (Z) for perspective effect
+            const scale = 1 / (1 + z * 0.1); 
+            
+            // Apply projection centered around the canvas center
+            const px = centerX + x * scale;
+            const py = centerY + y * scale;
+            return { px, py };
+        }
+
+        function drawDNA() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // --- Draw Rungs (Bonds) ---
+            ctx.strokeStyle = '#888'; // Grey for the rungs
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < numNodes - 1; i++) {
+                // Get positions for corresponding nodes on both strands
+                const posA_i = getNodePosition(i, 0);
+                const posB_i = getNodePosition(i, 1);
+                
+                const posA_i1 = getNodePosition(i + 1, 0);
+                const posB_i1 = getNodePosition(i + 1, 1);
+
+                // Project the starting points of the rung
+                const projA_i = project(posA_i.x, posA_i.y, posA_i.z);
+                const projB_i = project(posB_i.x, posB_i.y, posB_i.z);
+
+                // Project the ending points of the rung
+                const projA_i1 = project(posA_i1.x, posA_i1.y, posA_i1.z);
+                const projB_i1 = project(posB_i1.x, posB_i1.y, posB_i1.z);
+
+                // Draw the bond connecting node i to node i+1 (A to B)
+                ctx.beginPath();
+                ctx.moveTo(projA_i.px, projA_i.py);
+                ctx.lineTo(projB_i.px, projB_i.py);
+                ctx.stroke();
+
+                // Draw the bond connecting node i to node i+1 (A to B, on the other side)
+                ctx.beginPath();
+                ctx.moveTo(projA_i1.px, projA_i1.py);
+                ctx.lineTo(projB_i1.px, projB_i1.py);
+                ctx.stroke();
+            }
+
+
+            // --- Draw Strands (Nodes and Lines) ---
+            
+            // Strand A (Blueish)
+            ctx.strokeStyle = colorA;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < numNodes; i++) {
+                const pos = getNodePosition(i, 0);
+                const proj = project(pos.x, pos.y, pos.z);
+                if (i === 0) {
+                    ctx.moveTo(proj.px, proj.py);
+                } else {
+                    ctx.lineTo(proj.px, proj.py);
+                }
+            }
+            ctx.stroke();
+
+            // Strand B (Pinkish)
+            ctx.strokeStyle = colorB;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < numNodes; i++) {
+                const pos = getNodePosition(i, 1);
+                const proj = project(pos.x, pos.y, pos.z);
+                if (i === 0) {
+                    ctx.moveTo(proj.px, proj.py);
+                } else {
+                    ctx.lineTo(proj.px, proj.py);
+                }
+            }
+            ctx.stroke();
+
+            // Optional: Draw nodes as small circles for emphasis
+            ctx.fillStyle = colorA;
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < numNodes; i++) {
+                const posA = getNodePosition(i, 0);
+                const projA = project(posA.x, posA.y, posA.z);
+                ctx.beginPath();
+                ctx.arc(projA.px, projA.py, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = colorB;
+            for (let i = 0; i < numNodes; i++) {
+                const posB = getNodePosition(i, 1);
+                const projB = project(posB.x, posB.y, posB.z);
+                ctx.beginPath();
+                ctx.arc(projB.px, projB.py, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            // Update rotation angle
+            rotationAngle += rotationSpeed;
+
+            // Draw the scene
+            drawDNA();
+
+            // Request the next frame
+            requestAnimationFrame(animate);
+        }
+
+        // Handle resizing
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.9;
+            // Re-center calculations if needed, though the drawing function handles the current size
+        });
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>

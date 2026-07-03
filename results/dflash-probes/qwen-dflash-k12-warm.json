@@ -1,0 +1,80 @@
+{
+  "label": "qwen-dflash-k12-warm",
+  "cases": [
+    {
+      "case": "instruction_short",
+      "seconds": 1.031200871017063,
+      "completion_tokens": 11,
+      "prompt_tokens": 25,
+      "total_tokens": 36,
+      "tokens_per_second": 10.667174853286161,
+      "finish_reason": "stop",
+      "content_chars": 53,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k12-warm"
+    },
+    {
+      "case": "structured_json",
+      "seconds": 7.675464331987314,
+      "completion_tokens": 145,
+      "prompt_tokens": 42,
+      "total_tokens": 187,
+      "tokens_per_second": 18.891365229295115,
+      "finish_reason": "stop",
+      "content_chars": 645,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k12-warm"
+    },
+    {
+      "case": "code_python",
+      "seconds": 18.202448289986933,
+      "completion_tokens": 768,
+      "prompt_tokens": 59,
+      "total_tokens": 827,
+      "tokens_per_second": 42.192126452707605,
+      "finish_reason": "length",
+      "content_chars": 3167,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k12-warm"
+    },
+    {
+      "case": "visual_canvas",
+      "seconds": 34.83546840201598,
+      "completion_tokens": 1400,
+      "prompt_tokens": 36,
+      "total_tokens": 1436,
+      "tokens_per_second": 40.188924226406556,
+      "finish_reason": "length",
+      "content_chars": 5680,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k12-warm"
+    },
+    {
+      "case": "safety_refusal",
+      "seconds": 9.26982994901482,
+      "completion_tokens": 170,
+      "prompt_tokens": 37,
+      "total_tokens": 207,
+      "tokens_per_second": 18.33906349253659,
+      "finish_reason": "stop",
+      "content_chars": 746,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k12-warm"
+    },
+    {
+      "case": "planning_tools_text",
+      "seconds": 31.77049099499709,
+      "completion_tokens": 512,
+      "prompt_tokens": 43,
+      "total_tokens": 555,
+      "tokens_per_second": 16.115583485336277,
+      "finish_reason": "length",
+      "content_chars": 1965,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k12-warm"
+    }
+  ],
+  "total_completion_tokens": 3006,
+  "total_seconds": 102.7849028390192,
+  "aggregate_tokens_per_second": 29.245540122832733
+}

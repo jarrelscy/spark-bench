@@ -1,0 +1,23 @@
+{
+  "model": "minimax-m3",
+  "endpoint": "http://10.0.0.109:8000/v1/chat/completions",
+  "prompt": "Create a fully playable Space Invaders game in a single HTML file.",
+  "temperature": 0.3,
+  "max_tokens": 8000,
+  "chat_template_kwargs": {
+    "thinking_mode": "disabled",
+    "enable_thinking": false
+  },
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 177,
+    "total_tokens": 4934,
+    "completion_tokens": 4757
+  },
+  "elapsed_seconds": 259.535,
+  "content_chars": 14066,
+  "html_chars": 13024,
+  "raw_sse_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/SPACE-INVADERS-raw-sse.txt",
+  "raw_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/SPACE-INVADERS-raw-response.txt",
+  "html_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/SPACE-INVADERS.html"
+}

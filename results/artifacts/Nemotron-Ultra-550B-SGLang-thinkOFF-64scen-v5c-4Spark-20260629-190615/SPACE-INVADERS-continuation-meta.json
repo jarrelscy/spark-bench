@@ -1,0 +1,24 @@
+{
+  "model": "nemotron-ultra",
+  "endpoint": "http://10.0.0.109:8000/v1/chat/completions",
+  "temperature": 0.3,
+  "max_tokens": 8000,
+  "chat_template_kwargs": {
+    "enable_thinking": false
+  },
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 8003,
+    "total_tokens": 12138,
+    "completion_tokens": 4135,
+    "prompt_tokens_details": null,
+    "reasoning_tokens": 0
+  },
+  "continuation_chars": 14515,
+  "stitched_chars": 35697,
+  "overlap_chars_removed": 0,
+  "partial_path": "/home/raulwesche/projects/spark-bench/results/artifacts/Nemotron-Ultra-550B-SGLang-thinkOFF-64scen-v5c-4Spark-20260629-190615/SPACE-INVADERS.html",
+  "continuation_raw_path": "/home/raulwesche/projects/spark-bench/results/artifacts/Nemotron-Ultra-550B-SGLang-thinkOFF-64scen-v5c-4Spark-20260629-190615/SPACE-INVADERS-continuation-raw-response.txt",
+  "complete_path": "/home/raulwesche/projects/spark-bench/results/artifacts/Nemotron-Ultra-550B-SGLang-thinkOFF-64scen-v5c-4Spark-20260629-190615/SPACE-INVADERS-complete.html",
+  "elapsed_seconds": 452.626
+}

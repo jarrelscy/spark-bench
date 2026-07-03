@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const config = {
+            nodeCount: 100,
+            radius: 150,
+            spacing: 15,
+            rotationSpeed: 0.02,
+            perspective: 800, // Depth for 3D effect
+            colors: {
+                strand1: { r: 0, g: 180, b: 255 }, // Cyan
+                strand2: { r: 255, g: 100, b: 100 }, // Red/Pink
+                rung: { r: 200, g: 200, b: 255 }, // Light Blue
+                bg: '#050510'
+            }
+        };
+
+        let width, height, centerX, centerY;
+        let rotation = 0;
+
+        // Resize handling
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Utility: Project 3D coordinates to 2D
+        function project(x, y, z) {
+            const scale = config.perspective / (config.perspective + z);
+            return {
+                x: centerX + x * scale,
+                y: centerY + y * scale,
+                scale: scale
+            };
+        }
+
+        // Utility: Lerp color
+        function lerpColor(c1, c2, t) {
+            return {
+                r: c1.r + (c2.r - c1.r) * t,
+                g: c1.g + (c2.g - c1.g) * t,
+                b: c1.b + (c2.b - c1.b) * t
+            };
+        }
+
+        // Utility: Stringify color
+        function colorToString(c, alpha = 1) {
+            return `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${alpha})`;
+        }
+
+        // Generate points for the helix
+        const points = [];
+        for (let i = 0; i < config.nodeCount; i++) {
+            const t = i / config.nodeCount;
+            const angle = t * Math.PI * 4; // Two full turns
+            const z = (t - 0.5) * height * 0.8; // Spread vertically
+            
+            // Strand 1 (Sine)
+            const x1 = Math.cos(angle) * config.radius;
+            const y1 = Math.sin(angle) * config.radius;
+            
+            // Strand 2 (Cosine - offset by 90 degrees)
+            const x2 = Math.sin(angle) * config.radius;
+            const y2 = Math.cos(angle) * config.radius;
+
+            points.push({
+                i: i,
+                z: z,
+                s1: { x: x1, y: y1 },
+                s2: { x: x2, y: y2 }
+            });
+        }
+
+        // Sort points by Z-depth for painter's algorithm
+        function getSortedPoints() {
+            return [...points].sort((a, b) => a.z - b.z);
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = config.colors.bg;
+            ctx.fillRect(0, 0, width, height);
+
+            // Update rotation
+            rotation += config.rotationSpeed;
+
+            // Get sorted points
+            const sortedPoints = getSortedPoints();
+
+            // Draw Rungs (Connections)
+            ctx.lineWidth = 2;
+            sortedPoints.forEach(p => {
+                const p1 = project(p.s1.x, p.s1.y, p.z);
+                const p2 = project(p.s2.x, p.s2.y, p.z);
+
+                // Opacity based on depth (closer = brighter)
+                const opacity = 0.3 + (p1.scale * 0.7);
+                
+                ctx.strokeStyle = colorToString(config.colors.rung, opacity);
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            });
+
+            // Draw Nodes and Strand Lines
+            // We need to draw lines between nodes too, so we iterate through the original points
+            // But to handle depth correctly for nodes, we use the sorted order.
+            // For simplicity in this demo, we will draw nodes on top of lines.
+            
+            // 1. Draw Strand Lines
+            ctx.lineWidth = 4;
+            
+            // Draw Strand 1
+            ctx.beginPath();
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+                const proj = project(p.s1.x, p.s1.y, p.z);
+                if (i === 0) ctx.moveTo(proj.x, proj.y);
+                else ctx.lineTo(proj.x, proj.y);
+            }
+            ctx.strokeStyle = colorToString(config.colors.strand1, 0.6);
+            ctx.stroke();
+
+            // Draw Strand 2
+            ctx.beginPath();
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+                const proj = project(p.s2.x, p.s2.y, p.z);
+                if (i === 0) ctx.moveTo(proj.x, proj.y);
+                else ctx.lineTo(proj.x, proj.y);
+            }
+            ctx.strokeStyle = colorToString(config.colors.strand2, 0.6);
+            ctx.stroke();
+
+            // 2. Draw Nodes
+            sortedPoints.forEach(p => {
+                const proj1 = project(p.s1.x, p.s1.y, p.z);
+                const proj2 = project(p.s2.x, p.s2.y, p.z);
+
+                // Calculate brightness based on scale (depth)
+                const brightness = 0.5 + (proj1.scale * 0.5);
+                
+                // Draw Node 1
+                ctx.beginPath();
+                ctx.arc(proj1.x, proj1.y, 6 * proj1.scale, 0, Math.PI * 2);
+                ctx.fillStyle = colorToString(lerpColor(config.colors.strand1, {r:255,g:255,b:255}, 0.3), brightness);
+                ctx.fill();
+                ctx.strokeStyle = colorToString(config.colors.strand1, 1);
+                ctx.stroke();
+
+                // Draw Node 2
+                ctx.beginPath();
+                ctx.arc(proj2.x, proj2.y, 6 * proj2.scale, 0, Math.PI * 2);
+                ctx.fillStyle = colorToString(lerpColor(config.colors.strand2, {r:255,g:255,b:255}, 0.3), brightness);
+                ctx.fill();
+                ctx.strokeStyle = colorToString(config.colors.strand2, 1);
+                ctx.stroke();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+    </script>
+</body>
+</html>

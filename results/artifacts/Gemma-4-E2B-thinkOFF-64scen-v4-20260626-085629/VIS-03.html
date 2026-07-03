@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #0a0a1a; /* Dark background */
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0, 150, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas" width="800" height="600"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('dnaCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width;
+            const H = canvas.height;
+
+            // DNA Parameters
+            const numNodes = 20; // Number of nodes on each strand
+            const radius = 150;  // Radius of the helix
+            const strandHeight = 50; // Vertical distance between nodes
+            const rungThickness = 2;
+            const rotationSpeed = 0.005; // Radians per frame
+
+            let angle = 0; // Current rotation angle
+
+            // Color definition (subtle variation)
+            const color1 = 'rgba(0, 150, 255, 0.8)'; // Blueish
+            const color2 = 'rgba(255, 100, 200, 0.8)'; // Pinkish
+
+            // Function to draw the DNA helix
+            function drawDNA() {
+                // Clear the canvas
+                ctx.fillStyle = '#0a0a1a';
+                ctx.fillRect(0, 0, W, H);
+
+                // Calculate the center point
+                const centerX = W / 2;
+                const centerY = H / 2;
+
+                // --- Draw Strands ---
+                for (let i = 0; i < numNodes; i++) {
+                    // Calculate the angle for the current node
+                    const nodeAngle = (i / numNodes) * 2 * Math.PI + angle;
+
+                    // --- Strand 1 (Blue) ---
+                    const x1 = centerX + radius * Math.cos(nodeAngle);
+                    const y1 = centerY + strandHeight * i - (numNodes * strandHeight) / 2;
+
+                    ctx.beginPath();
+                    ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = color1;
+                    ctx.fill();
+
+                    // --- Strand 2 (Pink) ---
+                    const x2 = centerX + radius * Math.cos(nodeAngle);
+                    const y2 = centerY - strandHeight * i + (numNodes * strandHeight) / 2;
+
+                    ctx.beginPath();
+                    ctx.arc(x2, y2, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = color2;
+                    ctx.fill();
+                }
+
+                // --- Draw Rungs (Connectors) ---
+                for (let i = 0; i < numNodes - 1; i++) {
+                    // Calculate angles for the two connected nodes
+                    const angle1 = (i / numNodes) * 2 * Math.PI + angle;
+                    const angle2 = ((i + 1) / numNodes) * 2 * Math.PI + angle;
+
+                    // Coordinates for the two nodes
+                    const x1 = centerX + radius * Math.cos(angle1);
+                    const y1 = centerY + strandHeight * i - (numNodes * strandHeight) / 2;
+
+                    const x2 = centerX + radius * Math.cos(angle2);
+                    const y2 = centerY - strandHeight * (i + 1) + (numNodes * strandHeight) / 2;
+
+                    // Draw the rung (horizontal line)
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = rungThickness;
+                    ctx.stroke();
+                }
+            }
+
+            // Animation loop
+            function animate() {
+                // Update rotation angle
+                angle += rotationSpeed;
+
+                // Redraw the scene
+                drawDNA();
+
+                // Request the next frame
+                requestAnimationFrame(animate);
+            }
+
+            // Start the animation
+            animate();
+        });
+    </script>
+</body>
+</html>

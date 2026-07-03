@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotation = 0;
+
+        // Configuration
+        const numNodes = 40;
+        const radius = 100;
+        const helixSpacing = 15; // Vertical distance between nodes
+        const twistSpeed = 0.02;
+        const rotationSpeed = 0.015;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear canvas with a slight trail effect (optional, currently solid)
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Update rotation
+            rotation += rotationSpeed;
+
+            // Draw the DNA structure
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate vertical position
+                const y = centerY - (i * helixSpacing) + (numNodes * helixSpacing / 2);
+                
+                // Calculate angle for the first strand
+                // The sine wave creates the spiral
+                const angle1 = rotation + (i * 0.4);
+                const x1 = centerX + Math.cos(angle1) * radius;
+                const z1 = Math.sin(angle1) * radius; // Used for 3D depth simulation
+
+                // Second strand is 180 degrees (PI) out of phase
+                const angle2 = rotation + (i * 0.4) + Math.PI;
+                const x2 = centerX + Math.cos(angle2) * radius;
+                const z2 = Math.sin(angle2) * radius;
+
+                // Perspective calculation: 
+                // We simulate 3D by scaling the x-offset based on the z-depth
+                // z is positive (front) or negative (back)
+                const scale1 = (z1 + radius) / (2 * radius);
+                const scale2 = (z2 + radius) / (2 * radius);
+
+                const finalX1 = centerX + (x1 - centerX) * scale1;
+                const finalX2 = centerX + (x2 - centerX) * scale2;
+
+                // Draw Rungs (Horizontal connecting lines)
+                // We only draw the rung if it's not "behind" the center too much
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(100, 150, 255, ${0.2 + (scale1 + scale2) / 4})`;
+                ctx.lineWidth = 2;
+                ctx.moveTo(finalX1, y);
+                ctx.lineTo(finalX2, y);
+                ctx.stroke();
+
+                // Draw Nodes (Strand 1)
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(100, 200, 255, ${scale1})`;
+                ctx.arc(finalX1, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw Nodes (Strand 2)
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(255, 100, 200, ${scale2})`;
+                ctx.arc(finalX2, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

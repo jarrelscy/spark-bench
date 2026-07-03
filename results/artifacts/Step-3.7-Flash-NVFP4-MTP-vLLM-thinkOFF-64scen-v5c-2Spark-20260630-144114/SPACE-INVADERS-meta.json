@@ -1,0 +1,14 @@
+{
+  "game": "SPACE-INVADERS",
+  "endpoint": "http://10.0.0.229:8888/v1",
+  "model": "Step-3.7-Flash-NVFP4-MTP",
+  "max_tokens": 8000,
+  "temperature": 0.3,
+  "finish_reason": "length",
+  "elapsed_seconds": 252.849,
+  "content_chars": 0,
+  "html_chars": 0,
+  "prompt_tokens": 27,
+  "completion_tokens": 8000,
+  "total_tokens": 8027
+}

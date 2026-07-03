@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const nodesCount = 40;
+        const radius = 80;
+        const spacing = 20;
+        const nodeSize = 4;
+        const color1 = '#4facfe'; // Cyan-blue
+        const color2 = '#00f2fe'; // Bright aqua
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function project(x, y, z) {
+            // Simple orthographic projection with a slight perspective feel
+            // z is depth, x is horizontal, y is vertical
+            const scale = 1; 
+            return {
+                x: width / 2 + x * scale,
+                y: height / 2 + y * scale
+            };
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            angle += 0.02;
+            const nodes = [];
+
+            // Calculate positions for all nodes first to handle depth sorting if needed
+            // but for a simple helix, we can draw sequentially.
+            for (let i = 0; i < nodesCount; i++) {
+                const y = (i - nodesCount / 2) * spacing;
+                const theta = angle + (i * 0.3);
+                
+                const x1 = Math.cos(theta) * radius;
+                const z1 = Math.sin(theta) * radius;
+                
+                const x2 = Math.cos(theta + Math.PI) * radius;
+                const z2 = Math.sin(theta + Math.PI) * radius;
+
+                nodes.push({
+                    y: y,
+                    p1: project(x1, y, z1),
+                    p2: project(x2, y, z2),
+                    z1: z1,
+                    z2: z2
+                });
+            }
+
+            // Draw Rungs (connectors)
+            ctx.lineWidth = 1;
+            nodes.forEach(node => {
+                const alpha = (node.z1 + radius) / (2 * radius); // Simple depth shading
+                ctx.strokeStyle = `rgba(150, 150, 150, ${alpha * 0.5})`;
+                ctx.beginPath();
+                ctx.moveTo(node.p1.x, node.p1.y);
+                ctx.lineTo(node.p2.x, node.p2.y);
+                ctx.stroke();
+            });
+
+            // Draw Strands
+            for (let i = 0; i < nodesCount; i++) {
+                const node = nodes[i];
+                
+                // Strand 1
+                const alpha1 = (node.z1 + radius) / (2 * radius);
+                ctx.fillStyle = color1;
+                ctx.globalAlpha = alpha1;
+                ctx.beginPath();
+                ctx.arc(node.p1.x, node.p1.y, nodeSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Strand 2
+                const alpha2 = (node.z2 + radius) / (2 * radius);
+                ctx.fillStyle = color2;
+                ctx.globalAlpha = alpha2;
+                ctx.beginPath();
+                ctx.arc(node.p2.x, node.p2.y, nodeSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 1.0;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

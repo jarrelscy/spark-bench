@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0c;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const pointsCount = 40; // Number of rungs
+        const radius = 80;      // Radius of the helix
+        const spacing = 20;     // Vertical distance between points
+        const rotationSpeed = 0.02;
+        
+        const color1 = '#4facfe'; // Cyan-blue
+        const color2 = '#f093fb'; // Pink-purple
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2 - (pointsCount * spacing) / 2;
+
+            const points1 = [];
+            const points2 = [];
+
+            // Calculate positions for both strands
+            for (let i = 0; i < pointsCount; i++) {
+                const y = centerY + i * spacing;
+                
+                // Strand 1
+                const x1 = centerX + Math.cos(angle + i * 0.3) * radius;
+                const z1 = Math.sin(angle + i * 0.3); // Used for depth sorting/scaling
+                points1.push({ x: x1, y: y, z: z1 });
+
+                // Strand 2 (Offset by PI to be opposite)
+                const x2 = centerX + Math.cos(angle + i * 0.3 + Math.PI) * radius;
+                const z2 = Math.sin(angle + i * 0.3 + Math.PI);
+                points2.push({ x: x2, y: y, z: z2 });
+            }
+
+            // Draw connecting rungs first (so they appear behind nodes)
+            for (let i = 0; i < pointsCount; i++) {
+                const p1 = points1[i];
+                const p2 = points2[i];
+                
+                // Subtle depth effect: change opacity based on Z
+                const opacity = (p1.z + p2.z) / 2 * 0.3 + 0.4;
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(200, 200, 200, ${opacity})`;
+                ctx.lineWidth = 1;
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+
+            // Draw the nodes for both strands
+            const drawStrand = (points, color) => {
+                points.forEach(p => {
+                    const size = 3 + p.z * 2; // Size based on depth
+                    const alpha = 0.4 + p.z * 0.6; // Brightness based on depth
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = alpha;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                });
+            };
+
+            drawStrand(points1, color1);
+            drawStrand(points2, color2);
+
+            angle += rotationSpeed;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

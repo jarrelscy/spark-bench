@@ -1,0 +1,80 @@
+{
+  "label": "step37-mtp3-baseline",
+  "cases": [
+    {
+      "case": "instruction_short",
+      "seconds": 2.3713146889931522,
+      "completion_tokens": 64,
+      "prompt_tokens": 25,
+      "total_tokens": 89,
+      "tokens_per_second": 26.98924790415483,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 279,
+      "label": "step37-mtp3-baseline"
+    },
+    {
+      "case": "structured_json",
+      "seconds": 10.476026404998265,
+      "completion_tokens": 256,
+      "prompt_tokens": 44,
+      "total_tokens": 300,
+      "tokens_per_second": 24.436746348582957,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 1297,
+      "label": "step37-mtp3-baseline"
+    },
+    {
+      "case": "code_python",
+      "seconds": 26.579007342021214,
+      "completion_tokens": 768,
+      "prompt_tokens": 64,
+      "total_tokens": 832,
+      "tokens_per_second": 28.894984305369363,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 3397,
+      "label": "step37-mtp3-baseline"
+    },
+    {
+      "case": "visual_canvas",
+      "seconds": 51.226250415988034,
+      "completion_tokens": 1400,
+      "prompt_tokens": 37,
+      "total_tokens": 1437,
+      "tokens_per_second": 27.329737949413747,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 5718,
+      "label": "step37-mtp3-baseline"
+    },
+    {
+      "case": "safety_refusal",
+      "seconds": 17.455773397989105,
+      "completion_tokens": 512,
+      "prompt_tokens": 37,
+      "total_tokens": 549,
+      "tokens_per_second": 29.331269851325068,
+      "finish_reason": "length",
+      "content_chars": 211,
+      "reasoning_chars": 2267,
+      "label": "step37-mtp3-baseline"
+    },
+    {
+      "case": "planning_tools_text",
+      "seconds": 19.31961204999243,
+      "completion_tokens": 512,
+      "prompt_tokens": 44,
+      "total_tokens": 556,
+      "tokens_per_second": 26.501567354205783,
+      "finish_reason": "length",
+      "content_chars": 0,
+      "reasoning_chars": 1989,
+      "label": "step37-mtp3-baseline"
+    }
+  ],
+  "total_completion_tokens": 3512,
+  "total_seconds": 127.4279842999822,
+  "aggregate_tokens_per_second": 27.560665102669216
+}

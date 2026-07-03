@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #0a0a1a;
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas" width="600" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+
+        // DNA Parameters
+        const NUM_NODES = 20;
+        const RADIUS = 200;
+        const SPIRAL_HEIGHT = 250;
+        const ROTATION_SPEED = 0.005; // Radians per frame
+        const COLOR_SHIFT = 30; // Controls color variation
+
+        let angle = 0;
+        let time = 0;
+
+        // --- Node Structure ---
+        class DNAseam {
+            constructor(index, isTopStrand) {
+                this.index = index;
+                this.isTopStrand = isTopStrand;
+                this.x = RADIUS * Math.cos(index * (2 * Math.PI / NUM_NODES));
+                this.y = (isTopStrand ? -SPIRAL_HEIGHT / 2 : SPIRAL_HEIGHT / 2) + 
+                         (index * (SPIRAL_HEIGHT / NUM_NODES));
+                this.colorHue = (isTopStrand ? 120 : 240); // Greenish vs Blueish
+            }
+
+            draw(ctx) {
+                const hue = this.colorHue + (Math.sin(time * 0.5 + this.index * 0.5) * 20);
+                ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const topStrandNodes = [];
+        const bottomStrandNodes = [];
+
+        // Initialize nodes
+        for (let i = 0; i < NUM_NODES; i++) {
+            topStrandNodes.push(new DNAseam(i, true));
+            bottomStrandNodes.push(new DNAseam(i, false));
+        }
+
+        // --- Drawing Functions ---
+
+        function drawHelix() {
+            // 1. Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, W, H);
+
+            // Calculate rotation based on time
+            angle += ROTATION_SPEED;
+            time++;
+
+            // 2. Draw the connecting rungs (horizontal lines)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < NUM_NODES; i++) {
+                const topNode = topStrandNodes[i];
+                const bottomNode = bottomStrandNodes[i];
+
+                // Calculate current rotated positions
+                const topX = RADIUS * Math.cos(i * (2 * Math.PI / NUM_NODES) + angle);
+                const topY = -SPIRAL_HEIGHT / 2 + (i * (SPIRAL_HEIGHT / NUM_NODES));
+                
+                const bottomX = RADIUS * Math.cos(i * (2 * Math.PI / NUM_NODES) + angle);
+                const bottomY = SPIRAL_HEIGHT / 2 + (i * (SPIRAL_HEIGHT / NUM_NODES));
+
+
+                // Draw the rung
+                ctx.beginPath();
+                ctx.moveTo(topX, topY);
+                ctx.lineTo(bottomX, bottomY);
+                ctx.stroke();
+            }
+
+            // 3. Draw the nodes (The actual helix structure)
+            topStrandNodes.forEach(node => node.draw(ctx));
+            bottomStrandNodes.forEach(node => node.draw(ctx));
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            drawHelix();
+            requestAnimationFrame(animate);
+        }
+
+        // Start the animation
+        animate();
+
+    </script>
+</body>
+</html>

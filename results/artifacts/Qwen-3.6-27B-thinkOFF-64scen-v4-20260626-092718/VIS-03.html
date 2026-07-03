@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510; /* Deep dark background */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let angle = 0;
+
+    // Configuration
+    const config = {
+        radius: 150,           // Width of the helix
+        nodes: 40,             // Number of rungs
+        spacing: 12,           // Vertical distance between nodes
+        speed: 0.02,           // Rotation speed
+        strandWidth: 3,        // Thickness of the backbone lines
+        rungWidth: 2,          // Thickness of the connecting bars
+        perspective: 800,      // For simple depth simulation
+        colorStrand1: '#00f2ff', // Cyan
+        colorStrand2: '#ff0055'  // Magenta/Pink
+    };
+
+    // Resize canvas to fit window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        // Clear screen
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate total height of the DNA structure to center it
+        const totalHeight = config.nodes * config.spacing;
+        const startY = (height - totalHeight) / 2;
+        const centerX = width / 2;
+
+        // We need to calculate all points first to handle depth sorting (Painter's Algorithm)
+        // We will store objects: { type: 'rung'|'node', z: depth, ...data }
+        const renderList = [];
+
+        // Generate points for the two strands
+        const strand1Points = [];
+        const strand2Points = [];
+
+        for (let i = 0; i < config.nodes; i++) {
+            const y = startY + i * config.spacing;
+            
+            // Calculate x position based on sine wave + rotation angle
+            // Strand 1 and Strand 2 are 180 degrees (PI) out of phase
+            const x1 = Math.sin(angle + i * 0.3) * config.radius;
+            const x2 = Math.sin(angle + i * 0.3 + Math.PI) * config.radius;
+            
+            // Calculate Z-depth (for scaling/opacity)
+            // Normalized z from -1 to 1
+            const z1 = Math.cos(angle + i * 0.3);
+            const z2 = Math.cos(angle + i * 0.3 + Math.PI);
+
+            strand1Points.push({ x: centerX + x1, y: y, z: z1 });
+            strand2Points.push({ x: centerX + x2, y: y, z: z2 });
+
+            // Add rung to render list
+            // The rung connects point i of strand 1 to point i of strand 2
+            // We use the average Z of the two points for depth sorting
+            renderList.push({
+                type: 'rung',
+                z: (z1 + z2) / 2,
+                p1: { x: centerX + x1, y: y },
+                p2: { x: centerX + x2, y: y }
+            });
+        }
+
+        // Sort render list by Z depth (back to front)
+        renderList.sort((a, b) => a.z - b.z);
+
+        // --- Draw Rungs First (Backbones are drawn after to overlay connections) ---
+        // Actually, for a clean look, we usually draw backbones on top, 
+        // but strictly speaking, rungs are "inside". 
+        // Let's draw rungs first, then the nodes/lines.
+        
+        // 1. Draw Rungs
+        renderList.forEach(item => {
+            if (item.type === 'rung') {
+                // Fade out if far away in the back
+                const alpha = (item.z + 1) / 2; // 0 to 1
+                const width = (item.z + 1) / 2; // Thinner in back
+                
+                ctx.beginPath();
+                ctx.moveTo(item.p1.x, item.p1.y);
+                ctx.lineTo(item.p2.x, item.p2.y);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + (alpha * 0.4)})`; // White-ish rungs
+                ctx.lineWidth = config.rungWidth * (0.5 + alpha * 0.5);
+                ctx.stroke();
+            }
+        });
+
+        // 2. Draw Strands (Backbones)
+        // We draw these as continuous lines. 
+        // To make them look 3D, we can segment them or just rely on the fact 
+        // that we are drawing over the rungs. 
+        // A simple line is fine, but let's make the nodes glow.
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Helper to draw a strand
+        function drawStrand(points, color) {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                // Quadratic curve for smoothness
+                const xc = (points[i-1].x + points[i].x) / 2;
+                const yc = (points[i-1].y + points[i].y) / 2;
+                ctx.quadraticCurveTo(points[i-1].x, points[i-1].y, xc, yc);
+            }
+            ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = config.strandWidth;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
+        }
+
+        drawStrand(strand1Points, config.colorStrand1);
+        drawStrand(strand2Points, config.colorStrand2);
+
+        // 3. Draw Nodes (The dots)
+        // We iterate through the render list again to draw nodes in depth order
+        // We need to map the rung data back to node positions.
+        // Since we sorted rungs, we can just iterate the sorted list and draw the nodes associated with that rung index.
+        // However, we need the original index. Let's add index to the rung object before sorting?
+        // Or simply, we can just re-calculate or store index.
+        
+        // Let's rebuild a simple node list based on the original points arrays
+        // and sort them by Z.
+        const nodeList = [];
+        for(let i=0; i<config.nodes; i++) {
+            nodeList.push({ ...strand1Points[i], color: config.colorStrand1 });
+            nodeList.push({ ...strand2Points[i], color: config.colorStrand2 });
+        }
+        nodeList.sort((a, b) => a.z - b.z);
+
+        nodeList.forEach(node => {
+            const alpha = (node.z + 1) / 2;
+            const size = 2 + (alpha * 3); // Scale size by depth
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.fillStyle = node.color;
+            ctx.globalAlpha = 0.5 + (alpha * 0.5); // Fade opacity
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        });
+
+        // Update rotation
+        angle += config.speed;
+
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    draw();
+
+</script>
+</body>
+</html>

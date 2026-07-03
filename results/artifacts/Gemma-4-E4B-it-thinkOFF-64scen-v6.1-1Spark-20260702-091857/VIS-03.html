@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            background-color: #0a0a1a; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #050510;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const helixHeight = 300; // Total vertical span of the helix
+        const numNodes = 50; // Number of points per strand
+        const pitch = 15; // Controls how tightly the helix spirals (controls the change in angle per segment)
+        const radiusFactor = 0.8; // Multiplier for the radius calculation
+
+        let rotationAngle = 0;
+
+        /**
+         * Calculates the 3D coordinates for a point on a helix.
+         * @param {number} i - The index of the node (0 to numNodes - 1).
+         * @param {number} radius - The base radius of the helix.
+         * @param {number} angleOffset - Offset for the two strands (0 or Math.PI).
+         * @returns {{x: number, y: number, z: number}} 3D coordinates.
+         */
+        function calculateHelixPoint(i, radius, angleOffset) {
+            const t = i / numNodes * 2 * Math.PI; // Parameterized angle around the cylinder
+            const z = (i / numNodes - 0.5) * 2 * helixHeight; // Vertical position
+            
+            // The spiral twist factor controls the rotation around the Z-axis as it goes up/down
+            const spiralTwist = t * 3; 
+
+            // X and Y coordinates define the circle, modulated by the spiral
+            const x = radius * Math.cos(spiralTwist + angleOffset);
+            const y = radius * Math.sin(spiralTwist + angleOffset);
+            const z = z; // Using Z for vertical displacement in 3D space, which we map to Y on canvas
+
+            return { x: x, y: z, z: y }; // Mapping Z (height) to canvas Y, and Y (vertical position) to Z for depth perception if needed, but here we use Y for canvas Y.
+        }
+
+        /**
+         * Projects 3D coordinates (x, y, z) onto the 2D canvas plane.
+         * We treat the Z-axis (the original vertical axis) as the depth axis for perspective.
+         * @param {number} x3d - X coordinate in 3D.
+         * @param {number} y3d - Y coordinate in 3D (Height).
+         * @param {number} z3d - Z coordinate in 3D (Radius projection).
+         * @returns {{x: number, y: number}} Screen coordinates.
+         */
+        function project(x3d, y3d, z3d) {
+            // Simple orthographic projection, scaled and translated to center
+            const scale = 1.5; 
+            const projectedX = centerX + x3d * scale;
+            const projectedY = centerY - y3d * scale; // Invert Y for canvas coordinates (Y increases downwards)
+            return { x: projectedX, y: projectedY };
+        }
+
+
+        function drawDNA(strandOffset) {
+            // Strand 1: Slightly different color and offset
+            const color1 = `hsl(180, 70%, ${50 + strandOffset * 10}%)`; // Cyan/Blueish
+            // Strand 2: Slightly different color and offset
+            const color2 = `hsl(240, 70%, ${50 - strandOffset * 10}%)`; // Purple/Magentaish
+
+            // --- Draw Strands (Bonds) ---
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = color1;
+            
+            let prevPoint = null;
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate points for this strand
+                const { x: x3d, y: y3d, z: z3d } = calculateHelixPoint(i, 100, strandOffset);
+                const screenPoint = project(x3d, y3d, z3d);
+
+                if (i === 0) {
+                    ctx.moveTo(screenPoint.x, screenPoint.y);
+                } else {
+                    ctx.lineTo(screenPoint.x, screenPoint.y);
+                }
+                prevPoint = screenPoint;
+            }
+            ctx.stroke();
+
+            // --- Draw Rungs (Connections) ---
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#888888'; // Gray for rungs
+
+            for (let i = 0; i < numNodes - 1; i++) {
+                // Calculate points for the two strands at index i and i+1
+                
+                // Strand 1 (Offset 0)
+                const p1_i = calculateHelixPoint(i, 100, 0);
+                const p1_i1 = calculateHelixPoint(i + 1, 100, 0);
+                
+                // Strand 2 (Offset PI)
+                const p2_i = calculateHelixPoint(i, 100, Math.PI);
+                const p2_i1 = calculateHelixPoint(i + 1, 100, Math.PI);
+
+                // Project points
+                const s1_i = project(p1_i.x, p1_i.y, p1_i.z);
+                const s1_i1 = project(p1_i1.x, p1_i1.y, p1_i1.z);
+                const s2_i = project(p2_i.x, p2_i.y, p2_i.z);
+                const s2_i1 = project(p2_i1.x, p2_i1.y, p2_i1.z);
+
+                // Draw the rung connecting the two strands at index i
+                ctx.beginPath();
+                ctx.moveTo(s1_i.x, s1_i.y);
+                ctx.lineTo(s2_i.x, s2_i.y);
+                ctx.stroke();
+
+                // Draw the rung connecting the two strands at index i+1
+                ctx.beginPath();
+                ctx.moveTo(s1_i1.x, s1_i1.y);
+                ctx.lineTo(s2_i1.x, s2_i1.y);
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Rotate the entire structure (applied by adjusting the base angle for calculation)
+            rotationAngle += 0.005; 
+            
+            // Apply rotation to the calculation parameters (This simulates rotation around the central Z-axis)
+            // We modify the angleOffset slightly to incorporate the rotation into the helix structure
+            const rotFactor = rotationAngle * 2; 
+
+            // Draw the two strands
+            drawDNA(0); // Strand 1 (Offset 0)
+            drawDNA(1); // Strand 2 (Offset PI)
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>

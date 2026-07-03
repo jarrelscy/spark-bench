@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let stars = [];
+        const STAR_COUNT = 1200;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Star {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                // Spiral parameters
+                // Use polar coordinates to define the spiral shape
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.pow(Math.random(), 0.7) * (Math.min(width, height) * 0.45);
+                
+                // Spiral formula: r = a + b * theta
+                // We add some randomness to the angle to create thickness
+                const spiralAngle = distance * 0.005;
+                const finalAngle = angle + spiralAngle;
+
+                this.x = Math.cos(finalAngle) * distance;
+                this.y = Math.sin(finalAngle) * distance;
+                
+                // Original position relative to center
+                this.baseX = this.x;
+                this.baseY = this.y;
+
+                // Orbital properties
+                // Stars further out move slower
+                this.orbitSpeed = (Math.random() * 0.002 + 0.001) * (1 - (distance / (Math.min(width, height) * 0.45)));
+                this.rotation = Math.random() * Math.PI * 2;
+
+                // Visual properties
+                this.size = Math.random() * 1.5 + 0.5;
+                // Colors: Blues, Purples, and Whites
+                const colors = ['#ffffff', '#e0f0ff', '#d1d1ff', '#ffccff', '#fff5e0'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = Math.random() * 0.8 + 0.2;
+                this.twinkleSpeed = Math.random() * 0.05 + 0.02;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.rotation += this.orbitSpeed;
+                
+                // Calculate current position based on rotation
+                const currentDist = Math.sqrt(this.baseX**2 + this.baseY**2);
+                const currentAngle = Math.atan2(this.baseY, this.baseX) + this.orbitSpeed;
+                
+                this.x = Math.cos(currentAngle) * currentDist;
+                this.y = Math.sin(currentAngle) * currentDist;
+
+                // Twinkle effect
+                this.currentOpacity = this.opacity * (0.7 + 0.3 * Math.sin(Date.now() * this.twinkleSpeed + this.twinkleOffset));
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(width / 2 + this.x, height / 2 + this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.currentOpacity;
+                ctx.fill();
+            }
+        }
+
+        function createGalaxy() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function drawCore() {
+            // Create a glowing center
+            const gradient = ctx.createRadialGradient(
+                width / 2, height / 2, 0,
+                width / 2, height / 2, 50
+            );
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0.2, 'rgba(255, 200, 100, 0.6)');
+            gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, 50, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function animate() {
+            // Slight motion blur effect by not fully clearing
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            drawCore();
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        createGalaxy();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, stars = [];
+        const STAR_COUNT = 800;
+        const ARMS = 3;
+        const ARM_TIGHTNESS = 0.15;
+        const ROTATION_SPEED = 0.002;
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            stars = [];
+
+            for (let i = 0; i < STAR_COUNT; i++) {
+                // Distribute stars along spiral arms
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * (Math.min(width, height) * 0.45);
+                
+                // Spiral formula: angle offset based on distance
+                const spiralAngle = angle + (distance * ARM_TIGHTNESS);
+                
+                // Add some random spread/noise to the arms
+                const spread = (Math.random() - 0.5) * (distance * 0.2);
+                
+                // Assign to one of the arms
+                const armOffset = (Math.floor(Math.random() * ARMS) * (Math.PI * 2 / ARMS));
+
+                stars.push({
+                    distance: distance,
+                    angle: spiralAngle + armOffset,
+                    spread: spread,
+                    size: Math.random() * 1.5 + 0.5,
+                    // Vary colors between white, light blue, and pale yellow
+                    color: `hsl(${200 + Math.random() * 40}, ${50 + Math.random() * 50}%, ${80 + Math.random() * 20}%)`,
+                    twinkle: Math.random() * Math.PI,
+                    twinkleSpeed: 0.02 + Math.random() * 0.05
+                });
+            }
+        }
+
+        function draw() {
+            // Slight trail effect by using semi-transparent black fill
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Draw Core Glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 50);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.2, 'rgba(255, 240, 200, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+            ctx.fill();
+
+            stars.forEach(star => {
+                // Update rotation
+                star.angle += ROTATION_SPEED * (1 - star.distance / 1000); // Inner stars move faster
+                
+                // Twinkle effect
+                star.twinkle += star.twinkleSpeed;
+                const opacity = 0.5 + Math.sin(star.twinkle) * 0.5;
+
+                // Convert polar to cartesian coordinates
+                const x = centerX + Math.cos(star.angle) * star.distance + Math.sin(star.angle) * star.spread;
+                const y = centerY + Math.sin(star.angle) * star.distance - Math.cos(star.angle) * star.spread;
+
+                ctx.fillStyle = star.color;
+                ctx.globalAlpha = opacity;
+                ctx.beginPath();
+                ctx.arc(x, y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.globalAlpha = 1.0;
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', init);
+
+        init();
+        draw();
+    </script>
+</body>
+</html>

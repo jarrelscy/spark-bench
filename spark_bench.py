@@ -125,6 +125,24 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
         body.update(extra)
     url = endpoint.rstrip("/") + "/chat/completions"
     import os
+    # --- strict-API guard (env-gated; no effect on existing runs unless set) ---
+    # Adaptive-thinking API models (e.g. Fable 5 / claude-fable-5) reject sampling
+    # params (temperature/top_p/top_k -> HTTP 400) and take reasoning depth via an
+    # `effort` field instead. Set these two envs only for such endpoints.
+    if os.environ.get("SPARK_BENCH_OMIT_SAMPLING"):
+        for _k in ("temperature", "top_p", "top_k"):
+            body.pop(_k, None)
+    _eff = os.environ.get("SPARK_BENCH_REASONING_EFFORT")
+    if _eff:
+        body["reasoning"] = {"effort": _eff}
+    # --- cross-engine sampling parity (env-gated; Fable review 2026-07-03) ---
+    # Engines diverge on top_p/top_k defaults (vLLM adopts generation_config.json,
+    # SGLang/Atlas do not). Pin them explicitly for engine-comparison runs:
+    #   SPARK_BENCH_EXTRA_BODY='{"top_p":0.95,"top_k":20}'
+    _extra_body = os.environ.get("SPARK_BENCH_EXTRA_BODY")
+    if _extra_body:
+        body.update(json.loads(_extra_body))
+    # ---------------------------------------------------------------------------
     _api_key = (os.environ.get("SPARK_BENCH_API_KEY")
                 or os.environ.get("OPENROUTER_API_KEY")
                 or os.environ.get("OPENAI_API_KEY")
@@ -185,6 +203,20 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
     if comp is None:  # llama.cpp sometimes omits usage on tool calls
         comp = max(1, len(text) // 4)
     decode_t = max(total - (ttft or total), 1e-6)
+    # --- raw request/response provenance dump (env-gated; Fable review 2026-07-03)
+    # Set SPARK_BENCH_DUMP_DIR to append every request+response as JSONL so any
+    # disputed score can be re-scored offline (rescore_v61.py) for ALL engines.
+    _dump_dir = os.environ.get("SPARK_BENCH_DUMP_DIR")
+    if _dump_dir:
+        try:
+            with open(os.path.join(_dump_dir, "raw_dump.jsonl"), "a") as _df:
+                _df.write(json.dumps({
+                    "ts": time.time(), "endpoint": url, "request": body,
+                    "text": text, "reasoning": "".join(reasoning_parts),
+                    "tool_calls": tool_calls, "finish": finish, "usage": usage,
+                    "ttft": ttft, "total": total}, ensure_ascii=False) + "\n")
+        except OSError:
+            pass  # provenance must never break a run
     return {
         "ttft": ttft if ttft is not None else total,
         "total": total,

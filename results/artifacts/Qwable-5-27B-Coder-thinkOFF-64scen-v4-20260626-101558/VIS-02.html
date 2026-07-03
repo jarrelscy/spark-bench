@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="galaxyCanvas"></canvas>
+
+<script>
+    /**
+     * GALAXY CONFIGURATION
+     * Adjust these values to change the look and feel of the galaxy.
+     */
+    const config = {
+        starCount: 2000,       // Number of stars
+        armCount: 4,           // Number of spiral arms
+        armSpread: 1.5,        // How "tight" the spiral is (lower is tighter)
+        coreRadius: 150,      // Radius of the dense central core
+        galaxyRadius: 600,    // Max radius of the galaxy
+        rotationSpeed: 0.0005,// Base speed of rotation
+        starBaseSize: 1.5,    // Base size of stars
+        starMaxSize: 3.0,     // Max size of stars
+        twinkleSpeed: 0.05,   // Speed of opacity fluctuation
+        colors: [
+            '#FFFFFF', // White
+            '#FFDDAA', // Warm Yellow
+            '#AACCFF', // Cool Blue
+            '#FFCCFF', // Magenta tint
+            '#E0F7FF'  // Ice White
+        ]
+    };
+
+    const canvas = document.getElementById('galaxyCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, centerX, centerY;
+    let stars = [];
+
+    // Handle resize
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        centerX = width / 2;
+        centerY = height / 2;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    /**
+     * Star Class
+     */
+    class Star {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            // Determine if star is in the core or in the spiral arms
+            // 60% chance to be in core, 40% in arms
+            const inCore = Math.random() < 0.6;
+
+            // Distance from center
+            if (inCore) {
+                // Gaussian-ish distribution for core density
+                this.radius = Math.random() * Math.random() * config.coreRadius;
+            } else {
+                // Uniform distribution for arms
+                this.radius = Math.random() * (config.galaxyRadius - config.coreRadius) + config.coreRadius;
+            }
+
+            // Angle calculation
+            // The spiral angle is based on the radius.
+            // Further out = more rotation relative to the arm structure.
+            const armIndex = Math.floor(Math.random() * config.armCount);
+            const armOffset = (armIndex * (Math.PI * 2)) / config.armCount;
+            
+            // Spiral math: theta = a + b * ln(r)
+            // Simplified: theta = offset + (radius * factor)
+            const spiralAngle = (this.radius * 0.005 * config.armSpread);
+            
+            // Add some randomness (scatter) around the arm center
+            // Scatter increases with distance from center
+            const scatter = (Math.random() - 0.5) * (this.radius * 0.005 + 0.2);
+
+            this.angle = armOffset + spiralAngle + scatter;
+
+            // Color
+            this.color = config.colors[Math.floor(Math.random() * config.colors.length)];
+            
+            // Size
+            // Core stars can be bigger, outer stars smaller
+            const sizeFactor = 1 - (this.radius / config.galaxyRadius);
+            this.size = Math.random() * (config.starMaxSize - config.starBaseSize) + config.starBaseSize;
+            if (inCore) this.size *= 1.5; // Core stars are bigger
+
+            // Rotation speed
+            // Keplerian-ish: closer stars move faster, but we want differential rotation for visual effect
+            // Let's make it so the whole galaxy rotates, but inner parts spin faster visually
+            this.speed = config.rotationSpeed * (config.galaxyRadius / (this.radius + 10));
+
+            // Twinkle properties
+            this.opacity = Math.random();
+            this.twinkleOffset = Math.random() * 1000;
+            this.twinkleSpeed = config.twinkleSpeed * (Math.random() * 0.5 + 0.5);
+            
+            // Velocity for "jitter" (micro-movement)
+            this.vx = (Math.random() - 0.5) * 0.05;
+            this.vy = (Math.random() - 0.5) * 0.05;
+        }
+
+        update(time) {
+            // Rotate
+            this.angle += this.speed;
+
+            // Twinkle
+            // Use sine wave for smooth opacity change
+            const twinkle = Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+            this.currentOpacity = 0.5 + 0.5 * twinkle; // 0 to 1 range
+
+            // Slight radial jitter (breathing effect)
+            this.currentRadius = this.radius + Math.sin(time * 0.001 + this.radius) * 2;
+        }
+
+        draw(ctx) {
+            const x = centerX + Math.cos(this.angle) * this.currentRadius;
+            const y = centerY + Math.sin(this.angle) * this.currentRadius;
+
+            ctx.beginPath();
+            ctx.arc(x, y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.currentOpacity;
+            ctx.fill();
+            ctx.globalAlpha = 1.0; // Reset alpha
+        }
+    }
+
+    /**
+     * Core Glow Effect
+     * Draws a soft radial gradient behind the stars
+     */
+    function drawCoreGlow() {
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, config.coreRadius * 1.5);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Bright center
+        gradient.addColorStop(0.1, 'rgba(255, 240, 200, 0.4)'); // Warm inner glow
+        gradient.addColorStop(0.4, 'rgba(100, 150, 255, 0.1)'); // Blueish outer halo
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Fade out
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, config.coreRadius * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    /**
+     * Initialization
+     */
+    function init() {
+        stars = [];
+        for (let i = 0; i < config.starCount; i++) {
+            stars.push(new Star());
+        }
+    }
+
+    /**
+     * Animation Loop
+     */
+    let time = 0;
+    function animate() {
+        // Clear canvas with black background
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, width, height);
+
+        time++;
+
+        // Draw the central glow
+        drawCoreGlow();
+
+        // Update and draw stars
+        // We use 'lighter' composite operation for a glowing effect where stars overlap
+        ctx.globalCompositeOperation = 'lighter';
+        
+        for (let star of stars) {
+            star.update(time);
+            star.draw(ctx);
+        }
+
+        // Reset composite operation for next frame (background clear)
+        ctx.globalCompositeOperation = 'source-over';
+
+        requestAnimationFrame(animate);
+    }
+
+    // Start
+    init();
+    animate();
+
+</script>
+</body>
+</html>

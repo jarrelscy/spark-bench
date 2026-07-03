@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            background-color: #1a1a2e;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementByster canvas;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const numNodes = 25;
+            const axisX = width / 2;
+            const axisY = height / 2;
+            const radius = 100;
+            const nodeSize = 6;
+            const rungWidth = 4;
+            
+            const strandA = [];
+            const strandB = [];
+            
+            for (let i = 0; i < numNodes; i++) {
+                const angleA = (i / numNodes) * Math.PI * 2;
+                const angleB = ((i / numNodes) + 0.5) * Math.PI * 2;
+                
+                const xA = axisX + Math.cos(angleA) * radius;
+                const yA = axisY + Math.sin(angleA) * radius;
+                const xB = axisX + Math.cos(angleB) * radius;
+                const yB = axisY + Math.sin(angleB) * radius;
+                
+                strandA.push({x: xA, y: yA, angle: angleA});
+                strandB.push({x: xB, y: yB, angle: angleB});
+            }
+            
+            function drawHelix() {
+                ctx.clearRect(0, 0, width, height);
+                
+                // Draw strand A (red)
+                ctx.beginPath();
+                for (let i = 0; i < strandA.length; i++) {
+                    const node = strandA[i];
+                    const cx = node.x;
+                    const cy = node.y;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(cx, cy);
+                    } else {
+                        const prevNode = strandA[i - 1];
+                        const dx = cx - prevNode.x;
+                        const dy = cy - prevNode.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        ctx.lineTo(cx, cy);
+                        
+                        // Draw rung
+                        const rungY = prevNode.y + (cy - prevNode.y) * 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(prevNode.x, rungY);
+                        ctx.lineTo(cx, rungY);
+                        ctx.strokeStyle = '#ff4444';
+                        ctx.lineWidth = rungWidth;
+                        ctx.stroke();
+                    }
+                }
+                
+                // Draw strand B (blue)
+                ctx.beginPath();
+                for (let i = 0; i < strandB.length; i++) {
+                    const node = strandB[i];
+                    const cx = node.x;
+                    const cy = node.y;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(cx, cy);
+                    } else {
+                        const prevNode = strandB[i - 1];
+                        const dx = cx - prevNode.x;
+                        const dy = cy - prevNode.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        ctx.lineTo(cx, cy);
+                        
+                        // Draw rung
+                        const rungY = prevNode.y + (cy - prevNode.y) * 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(prevNode.x, rungY);
+                        ctx.lineTo(cx, rungY);
+                        ctx.strokeStyle = '#4444ff';
+                        ctx.lineWidth = rungWidth;
+                        ctx.stroke();
+                    }
+                }
+                
+                // Draw nodes
+                for (const node of strandA) {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, nodeSize, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ff4444';
+                    ctx.fill();
+                }
+                
+                for (const node of strandB) {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, nodeSize, 0, Math.PI * 2);
+                    ctx.fillStyle = '#4444ff';
+                    ctx.fill();
+                }
+            }
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                drawHelix();
+            }
+            
+            animate();
+        })();
+    </script>
+</body>
+</html>

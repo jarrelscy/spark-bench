@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const numNodes = 40;      // Number of points per strand
+        const radius = 80;       // Radius of the helix
+        const spacing = 20;      // Vertical distance between nodes
+        const nodeRadius = 4;    // Size of the spheres
+        const rotationSpeed = 0.02;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2 - (numNodes * spacing) / 2;
+
+            const points = [];
+
+            // Calculate positions for both strands
+            for (let i = 0; i < numNodes; i++) {
+                const y = centerY + i * spacing;
+                
+                // Strand 1 (Offset by 0 radians)
+                const x1 = centerX + Math.cos(angle + i * 0.3) * radius;
+                const z1 = Math.sin(angle + i * 0.3); // Depth for layering
+
+                // Strand 2 (Offset by PI radians - opposite side)
+                const x2 = centerX + Math.cos(angle + i * 0.3 + Math.PI) * radius;
+                const z2 = Math.sin(angle + i * 0.3 + Math.PI);
+
+                points.push({ x1, z1, y, x2, z2 });
+            }
+
+            // Draw Rungs first (so they are behind the nodes)
+            points.forEach(p => {
+                const depth = (p.z1 + p.z2) / 2;
+                const opacity = 0.2 + (depth + 1) * 0.3;
+                
+                ctx.beginPath();
+                ctx.moveTo(p.x1, p.y);
+                ctx.lineTo(p.x2, p.y);
+                ctx.strokeStyle = `rgba(200, 200, 200, ${opacity})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+
+            // Draw Nodes (Sorted by Z-index for proper 3D depth perception)
+            const allNodes = [];
+            points.forEach(p => {
+                allNodes.push({ x: p.x1, y: p.y, z: p.z1, color: '#4da6ff' }); // Blue strand
+                allNodes.push({ x: p.x2, y: p.y, z: p.z2, color: '#ff4d4d' }); // Red strand
+            });
+
+            // Sort nodes by depth (Z) so further nodes are drawn first
+            allNodes.sort((a, b) => a.z - b.z);
+
+            allNodes.forEach(node => {
+                const size = nodeRadius * (node.z + 1.5) * 0.6;
+                const opacity = 0.3 + (node.z + 1) * 0.35;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.globalAlpha = opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            });
+
+            angle += rotationSpeed;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

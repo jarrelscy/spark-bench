@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spiral Galaxy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; height: 100vh; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="galaxy"></canvas>
+  <script>
+    const canvas = document.getElementById('galaxy');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height, centerX, centerY;
+    const stars = [];
+    const STAR_COUNT = 2000;
+    const ARMS = 4;
+    const MAX_RADIUS = 0.45;
+    const CORE_RADIUS = 0.08;
+    
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      centerX = width / 2;
+      centerY = height / 2;
+    }
+    
+    function initStars() {
+      stars.length = 0;
+      const maxR = Math.min(width, height) * MAX_RADIUS;
+      const coreR = Math.min(width, height) * CORE_RADIUS;
+      
+      for (let i = 0; i < STAR_COUNT; i++) {
+        // Spiral arm assignment
+        const arm = i % ARMS;
+        const armOffset = (arm / ARMS) * Math.PI * 2;
+        
+        // Distance from center with bias toward arms
+        const t = Math.random();
+        const r = coreR + (maxR - coreR) * (t * t * (3 - 2 * t)); // smoothstep
+        
+        // Angle with spiral pattern
+        const spiralTurns = 2.5;
+        const baseAngle = (r - coreR) / (maxR - coreR) * spiralTurns * Math.PI * 2;
+        const angle = baseAngle + armOffset + (Math.random() - 0.5) * 0.8;
+        
+        // Star properties
+        const size = 0.5 + Math.random() * 2.5 * Math.pow(1 - (r - coreR) / (maxR - coreR), 0.5);
+        const brightness = 0.3 + Math.random() * 0.7;
+        const twinkleSpeed = 0.005 + Math.random() * 0.02;
+        const twinklePhase = Math.random() * Math.PI * 2;
+        
+        // Color variation: core = white/yellow, arms = blue/white, outer = red/orange
+        const distRatio = (r - coreR) / (maxR - coreR);
+        let hue, sat;
+        if (distRatio < 0.3) {
+          hue = 50 + Math.random() * 20; // yellow-white
+          sat = 10 + Math.random() * 30;
+        } else if (distRatio < 0.7) {
+          hue = 200 + Math.random() * 40; // blue-white
+          sat = 20 + Math.random() * 40;
+        } else {
+          hue = 350 + Math.random() * 30; // red-orange
+          sat = 40 + Math.random() * 40;
+        }
+        
+        // Orbital velocity (Keplerian-ish)
+        const orbitalSpeed = (0.00015 + Math.random() * 0.0001) * Math.pow(coreR / r, 0.5);
+        
+        stars.push({
+          r, angle, size, brightness, twinkleSpeed, twinklePhase,
+          hue, sat, orbitalSpeed, arm,
+          x: 0, y: 0, currentBrightness: brightness
+        });
+      }
+    }
+    
+    function updateStars(deltaTime) {
+      for (const star of stars) {
+        star.angle += star.orbitalSpeed * deltaTime;
+        star.currentBrightness = star.brightness * (0.7 + 0.3 * Math.sin(Date.now() * star.twinkleSpeed + star.twinklePhase));
+        
+        star.x = centerX + Math.cos(star.angle) * star.r;
+        star.y = centerY + Math.sin(star.angle) * star.r;
+      }
+    }
+    
+    function drawCore() {
+      const coreR = Math.min(width, height) * CORE_RADIUS;
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreR * 2);
+      gradient.addColorStop(0, 'rgba(255, 250, 240, 1)');
+      gradient.addColorStop(0.15, 'rgba(255, 245, 220, 0.9)');
+      gradient.addColorStop(0.35, 'rgba(255, 230, 180, 0.5)');
+      gradient.addColorStop(0.6, 'rgba(255, 200, 120, 0.15)');
+      gradient.addColorStop(1, 'rgba(255, 180, 80, 0)');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, coreR * 2, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Bright central point
+      const coreGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreR * 0.5);
+      coreGlow.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      coreGlow.addColorStop(0.5, 'rgba(255, 250, 240, 0.8)');
+      coreGlow.addColorStop(1, 'rgba(255, 240, 220, 0)');
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, coreR * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = coreGlow;
+      ctx.fill();
+    }
+    
+    function drawStars() {
+      // Sort by distance for proper layering (optional but nice)
+      stars.sort((a, b) => a.r - b.r);
+      
+      for (const star of stars) {
+        if (star.x < -10 || star.x > width + 10 || star.y < -10 || star.y > height + 10) continue;
+        
+        const alpha = Math.min(1, star.currentBrightness);
+        const lightness = 50 + star.currentBrightness * 40;
+        
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, Math.max(0.5, star.size), 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${star.hue}, ${star.sat}%, ${lightness}%, ${alpha})`;
+        ctx.fill();
+        
+        // Occasional bright twinkle
+        if (star.currentBrightness > 0.9 && Math.random() < 0.001) {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${star.hue}, ${star.sat}%, 90%, ${alpha * 0.5})`;
+          ctx.fill();
+        }
+      }
+    }
+    
+    function drawBackgroundDust() {
+      // Subtle dust lanes
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < ARMS; i++) {
+        const armOffset = (i / ARMS) * Math.PI * 2;
+        const dustGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.min(width, height) * 0.4);
+        dustGradient.addColorStop(0, 'rgba(60, 40, 20, 0)');
+        dustGradient.addColorStop(0.3, `rgba(80, 50, 20, 0.02)`);
+        dustGradient.addColorStop(0.7, `rgba(60, 30, 10, 0.01)`);
+        dustGradient.addColorStop(1, 'rgba(40, 20, 10, 0)');
+        
+        ctx.fillStyle = dustGradient;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        for (let r = 0; r < Math.min(width, height) * 0.4; r += 5) {
+          const angle = armOffset + (r / 100) * 2.5 * Math.PI * 2 + Math.sin(Date.now() * 0.0001 + r * 0.01) * 0.1;
+          ctx.lineTo(centerX + Math.cos(angle) * r, centerY + Math.sin(angle) * r);
+        }
+        // Return path for thickness
+        for (let r = Math.min(width, height) * 0.4; r >= 0; r -= 5) {
+          const angle = armOffset + (r / 100) * 2.5 * Math.PI * 2 + Math.sin(Date.now() * 0.0001 + r * 0.01) * 0.1 + 0.15;
+          ctx.lineTo(centerX + Math.cos(angle) * r, centerY + Math.sin(angle) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    
+    let lastTime = 0;
+    function animate(time) {
+      const deltaTime = time - lastTime;
+      lastTime = time;
+      
+      // Clear with slight trail for motion blur effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.fillRect(0, 0, width, height);
+      
+      drawBackgroundDust();
+      drawCore();
+      updateStars(deltaTime);
+      drawStars();
+      
+      requestAnimationFrame(animate);
+    }
+    
+    window.addEventListener('resize', () => {
+      resize();
+      initStars();
+    });
+    
+    resize();
+    initStars();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

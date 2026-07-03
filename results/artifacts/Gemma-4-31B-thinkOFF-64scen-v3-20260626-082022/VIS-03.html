@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const numPoints = 40;      // Number of nodes per strand
+        const radius = 80;        // Radius of the helix
+        const spacing = 20;       // Vertical distance between nodes
+        const nodeSize = 4;       // Size of the dots
+        const rotationSpeed = 0.02;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function project(x, y, z) {
+            // Simple orthographic projection with a slight perspective feel
+            // x is horizontal, y is vertical, z is depth
+            const scale = 1; 
+            return {
+                x: width / 2 + x * scale,
+                y: height / 2 + y * scale
+            };
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            angle += rotationSpeed;
+            const centerY = height / 2 - (numPoints * spacing) / 2;
+
+            const points1 = [];
+            const points2 = [];
+
+            // Calculate positions for both strands
+            for (let i = 0; i < numPoints; i++) {
+                const y = centerY + i * spacing;
+                const theta = angle + (i * 0.3); // Twist over height
+
+                // Strand 1
+                const x1 = Math.cos(theta) * radius;
+                const z1 = Math.sin(theta) * radius;
+                points1.push(project(x1, y, z1));
+
+                // Strand 2 (180 degrees offset)
+                const x2 = Math.cos(theta + Math.PI) * radius;
+                const z2 = Math.sin(theta + Math.PI) * radius;
+                points2.push(project(x2, y, z2));
+            }
+
+            // Draw connections (rungs)
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < numPoints; i++) {
+                const p1 = points1[i];
+                const p2 = points2[i];
+                
+                // Fade rungs based on depth (z) for a 3D effect
+                const zDepth = Math.sin(angle + (i * 0.3));
+                const opacity = (zDepth + 1) / 2;
+                
+                ctx.strokeStyle = `rgba(150, 150, 150, ${opacity * 0.5})`;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+
+            // Draw the two strands
+            drawStrand(points1, '#4da6ff'); // Light Blue
+            drawStrand(points2, '#ff4d88'); // Soft Pink
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawStrand(points, color) {
+            // Draw lines between nodes
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+
+            // Draw nodes
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+                // Use the same depth logic for node brightness
+                const zDepth = Math.sin(angle + (i * 0.3));
+                const brightness = (zDepth + 1) / 2;
+                
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.3 + (brightness * 0.7);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, nodeSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+        animate();
+    </script>
+</body>
+</html>

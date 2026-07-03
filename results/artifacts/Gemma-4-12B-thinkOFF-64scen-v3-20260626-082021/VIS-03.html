@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let animationFrame;
+
+        // Configuration
+        const nodeCount = 40;
+        const radius = 120;
+        const helixSpeed = 0.03;
+        const spacing = 15; // Vertical distance between nodes
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        let rotation = 0;
+
+        function draw() {
+            // Clear background
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Draw DNA
+            for (let i = 0; i < nodeCount; i++) {
+                // Calculate vertical position
+                const y = centerY - (nodeCount * spacing / 2) + (i * spacing);
+                
+                // Calculate angle for the two strands (offset by PI for opposite sides)
+                const angle1 = rotation + (i * 0.4);
+                const angle2 = rotation + (i * 0.4) + Math.PI;
+
+                // Calculate X positions
+                const x1 = centerX + Math.cos(angle1) * radius;
+                const x2 = centerX + Math.cos(angle2) * radius;
+
+                // Draw horizontal "rungs" connecting the two strands
+                // We draw the rung from the current node to the previous node's partner 
+                // or simply connect current i to current i
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.stroke();
+
+                // Draw Nodes (Strand 1 - Cyan/Blue)
+                ctx.beginPath();
+                ctx.arc(x1, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${180 + (i % 20)}, 80%, 60%, 0.8)`;
+                ctx.fill();
+
+                // Draw Nodes (Strand 2 - Magenta/Red)
+                ctx.beginPath();
+                ctx.arc(x2, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${320 + (i % 20)}, 80%, 60%, 0.8)`;
+                ctx.fill();
+
+                // Draw connecting lines between consecutive nodes on the same strand
+                if (i > 0) {
+                    const prevAngle1 = (rotation - helixSpeed) + ((i - 1) * 0.4);
+                    const prevX1 = centerX + Math.cos(prevAngle1) * radius;
+                    const prevY1 = centerY - (nodeCount * spacing / 2) + ((i - 1) * spacing);
+                    
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.moveTo(prevX1, prevY1);
+                    ctx.lineTo(x1, y);
+                    ctx.stroke();
+
+                    const prevAngle2 = (rotation - helixSpeed) + ((i - 1) * 0.4) + Math.PI;
+                    const prevX2 = centerX + Math.cos(prevAngle2) * radius;
+                    const prevY2 = centerY - (nodeCount * spacing / 2) + ((i - 1) * spacing);
+
+                    ctx.beginPath();
+                    ctx.moveTo(prevX2, prevY2);
+                    ctx.lineTo(x2, y);
+                    ctx.stroke();
+                }
+            }
+
+            rotation += helixSpeed;
+            animationFrame = requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

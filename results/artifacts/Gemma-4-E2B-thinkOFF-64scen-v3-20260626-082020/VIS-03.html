@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #111;
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+
+        // DNA Parameters
+        const numNodes = 20; // Number of nodes on each strand
+        const helixRadius = 150;
+        const strandColor1 = 'rgb(0, 150, 255)'; // Blueish
+        const strandColor2 = 'rgb(255, 50, 150)'; // Pinkish
+        const rungColor = 'rgba(255, 255, 255, 0.3)';
+        const rotationSpeed = 0.005; // Radians per frame
+
+        let angle = 0; // Current rotation angle
+        let time = 0;
+
+        // Function to draw a single strand
+        function drawStrand(color, offset) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate position based on angle and node index
+                const t = i / numNodes;
+                const currentAngle = angle + (t * Math.PI * 2);
+
+                // Polar to Cartesian coordinates
+                const x = W / 2 + helixRadius * Math.cos(currentAngle);
+                const y = H / 2 + helixRadius * Math.sin(currentAngle);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        }
+
+        // Function to draw the connecting rungs
+        function drawRungs() {
+            ctx.strokeStyle = rungColor;
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate position for the top node (Strand 1)
+                const t1 = i / numNodes;
+                const angle1 = angle + (t1 * Math.PI * 2);
+                const x1 = W / 2 + helixRadius * Math.cos(angle1);
+                const y1 = H / 2 + helixRadius * Math.sin(angle1);
+
+                // Calculate position for the bottom node (Strand 2)
+                const angle2 = angle + (t1 * Math.PI * 2);
+                const x2 = W / 2 + helixRadius * Math.cos(angle2);
+                const y2 = H / 2 + helixRadius * Math.sin(angle2);
+
+                // Draw the rung connecting them
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+        // Main drawing function
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
+
+            // 1. Draw the two helical strands
+            drawStrand(strandColor1, 0);
+            drawStrand(strandColor2, 0);
+
+            // 2. Draw the connecting rungs
+            drawRungs();
+
+            // Update time and angle for rotation
+            time += 1;
+            angle += rotationSpeed;
+
+            // Request the next frame
+            requestAnimationFrame(draw);
+        }
+
+        // Start the animation
+        draw();
+    </script>
+</body>
+</html>

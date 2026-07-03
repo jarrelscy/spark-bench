@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a; /* Dark background */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const config = {
+            strandColor1: 'rgba(220, 80, 80, 0.85)',   // Reddish
+            strandColor2: 'rgba(80, 180, 220, 0.85)',   // Bluish
+            rungColor: 'rgba(200, 200, 200, 0.3)',       // Subtle white
+            bgColor: '#1a1a1a',
+            amplitude: 100,        // Width of the wave
+            frequency: 0.02,       // How tightly coiled
+            speed: 0.03,           // Rotation speed
+            nodeCount: 40,         // Number of nodes per strand
+            nodeRadius: 4,         // Size of dots
+            spacing: 15,           // Vertical distance between rungs
+            perspective: 800       // For pseudo-3D scaling
+        };
+
+        let width, height;
+        let rotationAngle = 0;
+        let nodes = [];
+
+        // Resize canvas to fill window
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            generateNodes();
+        }
+
+        // Initialize node positions
+        function generateNodes() {
+            nodes = [];
+            const totalHeight = config.spacing * (config.nodeCount - 1);
+            const startY = (height - totalHeight) / 2;
+
+            for (let i = 0; i < config.nodeCount; i++) {
+                nodes.push({
+                    y: startY + i * config.spacing,
+                    // Phase offset for the second strand (180 degrees / PI radians)
+                    phase1: 0,
+                    phase2: Math.PI
+                });
+            }
+        }
+
+        // Calculate 3D-like projection
+        function getNodePosition(index, phaseOffset, currentRotation) {
+            const node = nodes[index];
+            const angle = node.y * config.frequency + currentRotation - node.phase1; // Strand 1 logic
+            const angle2 = node.y * config.frequency + currentRotation - node.phase2; // Strand 2 logic
+
+            // Calculate X positions based on sine wave
+            const x1 = width / 2 + Math.sin(angle) * config.amplitude;
+            const x2 = width / 2 + Math.sin(angle2) * config.amplitude;
+
+            // Calculate Z-depth (for scaling/opacity)
+            // Z ranges roughly from -amplitude to +amplitude
+            const z1 = Math.cos(angle) * config.amplitude;
+            const z2 = Math.cos(angle2) * config.amplitude;
+
+            return {
+                x1: x1,
+                y: node.y,
+                z1: z1,
+                x2: x2,
+                z2: z2
+            };
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = config.bgColor;
+            ctx.fillRect(0, 0, width, height);
+
+            // Update rotation
+            rotationAngle += config.speed;
+
+            // Draw Rungs first (so they appear behind or between strands)
+            for (let i = 0; i < config.nodeCount; i++) {
+                const pos = getNodePosition(i, 0, rotationAngle);
+                
+                // Draw connecting rung
+                ctx.beginPath();
+                ctx.moveTo(pos.x1, pos.y);
+                ctx.lineTo(pos.x2, pos.y);
+                
+                // Dynamic opacity based on depth (further away = fainter)
+                const avgZ = (pos.z1 + pos.z2) / 2;
+                const opacity = 0.1 + 0.2 * ((avgZ + config.amplitude) / (2 * config.amplitude));
+                ctx.strokeStyle = config.rungColor;
+                ctx.globalAlpha = Math.max(0.05, Math.min(0.4, opacity));
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Draw Strands
+            for (let i = 0; i < config.nodeCount - 1; i++) {
+                const posCurrent = getNodePosition(i, 0, rotationAngle);
+                const posNext = getNodePosition(i + 1, 0, rotationAngle);
+
+                // Draw Strand 1 (Red)
+                ctx.beginPath();
+                ctx.moveTo(posCurrent.x1, posCurrent.y);
+                ctx.lineTo(posNext.x1, posNext.y);
+                ctx.strokeStyle = config.strandColor1;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Draw Strand 2 (Blue)
+                ctx.beginPath();
+                ctx.moveTo(posCurrent.x2, posCurrent.y);
+                ctx.lineTo(posNext.x2, posNext.y);
+                ctx.strokeStyle = config.strandColor2;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // Draw Nodes (Dots)
+            for (let i = 0; i < config.nodeCount; i++) {
+                const pos = getNodePosition(i, 0, rotationAngle);
+
+                // Node 1
+                ctx.beginPath();
+                ctx.arc(pos.x1, pos.y, config.nodeRadius, 0, Math.PI * 2);
+                ctx.fillStyle = config.strandColor1;
+                ctx.fill();
+
+                // Node 2
+                ctx.beginPath();
+                ctx.arc(pos.x2, pos.y, config.nodeRadius, 0, Math.PI * 2);
+                ctx.fillStyle = config.strandColor2;
+                ctx.fill();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // Initialize
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(draw);
+
+    </script>
+</body>
+</html>

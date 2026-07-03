@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spiral Galaxy Animation</title>
+<style>
+body { margin:0; overflow:hidden; background:#000; }
+canvas { display:block; }
+</style>
+</head>
+<body>
+<canvas id="galaxy"></canvas>
+<script>
+const canvas = document.getElementById('galaxy');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const stars = [];
+const numStars = 500;
+for (let i = 0; i < numStars; i++) {
+  stars.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    z: Math.random() * 800 + 100,
+    radius: Math.random() * 1.5,
+    hue: Math.random() * 360,
+    twinkleSpeed: Math.random() * 2 + 1,
+    angle: Math.random() * Math.PI * 2
+  });
+}
+
+const coreRadius = 30;
+const rotationSpeed = 0.001;
+let time = 0;
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw stars with depth scaling and twinkle
+  stars.forEach(s => {
+    s.angle += rotationSpeed;
+    const depthFactor = s.z / 1000;
+    const scale = depthFactor;
+    const x = canvas.width/2 + (s.x - canvas.width/2) * depthFactor;
+    const y = canvas.height/2 + (s.y - canvas.height/2) * depthFactor;
+    const radius = s.radius * scale;
+    
+    // Twinkle effect
+    const brightness = 0.5 + 0.5 * Math.sin(time * s.twinkleSpeed + s.angle);
+    const alpha = 1 * brightness;
+    
+    ctx.fillStyle = `hsla(${s.hue}, 100%, 80%, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  
+  // Draw bright core
+  const coreGradient = ctx.createRadialGradient(
+    canvas.width/2, canvas.height/2, 0,
+    canvas.width/2, canvas.height/2, coreRadius
+  );
+  coreGradient.addColorStop(0, 'rgba(255,255,255,1)');
+  coreGradient.addColorStop(0.5, 'rgba(255,200,100,0.8)');
+  coreGradient.addColorStop(1, 'rgba(255,100,0,0.5)');
+  
+  ctx.fillStyle = coreGradient;
+  ctx.beginPath();
+  ctx.arc(canvas.width/2, canvas.height/2, coreRadius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Optional: subtle spiral arms glow
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+  for (let i = 0; i < 3; i++) {
+    const angleOffset = i * Math.PI / 1.5;
+    ctx.rotate(angleOffset);
+    
+    const gradient = ctx.createLinearGradient(-canvas.width/2, -coreRadius, canvas.width/2, coreRadius);
+    gradient.addColorStop(0, 'rgba(255,200,100,0.1)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, coreRadius * 1.8, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  
+  time += 0.016;
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

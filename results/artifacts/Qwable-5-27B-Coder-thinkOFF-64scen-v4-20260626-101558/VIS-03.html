@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a10; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let time = 0;
+
+    // Configuration
+    const config = {
+        strandWidth: 3,
+        nodeRadius: 4,
+        rungWidth: 1,
+        numNodes: 40,      // How many rungs/nodes
+        amplitude: 100,    // Width of the helix
+        frequency: 0.03,   // How tight the spiral is
+        speed: 0.02,       // Rotation speed
+        spacing: 15,       // Vertical distance between nodes
+        colorStrand1: { r: 0, g: 255, b: 255 }, // Cyan
+        colorStrand2: { r: 255, g: 0, b: 255 }, // Magenta
+        colorRung: { r: 100, g: 100, b: 100 }   // Gray
+    };
+
+    // Resize canvas to fill window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        // Clear screen with a slight fade effect for trails (optional, currently solid clear)
+        ctx.fillStyle = '#0a0a10';
+        ctx.fillRect(0, 0, width, height);
+
+        // Center of the screen
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        // Calculate total height of the helix to center it vertically
+        const totalHeight = (config.numNodes - 1) * config.spacing;
+        
+        // We need to draw the rungs and back-strands first, then the front nodes/strands
+        // to simulate 3D depth.
+        
+        // 1. Calculate points
+        const points = [];
+        
+        for (let i = 0; i < config.numNodes; i++) {
+            // Y position relative to center
+            const y = (i * config.spacing) - (totalHeight / 2);
+            
+            // Calculate angle based on position and time
+            const angle = (i * config.frequency) + time;
+            
+            // Calculate X offset using Sine wave
+            const xOffset = Math.sin(angle) * config.amplitude;
+            
+            // Calculate Z depth (cosine) to determine opacity/size
+            // Z ranges from -1 to 1. We map it to 0..1 for depth logic
+            const z = Math.cos(angle);
+
+            points.push({
+                index: i,
+                y: y,
+                x1: xOffset,
+                z1: z,
+                x2: -xOffset,
+                z2: -z
+            });
+        }
+
+        // 2. Draw Back elements (Low Z)
+        // We iterate through points. If z is negative, it's "behind" the axis.
+        // We draw lines connecting these back nodes first.
+        
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Draw Connecting Rungs (Back)
+        points.forEach(p => {
+            if (p.z1 < 0 || p.z2 < 0) {
+                drawRung(p, 0.2); // Dimmer opacity for back
+            }
+        });
+
+        // Draw Strands (Back) - Connect node i to i+1
+        for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i+1];
+            
+            // Check if the segment is "behind" the center axis
+            // Simple depth check: if average Z is negative
+            if ((p1.z1 + p2.z1) / 2 < 0) {
+                drawStrand(p1.x1, p1.y, p2.x1, p2.y, config.colorStrand1, 0.3);
+            }
+            if ((p1.z2 + p2.z2) / 2 < 0) {
+                drawStrand(p1.x2, p1.y, p2.x2, p2.y, config.colorStrand2, 0.3);
+            }
+        }
+
+        // 3. Draw Front elements (High Z)
+        
+        // Draw Connecting Rungs (Front)
+        points.forEach(p => {
+            if (p.z1 >= 0 || p.z2 >= 0) {
+                drawRung(p, 0.8); // Brighter opacity
+            }
+        });
+
+        // Draw Strands (Front)
+        for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i+1];
+            
+            if ((p1.z1 + p2.z1) / 2 >= 0) {
+                drawStrand(p1.x1, p1.y, p2.x1, p2.y, config.colorStrand1, 1.0);
+            }
+            if ((p1.z2 + p2.z2) / 2 >= 0) {
+                drawStrand(p1.x2, p1.y, p2.x2, p2.y, config.colorStrand2, 1.0);
+            }
+        }
+
+        // 4. Draw Nodes (The actual dots)
+        points.forEach(p => {
+            // Node 1
+            const depth1 = (p.z1 + 1) / 2; // 0 to 1
+            const size1 = config.nodeRadius * (0.5 + depth1 * 0.5);
+            const alpha1 = 0.2 + depth1 * 0.8;
+            drawNode(centerX + p.x1, centerY + p.y, size1, config.colorStrand1, alpha1);
+
+            // Node 2
+            const depth2 = (p.z2 + 1) / 2;
+            const size2 = config.nodeRadius * (0.5 + depth2 * 0.5);
+            const alpha2 = 0.2 + depth2 * 0.8;
+            drawNode(centerX + p.x2, centerY + p.y, size2, config.colorStrand2, alpha2);
+        });
+
+        // Update time for next frame
+        time += config.speed;
+        requestAnimationFrame(draw);
+    }
+
+    // Helper to draw a line segment (Strand)
+    function drawStrand(x1, y1, x2, y2, color, alpha) {
+        ctx.beginPath();
+        ctx.moveTo(centerX + x1, centerY + y1);
+        ctx.lineTo(centerX + x2, centerY + y2);
+        ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+        ctx.lineWidth = config.strandWidth;
+        ctx.stroke();
+    }
+
+    // Helper to draw the connection between strands (Rung)
+    function drawRung(point, alpha) {
+        ctx.beginPath();
+        ctx.moveTo(centerX + point.x1, centerY + point.y);
+        ctx.lineTo(centerX + point.x2, centerY + point.y);
+        ctx.strokeStyle = `rgba(${config.colorRung.r}, ${config.colorRung.g}, ${config.colorRung.b}, ${alpha})`;
+        ctx.lineWidth = config.rungWidth;
+        ctx.stroke();
+    }
+
+    // Helper to draw a glowing dot (Node)
+    function drawNode(x, y, radius, color, alpha) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        
+        // Create a subtle glow effect
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+        gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
+        gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Solid core
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+        ctx.fill();
+    }
+
+    // Start animation
+    requestAnimationFrame(draw);
+
+</script>
+</body>
+</html>

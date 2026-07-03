@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotation = 0;
+
+        // Configuration
+        const nodeCount = 40;
+        const helixRadius = 100;
+        const helixPitch = 0.3; // Controls how "stretched" the helix is
+        const twistSpeed = 0.02;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear canvas with a slight trail effect (optional, currently solid)
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Draw the DNA strands
+            // Strand 1 (Blueish)
+            // Strand 2 (Reddish)
+            
+            for (let i = 0; i < nodeCount; i++) {
+                // Calculate position for each node
+                // The 'i' determines height, the 'sin' determines rotation
+                const progress = i / nodeCount;
+                const y = centerY - (progress - 0.5) * (height * 0.8);
+                
+                // The angle is based on the index and current rotation
+                // Strand 2 is offset by PI (180 degrees)
+                const angle1 = progress * helixPitch - rotation;
+                const angle2 = progress * helixPitch - rotation + Math.PI;
+
+                const x1 = centerX + Math.cos(angle1) * helixRadius;
+                const z1 = Math.sin(angle1) * helixRadius; // Used for depth perspective
+
+                const x2 = centerX + Math.cos(angle2) * helixRadius;
+                const z2 = Math.sin(angle2) * helixRadius;
+
+                // Perspective calculation: items "further back" are smaller/dimmer
+                // We use z to simulate 3D depth
+                const scale1 = (z1 + helixRadius) / (2 * helixRadius);
+                const scale2 = (z2 + helixRadius) / (2 * helixRadius);
+
+                // Draw Rungs (the horizontal connections)
+                if (i > 0) {
+                    const prevAngle1 = ((i - 1) / nodeCount) * helixPitch - rotation;
+                    const prevAngle2 = ((i - 1) / nodeCount) * helixPitch - rotation + Math.PI;
+                    
+                    const prevX1 = centerX + Math.cos(prevAngle1) * helixRadius;
+                    const prevX2 = centerX + Math.cos(prevAngle2) * helixRadius;
+                    const prevY = centerY - (((i - 1) / nodeCount) - 0.5) * (height * 0.8);
+                    const currentY = y;
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(prevX1, prevY);
+                    ctx.lineTo(x1, currentY);
+                    ctx.moveTo(prevX2, prevY);
+                    ctx.lineTo(x2, currentY);
+                    ctx.stroke();
+                }
+
+                // Draw Nodes
+                // Strand 1
+                ctx.beginPath();
+                ctx.arc(x1, y, 3 * scale1, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(100, 150, 255, ${scale1})`;
+                ctx.fill();
+
+                // Strand 2
+                ctx.beginPath();
+                ctx.arc(x2, y, 3 * scale2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 100, 150, ${scale2})`;
+                ctx.fill();
+            }
+
+            rotation += twistSpeed;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const pointsCount = 40;     // Number of nodes per strand
+        const helixRadius = 80;     // Width of the helix
+        const verticalSpacing = 20; // Distance between rungs
+        const nodeRadius = 4;       // Size of the spheres
+        const rotationSpeed = 0.02;  // Speed of rotation
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function project(x, y, z) {
+            // Basic 3D to 2D projection
+            // Rotating around Y axis:
+            // newX = x * cos(angle) - z * sin(angle)
+            // newZ = x * sin(angle) + z * cos(angle)
+            const rotatedX = x * Math.cos(angle) - z * Math.sin(angle);
+            const rotatedZ = x * Math.sin(angle) + z * Math.cos(angle);
+            
+            // Simple perspective: divide by a distance factor
+            const perspective = 400 / (400 + rotatedZ);
+            return {
+                x: width / 2 + rotatedX * perspective,
+                y: height / 2 + y * perspective,
+                z: rotatedZ,
+                scale: perspective
+            };
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            angle += rotationSpeed;
+
+            const nodes = [];
+
+            // Calculate positions for all nodes
+            for (let i = 0; i < pointsCount; i++) {
+                const y = (i - pointsCount / 2) * verticalSpacing;
+                const theta = i * 0.4; // Twist factor
+
+                // Strand 1
+                const x1 = Math.cos(theta) * helixRadius;
+                const z1 = Math.sin(theta) * helixRadius;
+                
+                // Strand 2 (180 degrees offset)
+                const x2 = Math.cos(theta + Math.PI) * helixRadius;
+                const z2 = Math.sin(theta + Math.PI) * helixRadius;
+
+                nodes.push({
+                    p1: project(x1, y, z1),
+                    p2: project(x2, y, z2)
+                });
+            }
+
+            // Draw rungs (connecting lines)
+            ctx.lineWidth = 2;
+            for (let i = 0; i < nodes.length; i++) {
+                const { p1, p2 } = nodes[i];
+                const opacity = 1 - Math.abs(p1.z) / 500; // Depth fade
+                ctx.strokeStyle = `rgba(150, 150, 150, ${opacity * 0.5})`;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+
+            // Draw nodes (spheres)
+            nodes.forEach(({ p1, p2 }) => {
+                // Strand 1: Cyan/Blue
+                const size1 = nodeRadius * p1.scale;
+                const alpha1 = 1 - Math.abs(p1.z) / 500;
+                ctx.fillStyle = `rgba(0, 180, 255, ${alpha1})`;
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, size1, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Strand 2: Magenta/Purple
+                const size2 = nodeRadius * p2.scale;
+                const alpha2 = 1 - Math.abs(p2.z) / 500;
+                ctx.fillStyle = `rgba(255, 0, 180, ${alpha2})`;
+                ctx.beginPath();
+                ctx.arc(p2.x, p2.y, size2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

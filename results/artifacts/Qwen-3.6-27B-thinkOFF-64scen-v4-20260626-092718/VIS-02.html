@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Spiral Galaxy</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let stars = [];
+        
+        // Configuration
+        const STAR_COUNT = 1500;
+        const ARM_COUNT = 3;
+        const ARM_SPREAD = 0.5; // How wide the arms are
+        const CORE_SIZE = 30;
+        const GALAXY_RADIUS_FACTOR = 0.8; // % of screen width/height
+        const BASE_SPEED = 0.0005;
+
+        // Resize handling
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initGalaxy();
+        }
+
+        window.addEventListener('resize', resize);
+
+        // Star Class
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Distance from center (0 to 1)
+                // Use Math.random() to distribute, but bias towards center slightly for density
+                let r = Math.random(); 
+                r = Math.pow(r, 0.5); // Bias towards center
+                
+                this.distance = r * Math.min(width, height) * 0.45;
+                
+                // Angle logic for spiral arms
+                // Base angle determines position along the spiral
+                const armIndex = Math.floor(Math.random() * ARM_COUNT);
+                const armAngle = (armIndex / ARM_COUNT) * Math.PI * 2;
+                
+                // The further out, the more the spiral twists
+                const spiralTwist = this.distance * 0.015; 
+                
+                // Random spread within the arm
+                const spread = (Math.random() - 0.5) * ARM_SPREAD * (1 + this.distance * 0.02);
+                
+                this.angle = armAngle + spiralTwist + spread;
+                
+                // Rotation speed (inner stars move faster)
+                // Keplerian-ish logic: 1 / sqrt(distance)
+                const speedFactor = Math.max(10, this.distance) / (this.distance * this.distance);
+                this.speed = BASE_SPEED * (1 + speedFactor * 50);
+
+                // Visual properties
+                this.size = Math.random() * 1.5 + 0.5;
+                
+                // Color logic
+                // Core stars: Yellow/White/Orange
+                // Outer stars: Blue/Purple/White
+                const colorRandom = Math.random();
+                if (this.distance < CORE_SIZE * 2) {
+                    // Core
+                    if (colorRandom > 0.7) this.color = `255, 200, ${150 + Math.random()*100}`; // Orange/Gold
+                    else this.color = `255, 255, 255`; // White
+                } else {
+                    // Arms
+                    if (colorRandom > 0.6) this.color = `${150 + Math.random()*100}, ${150 + Math.random()*100}, 255`; // Blueish
+                    else if (colorRandom > 0.3) this.color = `${200 + Math.random()*55}, ${200 + Math.random()*55}, 255`; // Purple-ish
+                    else this.color = `255, 255, 255`; // White
+                }
+
+                // Twinkle logic
+                this.twinkleOffset = Math.random() * 1000;
+                this.twinkleSpeed = 0.02 + Math.random() * 0.05;
+            }
+
+            update(time) {
+                this.angle += this.speed;
+                
+                // Calculate twinkle alpha
+                const twinkle = Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+                // Map sine (-1 to 1) to alpha (0.2 to 1.0)
+                this.alpha = 0.2 + (twinkle + 1) * 0.4;
+            }
+
+            draw() {
+                const x = width / 2 + Math.cos(this.angle) * this.distance;
+                const y = height / 2 + Math.sin(this.angle) * this.distance;
+
+                ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initGalaxy() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        // Animation Loop
+        let time = 0;
+        function animate() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Core Glow
+            const gradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, CORE_SIZE * 3);
+            gradient.addColorStop(0, 'rgba(255, 240, 200, 0.8)'); // Bright center
+            gradient.addColorStop(0.1, 'rgba(255, 200, 150, 0.4)');
+            gradient.addColorStop(0.4, 'rgba(100, 150, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(width/2, height/2, CORE_SIZE * 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Update and draw stars
+            // Use 'lighter' composite operation for that glowing star effect
+            ctx.globalCompositeOperation = 'lighter';
+            
+            for (let star of stars) {
+                star.update(time);
+                star.draw();
+            }
+
+            // Reset composite operation for next frame background clear
+            ctx.globalCompositeOperation = 'source-over';
+
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>

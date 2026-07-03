@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <style>
+        :root {
+            --bg: #0a0a12;
+            --fg: #e0ffe0;
+            --accent: #00ff00;
+            --accent-dim: #004400;
+            --player-color: #00ffff;
+            --enemy-color-1: #ff0044;
+            --enemy-color-2: #ffaa00;
+            --enemy-color-3: #44ffff;
+            --ufo-color: #ff00ff;
+            --barrier-color: #00ff88;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #ui {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--accent);
+        }
+
+        #game-container {
+            position: relative;
+            border: 4px solid var(--accent);
+            box-shadow: 
+                0 0 20px var(--accent),
+                inset 0 0 20px var(--accent-dim);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #overlay.visible { pointer-events: auto; }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0 0 10px;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { text-shadow: 0 0 5px var(--accent); }
+            to { text-shadow: 0 0 20px var(--accent), 0 0 30px var(--accent); }
+        }
+
+        p { font-size: 1.2rem; margin: 5px 0; color: #ccc; }
+        .controls { margin-top: 20px; font-size: 1rem; line-height: 1.8; color: #888; text-align: left; }
+        .controls span { color: var(--accent); font-weight: bold; }
+
+        #start-btn, #restart-btn {
+            margin-top: 20px;
+            padding: 12px 40px;
+            font-family: inherit;
+            font-size: 1.2rem;
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        #start-btn:hover, #restart-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div>SCORE: <span id="score">00000</span></div>
+    <div>HI-SCORE: <span id="hiScore">00000</span></div>
+    <div>LIVES: <span id="lives">3</span></div>
+</div>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="overlay" class="visible">
+        <h1>SPACE INVADERS</h1>
+        <p>Defend Earth from the alien horde</p>
+        <div class="controls">
+            <div><span>← / →</span> or <span>A / D</span> : Move</div>
+            <div><span>SPACE</span> or <span>↑ / W</span> : Fire</div>
+            <div><span>P</span> or <span>ESC</span> : Pause</div>
+            <div><span>Touch</span> : Drag to move, Tap to fire</div>
+        </div>
+        <button id="start-btn">Start Game</button>
+    </div>
+    <div id="gameOverOverlay" class="hidden">
+        <h1>GAME OVER</h1>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button id="restart-btn">Play Again</button>
+    </div>
+    <div id="pauseOverlay" class="hidden">
+        <h1>PAUSED</h1>
+        <p>Press <span style="color:var(--accent)">P</span> or <span style="color:var(--accent)">ESC</span> to Resume</p>
+    </div>
+    <div id="levelOverlay" class="hidden">
+        <h1 id="levelText">LEVEL 1</h1>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   GAME CONSTANTS & CONFIGURATION
+   ============================================================ */
+const CANVAS_W = 800;
+const CANVAS_H = 600;
+const GRID_SIZE = 20; // Base unit for pixel art scaling
+
+// Colors (CSS Variables mapped for Canvas)
+const COLORS = {
+    bg: '#000000',
+    player: '#00ffff',
+    playerDetail: '#008888',
+    bullet: '#ffff00',
+    enemyBullet: '#ff4444',
+    barrier: '#00ff88',
+    barrierDamaged: '#008844',
+    ufo: '#ff00ff',
+    particle: ['#ff0044', '#ffaa00', '#ffff00', '#ffffff', '#00ffff'],
+    text: '#00ff00',
+    star: ['#ffffff', '#aaaaff', '#ffaaaa', '#ffffaa']
+};
+
+// Enemy Types (Rows 0-4)
+const ENEMY_TYPES = [
+    { color: '#ff0044', points: 30, frames: ['A', 'B'] }, // Top row - Squid
+    { color: '#ffaa00', points: 20, frames: ['A', 'B'] }, // Row 1 - Crab
+    { color: '#ffaa00', points: 20, frames: ['A', 'B'] }, // Row 2 - Crab
+    { color: '#44ffff', points: 10, frames: ['A', 'B'] }, // Row 3 - Octopus
+    { color: '#44ffff', points: 10, frames: ['A', 'B'] }  // Row 4 - Octopus
+];
+
+/* ============================================================
+   SPRITE DEFINITIONS (Pixel Art Data)
+   1 = Primary Color, 2 = Secondary/Detail, 0 = Transparent
+   ============================================================ */
+const SPRITES = {
+    // Player Ship (16x10)
+    player: [
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,1,1,1,1,2,2,1,0,0,0],
+        [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
+        [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+        [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+        [1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1],
+        [0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0]
+    ],
+    // Enemy A Frames (12x8)
+    enemy1A: [ // Squid
+        [0,0,1,1,1,1,1,1,1,1,0,0],
+        [0,1,2,2,2,2,2,2,2,2,1,0],
+        [1,2,1,2,2,2,2,2,2,1,2,1],
+        [1,2,2,2,1,2,2,1,2,2,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [0,1,2,1,2,2,2,2,1,2,1,0],
+        [0,0,1,0,1,1,1,1,0,1,0,0],
+        [1,0,0,1,0,0,0,0,1,0,0,1]
+    ],
+    enemy1B: [ // Squid legs down
+        [0,0,1,1,1,1,1,1,1,1,0,0],
+        [0,1,2,2,2,2,2,2,2,2,1,0],
+        [1,2,1,2,2,2,2,2,2,1,2,1],
+        [1,2,2,2,1,2,2,1,2,2,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [0,1,2,1,2,2,2,2,1,2,1,0],
+        [1,0,1,0,1,1,1,1,0,1,0,1],
+        [0,1,0,1,0,0,0,0,1,0,1,0]
+    ],
+    enemy2A: [ // Crab
+        [0,0,1,1,0,0,0,0,1,1,0,0],
+        [0,1,2,2,1,1,1,1,2,2,1,0],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [1,2,1,2,2,2,2,2,2,1,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [0,0,1,2,1,0,0,1,2,1,0,0],
+        [0,1,0,1,0,1,1,0,1,0,1,0],
+        [1,0,1,0,1,0,0,1,0,1,0,1]
+    ],
+    enemy2B: [ // Crab legs out
+        [0,0,1,1,0,0,0,0,1,1,0,0],
+        [0,1,2,2,1,1,1,1,2,2,1,0],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [1,2,1,2,2,2,2,2,2,1,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [0,1,0,2,0,1,1,0,2,0,1,0],
+        [1,0,1,0,1,0,0,1,0,1,0,1],
+        [0,1,0,1,0,1,1,0,1,0,1,0]
+    ],
+    enemy3A: [ // Octopus
+        [0,1,1,1,1,1,1,1,1,1,1,0],
+        [1,2,1,1,1,1,1,1,1,1,2,1],
+        [1,2,2,2,1,1,1,1,2,2,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [1,1,2,2,2,2,2,2,2,2,1,1],
+        [0,1,2,0,2,0,0,2,0,2,1,0],
+        [0,0,1,0,1,1,1,1,0,1,0,0],
+        [1,0,0,1,0,0,0,0,1,0,0,1]
+    ],
+    enemy3B: [ // Octopus legs wiggle
+        [0,1,1,1,1,1,1,1,1,1,1,0],
+        [1,2,1,1,1,1,1,1,1,1,2,1],
+        [1,2,2,2,1,1,1,1,2,2,2,1],
+        [1,2,2,2,2,2,2,2,2,2,2,1],
+        [1,1,2,2,2,2,2,2,2,2,1,1],
+        [1,0,2,1,2,0,0,2,1,2,0,1],
+        [0,1,0,1,0,1,1,0,1,0,1,0],
+        [0,1,0,1,0,1,1,0,1,0,1,0]
+    ],
+    // UFO (16x7)
+    ufo: [
+        [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,1,2,2,1,1,1,1,1,1,1,1,2,2,1,0],
+        [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+        [0,1,2,2,1,1,1,1,1,1,1,1,2,2,1,0],
+        [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0]
+    ],
+    // Player Bullet (2x8)
+    bullet: [
+        [1],[1],[1],[1],[1],[1],[1],[1]
+    ],
+    // Enemy Bullet (3x8) - Cross shape
+    enemyBullet: [
+        [0,1,0],
+        [0,1,0],
+        [1,1,1],
+        [0,1,0],
+        [0,1,0],
+        [1,1,1],
+        [0,1,0],
+        [0,1,0]
+    ],
+    // Explosion Frames (16x16)
+    explosion: [
+        // Frame 0
+        [[0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0],[0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0],[1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0],[0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0],[0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0],[0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0]],
+        // Frame 1
+        [[0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,1,0,1,0,0,0,0,1,0,1,0,0,0],[0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0],[0,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,1,0,1,0,0,0,0,1,0,0],[0,0,0,1,0,0,0,1,1,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0]],
+        // Frame 2
+        [[0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,1,0,1,0,0,1,0,1,0,0,0,0],[0,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0],[0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,1,1,0,0,0,0,1,0,0],[0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]]
+    ],
+    // Barrier Block (12x8) - 1 block = 4x4 pixels in game logic, but we draw 12x8 sprite for 3x2 blocks
+    barrier: [
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,1,1,1,1,0,0,1,1],
+        [1,1,0,0,1,1,1,1,0,0,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,1,1,1,1,0,0,1,1],
+        [1,1,0,0,1,1,1,1,0,0,1,1]
+    ]
+};
+
+/* ============================================================
+   HELPER FUNCTIONS
+   ============================================================ */
+const rand = (min, max) => Math.random() * (max - min) + min;
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+const state = {
+    canvas: null,
+    ctx: null,
+    running: false,
+    paused: false,
+    gameOver: false,
+    lastTime: 0,
+    
+    // Entities
+    player: null,
+    playerBullets: [],
+    enemies: [],
+    enemyBullets: [],
+    barriers: [],
+    ufo: null,
+    particles: [],
+    stars: [],
+    
+    // Logic
+    score: 0,
+    hiScore: 0,
+    lives: 3,
+    level: 1,
+    enemyDirection: 1,
+    enemyMoveTimer: 0,
+    enemyMoveInterval: 1000, // ms
+    enemyAnimTimer: 0,
+    enemyAnimFrame: 0,
+    ufoTimer: 0,
+    canShoot: true,
+    shootCooldown: 0,
+    
+    // Input
+    keys: { left: false, right: false, fire: false, pause: false },
+    touch: { x: null, startX: 0, playerStartX: 0 }
+};
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+function init() {
+    state.canvas = document.getElementById('gameCanvas');
+    state.ctx = state.canvas.getContext('2d');
+    
+    // Hi-Score
+    state.hiScore = parseInt(localStorage.getItem('spaceInvadersHiScore')) || 0;
+    updateUI();
+    
+    // Stars
+    for(let i=0; i<100; i++) {
+        state.stars.push({
+            x: rand(0, CANVAS_W),
+            y: rand(0, CANVAS_H),
+            size: rand(0.5, 2),
+            speed: rand(0.1, 0.5),
+            color: COLORS.star[randInt(0, COLORS.star.length-1)],
+            twinkle: rand(0, Math.PI*2),
+            twinkleSpeed: rand(0.01, 0.05)
+        });
+    }
+    
+    // Event Listeners
+    window.addEventListener('keydown', e => handleKey(e, true));
+    window.addEventListener('keyup', e => handleKey(e, false));
+    
+    // Touch
+    state.canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+    state.canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+    state.canvas.addEventListener('touchend', handleTouchEnd);
+    
+    // Buttons
+    document.getElementById('start-btn').addEventListener('click', startGame);
+    document.getElementById('restart-btn').addEventListener('click', startGame);
+    
+    // Start Loop
+    requestAnimationFrame(gameLoop);
+}
+
+function handleKey(e, isDown) {
+    const code = e.code;
+    if (code === 'ArrowLeft' || code === 'KeyA') state.keys.left = isDown;
+    if (code === 'ArrowRight' || code === 'KeyD') state.keys.right = isDown;
+    if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') { 
+        state.keys.fire = isDown; 
+        if(isDown) e.preventDefault(); // Prevent page scroll
+    }
+    if (code === 'KeyP' || code === 'Escape') {
+        if(isDown && state.running && !state.gameOver) togglePause();
+    }
+}
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    if (!state.running || state.gameOver) return;
+    const touch = e.touches[0];
+    const rect = state.canvas.getBoundingClientRect();
+    state.touch.startX = touch.clientX - rect.left;
+    state.touch.playerStartX = state.player.x;
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!state.running || state.gameOver) return;
+    const touch = e.touches[0];
+    const rect = state.canvas.getBoundingClientRect();
+    const currentX = touch.clientX - rect.left;
+    const dx = currentX - state.touch.startX;
+    state.player.x = clamp(state.touch.playerStartX + dx * 1.5, state.player.width/2, CANVAS_W - state.player.width/2);
+}
+
+function handleTouchEnd(e) {
+    if (!state.running || state.gameOver) return;
+    // Tap to shoot logic: if touch duration short and movement small
+    // Simplified: Fire on touch end if not moved much (handled by move)
+    // Better: Fire on touchstart if not moving? 
+    // Let's just allow fire button on screen or use a double tap? 
+    // Standard mobile: Touch to move, separate fire button is better but we have no UI buttons.
+    // Compromise: Tap (short touch < 200ms, small move) -> Fire. 
+    // For simplicity in single file: Fire on touchstart if not dragging.
+    // We'll implement a simple tap detection in start.
+}
+
+/* ============================================================
+   GAME FLOW
+   ============================================================ */
+function startGame() {
+    document.getElementById('overlay').classList.remove('visible');
+    document.getElementById('gameOverOverlay').classList.add('hidden');
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    document.getElementById('levelOverlay').classList.add('hidden');
+    
+    state.running = true;
+    state.paused = false;
+    state.gameOver = false;
+    state.score = 0;
+    state.lives = 3;
+    state.level = 1;
+    state.enemyDirection = 1;
+    state.enemyMoveInterval = 1000;
+    state.shootCooldown = 0;
+    
+    createPlayer();
+    createEnemies();
+    createBarriers();
+    state.ufo = null;
+    state.ufoTimer = rand(15, 30) * 1000; // 15-30 seconds
+    state.particles = [];
+    state.playerBullets = [];
+    state.enemyBullets = [];
+    
+    updateUI();
+    showLevelText(1);
+}
+
+function togglePause() {
+    if (!state.running || state.gameOver) return;
+    state.paused = !state.paused;
+    document.getElementById('pauseOverlay').classList.toggle('hidden', !state.paused);
+}
+
+function gameOver() {
+    state.running = false;
+    state.gameOver = true;
+    if (state.score > state.hiScore) {
+        state.hiScore = state.score;
+        localStorage.setItem('spaceInvadersHiScore', state.hiScore);
+    }
+    document.getElementById('finalScore').textContent = state.score.toString().padStart(5, '0');
+    document.getElementById('gameOverOverlay').classList.remove('hidden');
+    updateUI();
+}
+
+function nextLevel() {
+    state.level++;
+    state.enemyMoveInterval = Math.max(150, state.enemyMoveInterval - 50); // Speed up
+    state.enemyDirection = 1;
+    createEnemies();
+    createBarriers(); // Reset barriers
+    state.playerBullets = [];
+    state.enemyBullets = [];
+    state.ufo = null;
+    state.ufoTimer = rand(15, 30) * 1000;
+    showLevelText(state.level);
+}
+
+function showLevelText(level) {
+    const el = document.getElementById('levelOverlay');
+    document.getElementById('levelText').textContent = `LEVEL ${level}`;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 2000);
+}
+
+function updateUI() {
+    document.getElementById('score').textContent = state.score.toString().padStart(5, '0');
+    document.getElementById('hiScore').textContent = state.hiScore.toString().padStart(5, '0');
+    document.getElementById('lives').textContent = state.lives;
+}
+
+/* ============================================================
+   ENTITY CREATION
+   ============================================================ */
+function createPlayer() {
+    const w = 16 * 2; // Sprite width * scale
+    const h = 10 * 2;
+    state.player = {
+        x: CANVAS_W / 2,
+        y: CANVAS_H - 50,
+        width: w,
+        height: h,
+        speed: 5,
+        color: COLORS.player,
+        detailColor: COLORS.playerDetail,
+        alive: true,
+        invincible: 0,
+        sprite: SPRITES.player
+    };
+}
+
+function createEnemies() {
+    state.enemies = [];
+    const rows = 5;
+    const cols = 11;
+    const spacingX = 50;
+    const spacingY = 40;
+    const startX = (CANVAS_W - (cols - 1) * spacingX) / 2;
+    const startY = 80;
+    
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const type = ENEMY_TYPES[r];
+            const spriteA = SPRITES[`enemy${r+1}A`];
+            const spriteB = SPRITES[`enemy${r+1}B`];
+            
+            state.enemies.push({
+                x: startX + c * spacingX,
+                y: startY + r * spacingY,
+                width: 12 * 2,
+                height: 8 * 2,
+                type: r,
+                color: type.color,
+                points: type.points,
+                sprites: [spriteA, spriteB],
+                currentFrame: 0,
+                alive: true
+            });
+        }
+    }
+}
+
+function createBarriers() {
+    state.barriers = [];
+    const barrierCount = 4;
+    const barrierWidth = 12 * 2; // Sprite width * scale
+    const barrierHeight = 8 * 2;
+    const gap = (CANVAS_W - barrierCount * barrierWidth) / (barrierCount + 1);
+    const y = CANVAS_H - 160;
+    
+    // Barriers are made of a grid of "blocks" (4x4 pixels logic units)
+    // Sprite is 12x8 pixels (3 blocks wide, 2 blocks high)
+    // We will store barrier health per block (3x2 grid per barrier)
+    for (let i = 0; i < barrierCount; i++) {
+        const bx = gap + i * (barrierWidth + gap);
+        const blocks = [];
+        for (let r = 0; r < 2; r++) { // 2 rows of blocks
+            for (let c = 0; c < 3; c++) { // 3 cols of blocks
+                blocks.push({ x: c, y: r, health: 4 }); // 4 hits per block
+            }
+        }
+        state.barriers.push({
+            x: bx,
+            y: y,
+            width: barrierWidth,
+            height: barrierHeight,
+            blocks: blocks,
+            blockSize: 4 * 2 // 4 logic pixels * scale 2
+        });
+    }
+}
+
+function spawnUFO() {
+    if (state.ufo) return;
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    state.ufo = {
+        x: direction === 1 ? -20 : CANVAS_W + 20,
+        y: 50,
+        width: 16 * 2,
+        height: 7 * 2,
+        speed: 2.5 * direction,
+        color: COLORS.ufo,
+        sprite: SPRITES.ufo,
+        points: randInt(50, 300) // Mystery score
+    };
+}
+
+/* ============================================================
+   CORE GAME LOOP
+   ============================================================ */
+function gameLoop(timestamp) {
+    const dt = timestamp - state.lastTime;
+    state.lastTime = timestamp;
+    
+    if (state.running && !state.paused && !state.gameOver) {
+        update(dt);
+    }
+    render();
+    requestAnimationFrame(gameLoop);
+}
+
+function update(dt) {
+    // Player Invincibility
+    if (state.player.invincible > 0) state.player.invincible -= dt;
+    
+    // Input
+    if (state.keys.left) state.player.x -= state.player.speed * (dt/16);
+    if (state.keys.right) state.player.x += state.player.speed * (dt/16);
+    state.player.x = clamp(state.player.x, state.player.width/2, CANVAS_W - state.player.width/2);
+    
+    // Shooting
+    state.shootCooldown -=

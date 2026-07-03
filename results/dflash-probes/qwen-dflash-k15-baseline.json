@@ -1,0 +1,80 @@
+{
+  "label": "qwen-dflash-k15-baseline",
+  "cases": [
+    {
+      "case": "instruction_short",
+      "seconds": 1.0397477720107418,
+      "completion_tokens": 11,
+      "prompt_tokens": 25,
+      "total_tokens": 36,
+      "tokens_per_second": 10.579488887701466,
+      "finish_reason": "stop",
+      "content_chars": 53,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k15-baseline"
+    },
+    {
+      "case": "structured_json",
+      "seconds": 8.67602625102154,
+      "completion_tokens": 165,
+      "prompt_tokens": 42,
+      "total_tokens": 207,
+      "tokens_per_second": 19.017923093602032,
+      "finish_reason": "stop",
+      "content_chars": 831,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k15-baseline"
+    },
+    {
+      "case": "code_python",
+      "seconds": 17.031568225997034,
+      "completion_tokens": 768,
+      "prompt_tokens": 59,
+      "total_tokens": 827,
+      "tokens_per_second": 45.09273543159241,
+      "finish_reason": "length",
+      "content_chars": 3073,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k15-baseline"
+    },
+    {
+      "case": "visual_canvas",
+      "seconds": 32.562989387020934,
+      "completion_tokens": 1400,
+      "prompt_tokens": 36,
+      "total_tokens": 1436,
+      "tokens_per_second": 42.99359568498391,
+      "finish_reason": "length",
+      "content_chars": 5592,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k15-baseline"
+    },
+    {
+      "case": "safety_refusal",
+      "seconds": 11.94633225601865,
+      "completion_tokens": 224,
+      "prompt_tokens": 37,
+      "total_tokens": 261,
+      "tokens_per_second": 18.75052486399306,
+      "finish_reason": "stop",
+      "content_chars": 991,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k15-baseline"
+    },
+    {
+      "case": "planning_tools_text",
+      "seconds": 28.818049510009587,
+      "completion_tokens": 512,
+      "prompt_tokens": 43,
+      "total_tokens": 555,
+      "tokens_per_second": 17.766643083258053,
+      "finish_reason": "length",
+      "content_chars": 1873,
+      "reasoning_chars": 0,
+      "label": "qwen-dflash-k15-baseline"
+    }
+  ],
+  "total_completion_tokens": 3080,
+  "total_seconds": 100.07471340207849,
+  "aggregate_tokens_per_second": 30.777005452168805
+}

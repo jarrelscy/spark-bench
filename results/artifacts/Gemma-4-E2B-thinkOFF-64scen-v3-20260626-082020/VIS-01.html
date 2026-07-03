@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas Solar System</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000000;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="solarSystemCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('solarSystemCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas dimensions to fill the window
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // --- Constants ---
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const scaleFactor = 1.0; // Adjust for overall view size
+
+        // --- Celestial Bodies Data ---
+        const solarSystem = [
+            // { radius, color, size, orbitalPeriod (seconds), speed (radians/sec) }
+            { name: "Sun", radius: 50, color: "yellow", size: 20, mass: 100, orbitRadius: 0, speed: 0, isStar: true },
+            { name: "Mercury", radius: 80, color: "#a9a9a9", size: 4, orbitRadius: 100, speed: 0.015, mass: 0.1, orbitalPeriod: 1, distance: 100 },
+            { name: "Venus", radius: 130, color: "#e6b800", size: 6, orbitRadius: 160, speed: 0.008, mass: 0.2, orbitalPeriod: 2, distance: 160 },
+            { name: "Earth", radius: 180, color: "#4169E1", size: 7, orbitRadius: 220, speed: 0.005, mass: 1, orbitalPeriod: 4, distance: 220 },
+            { name: "Mars", radius: 230, color: "#B22222", size: 5, orbitRadius: 280, speed: 0.003, mass: 0.3, orbitalPeriod: 6, distance: 280 },
+            { name: "Jupiter", radius: 300, color: "#FFD700", size: 12, orbitRadius: 350, speed: 0.0015, mass: 5, orbitalPeriod: 10, distance: 350 },
+            { name: "Saturn", radius: 380, color: "#FFD700", size: 10, orbitRadius: 420, speed: 0.001, mass: 3, orbitalPeriod: 15, distance: 420 }
+        ];
+
+        let animationTime = 0; // Used for calculating orbital positions
+
+        // --- Drawing Functions ---
+
+        function drawStarfield() {
+            // Simple dark background with subtle noise/stars
+            ctx.fillStyle = 'rgba(0, 0, 10, 1)'; // Very dark blue/black
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw faint stars (simple implementation)
+            const starCount = 500;
+            for (let i = 0; i < starCount; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 1.5;
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.5})`;
+                ctx.fillRect(x, y, size, size);
+            }
+        }
+
+        function drawPlanet(planet) {
+            const { name, radius, color, size, orbitRadius } = planet;
+
+            // Calculate position based on time and speed
+            // Angle = (Time * Speed) + InitialAngle
+            const angle = animationTime * planet.speed;
+            const x = centerX + orbitRadius * Math.cos(angle);
+            const y = centerY + orbitRadius * Math.sin(angle);
+
+            // 1. Draw Orbit Path (Optional, for visual effect)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = color + '30'; // Faint trail
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 2. Draw Planet Body
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset shadow for next drawing
+        }
+
+        function drawSun() {
+            const sun = solarSystem.find(p => p.isStar);
+            if (!sun) return;
+
+            // Sun is always at the center
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, sun.radius, 0, Math.PI * 2);
+            
+            // Glowing effect
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, sun.radius);
+            gradient.addColorStop(0, 'white');
+            gradient.addColorStop(0.5, sun.color);
+            gradient.addColorStop(1, 'orange');
+
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+
+
+        // --- Animation Loop ---
+
+        function animate() {
+            // 1. Update Time
+            animationTime += 0.01; // Increment time for smooth movement
+
+            // 2. Clear Screen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 3. Draw Background
+            drawStarfield();
+
+            // 4. Draw Bodies
+            // Draw planets in order (further ones first, so closer ones overlap correctly if needed)
+            solarSystem.forEach(planet => {
+                if (planet.name !== "Sun") {
+                    drawPlanet(planet);
+                }
+            });
+
+            drawSun();
+
+            // Request next frame
+            requestAnimationFrame(animate);
+        }
+
+        // --- Initialization and Resize Handling ---
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Initial call
+
+        // Start the animation
+        animate();
+
+    </script>
+</body>
+</html>

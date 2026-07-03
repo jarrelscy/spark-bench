@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a2a, #1a0a3a);
+            overflow: hidden;
+        }
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 0, 100, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // DNA parameters
+        const params = {
+            radius: 120,
+            helixHeight: 400,
+            nodeCount: 24,
+            rotationSpeed: 0.008,
+            strandWidth: 4,
+            rungWidth: 2
+        };
+        
+        let rotationAngle = 0;
+        
+        // Colors for the two strands with subtle variation
+        const strand1Color = '#4ade80';
+        const strand2Color = '#60a5fa';
+        const rungColor = '#fbbf24';
+        
+        // Animation loop
+        function animate() {
+            // Clear canvas with dark background
+            ctx.fillStyle = 'rgba(10, 10, 42, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update rotation
+            rotationAngle += params.rotationSpeed;
+            
+            // Draw DNA helix
+            drawDNA();
+            
+            // Continue animation
+            requestAnimationFrame(animate);
+        }
+        
+        function drawDNA() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Calculate positions for nodes on both strands
+            const nodes1 = [];
+            const nodes2 = [];
+            
+            for (let i = 0; i < params.nodeCount; i++) {
+                const t = i / params.nodeCount;
+                const y = centerY - params.helixHeight / 2 + t * params.helixHeight;
+                const angle = rotationAngle + t * Math.PI * 2;
+                
+                // Strand 1 (right side)
+                const x1 = centerX + params.radius * Math.cos(angle);
+                const y1 = y;
+                nodes1.push({ x: x1, y: y1 });
+                
+                // Strand 2 (left side, opposite phase)
+                const x2 = centerX - params.radius * Math.cos(angle);
+                const y2 = y;
+                nodes2.push({ x: x2, y: y2 });
+            }
+            
+            // Draw the two strands
+            drawStrand(nodes1, strand1Color);
+            drawStrand(nodes2, strand2Color);
+            
+            // Draw connecting rungs
+            drawRungs(nodes1, nodes2);
+        }
+        
+        function drawStrand(nodes, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = params.strandWidth;
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                
+                // Draw node as a small circle
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, params.strandWidth * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Connect to next node
+                if (i < nodes.length - 1) {
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(nodes[i + 1].x, nodes[i + 1].y);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawRungs(nodes1, nodes2) {
+            ctx.strokeStyle = rungColor;
+            ctx.lineWidth = params.rungWidth;
+            ctx.lineCap = 'round';
+            
+            for (let i = 0; i < nodes1.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(nodes1[i].x, nodes1[i].y);
+                ctx.lineTo(nodes2[i].x, nodes2[i].y);
+                ctx.stroke();
+            }
+        }
+        
+        // Start the animation
+        animate();
+    </script>
+</body>
+</html>

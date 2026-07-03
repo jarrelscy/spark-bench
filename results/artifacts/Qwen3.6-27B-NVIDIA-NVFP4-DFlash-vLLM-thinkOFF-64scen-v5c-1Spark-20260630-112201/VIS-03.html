@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const config = {
+            amplitude: 150,       // Width of the helix
+            frequency: 0.03,      // How tight the coils are
+            speed: 0.02,          // Rotation speed
+            nodeCount: 60,        // Number of points in the helix
+            verticalSpacing: 12,  // Distance between nodes vertically
+            lineWidth: 3,         // Thickness of strands
+            rungsColor: 'rgba(255, 255, 255, 0.15)',
+            strand1Color: { r: 0, g: 255, b: 255 },   // Cyan
+            strand2Color: { r: 255, g: 0, b: 255 }     // Magenta
+        };
+
+        let time = 0;
+
+        // Resize canvas to fit window
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear screen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Center coordinates
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Calculate helix height based on node count
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            const startY = centerY - totalHeight / 2;
+
+            // Arrays to store calculated points for this frame
+            const points1 = [];
+            const points2 = [];
+
+            // 1. Calculate Points
+            for (let i = 0; i < config.nodeCount; i++) {
+                const y = startY + i * config.verticalSpacing;
+                
+                // Calculate phase based on index and time
+                const phase = i * config.frequency + time;
+                
+                // Strand 1 (Front/Back oscillating)
+                const x1 = Math.sin(phase) * config.amplitude;
+                const z1 = Math.cos(phase) * config.amplitude; // Z-depth for 3D effect
+                
+                // Strand 2 (Offset by PI to be opposite)
+                const x2 = Math.sin(phase + Math.PI) * config.amplitude;
+                const z2 = Math.cos(phase + Math.PI) * config.amplitude;
+
+                points1.push({ x: centerX + x1, y: y, z: z1 });
+                points2.push({ x: centerX + x2, y: y, z: z2 });
+            }
+
+            // 2. Draw Rungs (Connecting bars)
+            // We draw these first so they appear behind the strands
+            ctx.strokeStyle = config.rungsColor;
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < config.nodeCount; i++) {
+                const p1 = points1[i];
+                const p2 = points2[i];
+                
+                // Only draw rungs if they aren't too far apart visually (optional aesthetic)
+                // Or simply draw all. Here we draw all but fade them if they are "behind".
+                
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+
+            // 3. Draw Strands
+            // To simulate 3D, we change opacity and width based on Z-depth.
+            // Z ranges roughly from -amplitude to +amplitude.
+            // We normalize Z to 0-1 for alpha.
+            
+            const drawStrand = (points, colorBase) => {
+                for (let i = 0; i < points.length - 1; i++) {
+                    const pCurrent = points[i];
+                    const pNext = points[i+1];
+
+                    // Calculate average Z for this segment to determine depth
+                    const avgZ = (pCurrent.z + pNext.z) / 2;
+                    
+                    // Normalize Z (-amplitude to +amplitude) -> (0 to 1)
+                    // 1 is front, 0 is back
+                    const depth = (avgZ + config.amplitude) / (2 * config.amplitude);
+                    
+                    // Alpha based on depth: 0.1 (back) to 1.0 (front)
+                    const alpha = 0.2 + (depth * 0.8);
+                    
+                    // Width based on depth: thin (back) to thick (front)
+                    const width = 1 + (depth * config.lineWidth);
+
+                    ctx.beginPath();
+                    ctx.moveTo(pCurrent.x, pCurrent.y);
+                    ctx.lineTo(pNext.x, pNext.y);
+                    
+                    // Construct color string
+                    ctx.strokeStyle = `rgba(${colorBase.r}, ${colorBase.g}, ${colorBase.b}, ${alpha})`;
+                    ctx.lineWidth = width;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+            };
+
+            drawStrand(points1, config.strand1Color);
+            drawStrand(points2, config.strand2Color);
+
+            // Update time for next frame
+            time += config.speed;
+
+            // Loop
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+
+    </script>
+</body>
+</html>

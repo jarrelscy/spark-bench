@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a1a; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize canvas to full window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Configuration parameters
+        const numNodes = 40;          // Nodes per strand
+        const radius = 120;          // Helix radius
+        const height = 600;          // Total helix height
+        const turns = 2;             // Full twists in the helix
+        const rotationSpeed = 0.01;  // Radians per frame
+        let rotationAngle = 0;       // Current rotation state
+        const focalLength = 800;     // Perspective projection focal length
+
+        // Color definitions (RGB arrays for easy alpha manipulation)
+        const strand1Color = [77, 201, 246];   // Soft cyan
+        const strand2Color = [240, 110, 169];  // Soft pink
+        const rungColor = [255, 255, 255];     // White rungs
+
+        // Generate base node positions (unrotated)
+        function getNodes() {
+            const nodes = [];
+            const angleStep = (turns * 2 * Math.PI) / (numNodes - 1);
+            const yStep = height / (numNodes - 1);
+            const startY = -height / 2; // Center helix vertically
+
+            for (let i = 0; i < numNodes; i++) {
+                const y = startY + i * yStep;
+                const theta = i * angleStep;
+
+                // Strand 1 (front/back depending on rotation)
+                const x1 = radius * Math.cos(theta);
+                const z1 = radius * Math.sin(theta);
+                // Strand 2 (opposite side of helix)
+                const x2 = radius * Math.cos(theta + Math.PI);
+                const z2 = radius * Math.sin(theta + Math.PI);
+
+                nodes.push({
+                    strand1: { x: x1, y, z: z1 },
+                    strand2: { x: x2, y, z: z2 }
+                });
+            }
+            return nodes;
+        }
+
+        // Project 3D point to 2D canvas coordinates with depth effects
+        function project(point, rotAngle) {
+            // Rotate around Y axis (vertical central axis of helix)
+            const cosA = Math.cos(rotAngle);
+            const sinA = Math.sin(rotAngle);
+            const xRot = point.x * cosA - point.z * sinA;
+            const zRot = point.x * sinA + point.z * cosA;
+            const yRot = point.y;
+
+            // Perspective projection
+            const scale = focalLength / (focalLength + zRot);
+            const xProj = xRot * scale + canvas.width / 2;
+            const yProj = -yRot * scale + canvas.height / 2; // Flip Y for canvas coordinate system
+
+            // Depth-based alpha (further = more transparent)
+            const alpha = 1 - ((zRot + radius) / (2 * radius)) * 0.7;
+            // Depth-based node size (further = smaller)
+            const size = 3 - (zRot / radius) * 1;
+
+            return { x: xProj, y: yProj, z: zRot, alpha, size };
+        }
+
+        // Main draw loop
+        function draw() {
+            // Clear canvas with dark background
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const nodes = getNodes();
+            rotationAngle += rotationSpeed;
+
+            // Draw horizontal rungs first (middle layer)
+            for (let i = 0; i < numNodes; i++) {
+                const node = nodes[i];
+                const p1 = project(node.strand1, rotationAngle);
+                const p2 = project(node.strand2, rotationAngle);
+
+                // Create gradient for depth-appropriate alpha along rung length
+                const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                gradient.addColorStop(0, `rgba(${rungColor[0]}, ${rungColor[1]}, ${rungColor[2]}, ${p1.alpha})`);
+                gradient.addColorStop(1, `rgba(${rungColor[0]}, ${rungColor[1]}, ${rungColor[2]}, ${p2.alpha})`);
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2

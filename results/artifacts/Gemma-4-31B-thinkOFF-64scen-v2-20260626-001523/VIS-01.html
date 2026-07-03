@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Solar System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050508;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="solarCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('solarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const stars = [];
+        const planets = [];
+
+        // Planet Data: [name, distance, radius, speed, color]
+        const planetData = [
+            { name: "Mercury", dist: 60,  size: 3,  speed: 0.047, color: "#A5A5A5" },
+            { name: "Venus",   dist: 90,  size: 6,  speed: 0.035, color: "#E3BB76" },
+            { name: "Earth",   dist: 130, size: 6,  speed: 0.029, color: "#2271B3" },
+            { name: "Mars",    dist: 170, size: 4,  speed: 0.024, color: "#E27B58" },
+            { name: "Jupiter", dist: 240, size: 12, speed: 0.013, color: "#D39C7E" },
+            { name: "Saturn",  dist: 310, size: 10, speed: 0.009, color: "#C5AB6E" }
+        ];
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+
+            // Generate static starfield
+            stars.length = 0;
+            for (let i = 0; i < 400; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random()
+                });
+            }
+
+            // Initialize planets with starting angles
+            planets.length = 0;
+            planetData.forEach(data => {
+                planets.push({
+                    ...data,
+                    angle: Math.random() * Math.PI * 2
+                });
+            });
+        }
+
+        function drawStars() {
+            ctx.fillStyle = "white";
+            stars.forEach(star => {
+                ctx.globalAlpha = star.opacity;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawSun() {
+            ctx.save();
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = "#FFD700";
+            ctx.fillStyle = "#FFCC00";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function animate() {
+            ctx.fillStyle = "#050508";
+            ctx.fillRect(0, 0, width, height);
+
+            drawStars();
+            drawSun();
+
+            planets.forEach(planet => {
+                // Draw Orbit Path
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, planet.dist, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Calculate Position
+                const px = centerX + Math.cos(planet.angle) * planet.dist;
+                const py = centerY + Math.sin(planet.angle) * planet.dist;
+
+                // Draw Planet
+                ctx.fillStyle = planet.color;
+                ctx.beginPath();
+                ctx.arc(px, py, planet.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Update Angle
+                planet.angle += planet.speed * 0.5; // Adjusted for smoother visual speed
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

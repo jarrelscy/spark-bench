@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        const stars = [];
+        const starCount = 800;
+        const arms = 3; // Number of spiral arms
+        const armTightness = 0.15; // How tightly the spiral winds
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Star {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                // Randomly assign to one of the spiral arms
+                const armIndex = Math.floor(Math.random() * arms);
+                const angleOffset = (armIndex * 2 * Math.PI) / arms;
+                
+                // Distance from center
+                this.dist = Math.random() * (Math.min(width, height) * 0.4);
+                
+                // The spiral formula: angle = distance * tightness
+                this.angle = (this.dist * armTightness) + angleOffset;
+                
+                // Add some random scatter so it's not a perfect line
+                this.scatter = (Math.random() - 0.5) * (this.dist * 0.2);
+                
+                // Speed based on distance (Kepler-like: inner stars move faster)
+                this.speed = 0.002 + (1 / (this.dist + 100)) * 0.5;
+                
+                // Colors: mix of white, light blue, and pale yellow
+                const colors = ['#fff', '#eef', '#ffe', '#ccf', '#fcf'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                this.size = Math.random() * 1.5 + 0.5;
+                this.twinkle = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.angle += this.speed;
+                this.twinkle += 0.05;
+            }
+
+            draw() {
+                // Calculate position based on polar coordinates
+                const x = width / 2 + Math.cos(this.angle) * this.dist;
+                const y = height / 2 + Math.sin(this.angle) * this.dist;
+                
+                // Add scatter effect to the position
+                const offsetX = Math.cos(this.angle + Math.PI/2) * this.scatter;
+                const offsetY = Math.sin(this.angle + Math.PI/2) * this.scatter;
+
+                // Twinkle opacity
+                const opacity = 0.5 + Math.sin(this.twinkle) * 0.5;
+                
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = opacity;
+                ctx.beginPath();
+                ctx.arc(x + offsetX, y + offsetY, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize stars
+        for (let i = 0; i < starCount; i++) {
+            stars.push(new Star());
+        }
+
+        function drawCore() {
+            const gradient = ctx.createRadialGradient(
+                width / 2, height / 2, 0,
+                width / 2, height / 2, 50
+            );
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 250, 200, 0.8)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, 50, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function animate() {
+            // Slight trail effect by using a semi-transparent black fill
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+
+            drawCore();
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

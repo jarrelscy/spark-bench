@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxy"></canvas>
+    <script>
+        const canvas = document.getElementById('galaxy');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let stars = [];
+        const STAR_COUNT = 800;
+        const SPINCH = 0.002;
+        const ARM_COUNT = 4;
+        const SPIN_SPEED = 0.0005;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Random angle for the spiral arm
+                this.angle = Math.random() * Math.PI * 2;
+                // Distance from center (with bias towards center)
+                this.distance = Math.random() * Math.min(width, height) * 0.4;
+                // Slight offset to create spiral arms
+                this.armOffset = (Math.floor(Math.random() * ARM_COUNT) / ARM_COUNT) * Math.PI * 2;
+                // Size of the star
+                this.size = Math.random() * 1.5 + 0.5;
+                // Twinkle speed
+                this.twinkleSpeed = Math.random() * 0.05 + 0.01;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                // Color variation (blue-white, yellow, red)
+                const colorType = Math.random();
+                if (colorType < 0.6) {
+                    this.color = 'rgba(200, 220, , 1)';
+                } else if (colorType < ) {
+                    this.color = 'rgba(255, 200, 100, 1)';
+                } else {
+                    this.color = 'rgba(255, 150, 50, 1)';
+                }
+            }
+
+            update(time) {
+                // Calculate current position
+                const currentAngle = this.angle + this.armOffset + time * SPIN_SPEED;
+                this.x = width / 2 + Math.cos(currentAngle) * this.distance;
+                this.y = height / 2 + Math.sin(currentAngle) * this.distance;
+
+                // Calculate twinkle
+                this.opacity = 0.5 + Math.sin(time * this.twinkleSpeed + this.twinkleOffset) * 0.5;
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.color.replace('1', this.opacity.toString());
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            resize();
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function animate(time) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw core glow
+            const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, 100);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 150, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, 100, 0, Math.PI * 2);
+           .ctx.fill();
+
+            // Update and draw stars
+            stars.forEach(star => {
+                star.update(time);
+                star.draw(ctx);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+        animate(0);
+    </script>
+</body>
+</html>

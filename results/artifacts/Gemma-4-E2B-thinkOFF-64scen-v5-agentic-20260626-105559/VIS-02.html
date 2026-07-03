@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        // --- Galaxy Parameters ---
+        const numStars = 500;
+        const coreRadius = Math.min(width, height) * 0.1;
+        const coreX = width / 2;
+        const coreY = height / 2;
+        const coreSize = 3;
+
+        let stars = [];
+        let animationFrameId;
+
+        // Star class definition
+        class Star {
+            constructor(x, y, distance, colorHue) {
+                this.x = x;
+                this.y = y;
+                this.distance = distance; // Distance from the core
+                this.angle = Math.random() * Math.PI * 2; // Initial angle for spiral placement
+                this.size = Math.random() * 1.5 + 0.5;
+                this.colorHue = colorHue; // Base hue for color variation
+                this.twinkle = Math.random() * 0.5 + 0.5; // Twinkle intensity
+                this.speed = Math.random() * 0.005 + 0.001; // Rotation speed factor
+            }
+
+            update(time) {
+                // Calculate spiral path based on distance and angle
+                const spiralFactor = this.distance * 0.01;
+                this.angle += this.speed;
+                this.x = coreX + Math.cos(this.angle) * this.distance;
+                this.y = coreY + Math.sin(this.angle) * this.distance;
+
+                // Subtle twinkle effect based on time and random noise
+                const twinkle = Math.sin(time * 0.005 + this.distance * 0.1) * 0.5 + 0.5;
+                this.opacity = 0.5 + twinkle * 0.5; // Base opacity + twinkle modulation
+            }
+
+            draw() {
+                const alpha = this.opacity * (0.3 + Math.random() * 0.7); // Vary opacity slightly
+                
+                // Color based on hue, slightly randomized
+                const r = Math.floor(120 + (this.colorHue % 60));
+                const g = Math.floor(120 + (this.colorHue % 60) * 0.5);
+                const b = Math.floor(120 + (this.colorHue % 60) * 1.5);
+                
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * (0.5 + this.twinkle * 0.5), 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // --- Initialization ---
+
+        function initializeStars() {
+            for (let i = 0; i < numStars; i++) {
+                // Distribute stars in a somewhat spiral-like pattern
+                const distance = Math.random() * (Math.min(width, height) * 0.8);
+                // Assign a hue for color variation (0 to 360)
+                const colorHue = Math.random() * 360; 
+                
+                // Initial position is spread out, but the update function will pull them into the spiral
+                stars.push(new Star(coreX, coreY, distance, colorHue));
+            }
+        }
+
+        // --- Animation Loop ---
+
+        let startTime = Date.now();
+
+        function animate(currentTime) {
+            // 1. Clear the canvas (with a slight fade for a trailing effect)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Subtle trail effect
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Draw the core (Bright center)
+            const coreGradient = ctx.createRadialGradient(coreX, coreY, coreSize * 0.5, coreX, coreY, coreSize);
+            coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            coreGradient.addColorStop(0.5, 'rgba(255, 150, 0, 0.8)');
+            coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(coreX, coreY, coreSize, 0, Math.PI * 2);
+            ctx.fill();
+
+
+            // 3. Update and Draw Stars
+            stars.forEach(star => {
+                star.update(currentTime);
+                star.draw();
+            });
+
+            // Loop
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // --- Resize Handler ---
+        window.addEventListener('resize', () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            // Re-initialize or adjust if necessary, but for this simple setup, just resizing the context is enough.
+        });
+
+        // --- Start ---
+        initializeStars();
+        animate(Date.now());
+
+    </script>
+</body>
+</html>

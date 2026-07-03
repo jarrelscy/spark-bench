@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        
+        // Configuration
+        const numNodes = 40;
+        const radius = 120;
+        const verticalSpacing = 25;
+        const phaseShift = Math.PI; // 180 degrees between strands
+        const rotationSpeed = 0.02;
+        let currentRotation = 0;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawNode(x, y, radius, color, alpha) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = alpha;
+            ctx.fill();
+            
+            // Glow effect
+            if (radius > 2) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+                const gradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2.5);
+                gradient.addColorStop(0, color);
+                gradient.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function drawRung(x1, y1, x2, y2, alpha) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = 'rgba(100, 200, 255, ' + alpha + ')';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            const strandColor1 = '#00ccff'; // Cyan
+            const strandColor2 = '#ff3366'; // Pink/Red
+
+            const nodes = [];
+
+            // Calculate node positions in 3D space projected to 2D
+            for (let i = 0; i < numNodes; i++) {
+                const y = (i - numNodes / 2) * verticalSpacing;
+                const angle1 = currentRotation + (i * 0.3);
+                const angle2 = angle1 + phaseShift;
+
+                // 3D coordinates (simplified projection)
+                const x1 = Math.cos(angle1) * radius;
+                const z1 = Math.sin(angle1) * radius;
+                const x2 = Math.cos(angle2) * radius;
+                const z2 = Math.sin(angle2) * radius;
+
+                // Project to 2D (simple orthographic projection)
+                const scale1 = 1 + z1 / (radius * 3);
+                const scale2 = 1 + z2 / (radius * 3);
+
+                const screenX1 = centerX + x1;
+                const screenY1 = centerY + y;
+                const screenX2 = centerX + x2;
+                const screenY2 = centerY + y;
+
+                nodes.push({
+                    x1: screenX1,
+                    y1: screenY1,
+                    z1: z1,
+                    scale1: scale1,
+                    x2: screenX2,
+                    y2: screenY2,
+                    z2: z2,
+                    scale2: scale2
+                });
+            }
+
+            // Sort by depth (z-coordinate) to draw back-to-front
+            const sortedIndices = nodes.map((node, i) => i)
+                .sort((a, b) => nodes[a].z1 - nodes[b].z1);
+
+            // Draw rungs and nodes
+            for (let i = 0; i < numNodes; i++) {
+                const idx = sortedIndices[i];
+                const node = nodes[idx];
+                
+                const alpha1 = 0.4 + (node.z1 + radius) / (2 * radius) * 0.6;
+                const alpha2 = 0.4 + (node.z2 + radius) / (2 * radius) * 0.6;
+                const rungAlpha = 0.3 + (node.z1 + node.z2 + 2 * radius) / (4 * radius) * 0.4;
+
+                // Draw rung (behind nodes)
+                drawRung(node.x1, node.y1, node.x2, node.y2, rungAlpha);
+
+                // Draw nodes
+                drawNode(node.x1, node.y1, 4 * node.scale1, strandColor1, alpha1);
+                drawNode(node.x2, node.y2, 4 * node.scale2, strandColor2, alpha2);
+            }
+
+            currentRotation += rotationSpeed;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

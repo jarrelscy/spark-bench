@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rotating DNA Double Helix</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #05060a;
+    font-family: sans-serif;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+(function () {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  let W = 0, H = 0, DPR = window.devicePixelRatio || 1;
+
+  function resize() {
+    DPR = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Helix configuration
+  const config = {
+    nodeCount: 28,           // number of rungs along the helix
+    turns: 2.5,              // number of full turns visible
+    radius: 140,             // helix radius
+    nodeRadius: 5,
+    verticalSpacing: 22,     // spacing between rungs
+    rotationSpeed: 0.0035,   // radians per frame
+    perspective: 700,        // focal length for pseudo-3D
+    strandColorA: [120, 220, 255], // cyan-ish
+    strandColorB: [255, 130, 200], // pink-ish
+    rungColor: [180, 200, 230],
+    bgColor: '#05060a'
+  };
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpColor(c1, c2, t) {
+    return [
+      Math.round(lerp(c1[0], c2[0], t)),
+      Math.round(lerp(c1[1], c2[1], t)),
+      Math.round(lerp(c1[2], c2[2], t))
+    ];
+  }
+  function rgba(c, a) {
+    return `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  }
+
+  let rotation = 0;
+
+  function project(x, y, z) {
+    // Simple perspective projection: z is depth (positive = closer)
+    const scale = config.perspective / (config.perspective + z);
+    const px = W / 2 + x * scale;
+    const py = H / 2 + y * scale;
+    return { x: px, y: py, scale: scale };
+  }
+
+  function draw() {
+    // Background with slight trail effect for smoothness
+    ctx.fillStyle = config.bgColor;
+    ctx.fillRect(0, 0, W, H);
+
+    rotation += config.rotationSpeed;
+
+    const totalHeight = (config.nodeCount - 1) * config.verticalSpacing;
+    const startY = -totalHeight / 2;
+
+    // Pre-compute node positions
+    const nodes = [];
+    for (let i = 0; i < config.nodeCount; i++) {
+      const t = i / (config.nodeCount - 1);
+      // Angle along helix (rotates with time)
+      const angle = t * config.turns * Math.PI * 2 + rotation;
+      const y = startY + i * config.verticalSpacing;
+
+      // Strand A
+      const ax = Math.cos(angle) * config.radius;
+      const az = Math.sin(angle) * config.radius;
+
+      // Strand B (offset by pi)
+      const bx = Math.cos(angle + Math.PI) * config.radius;
+      const bz = Math.sin(angle + Math.PI) * config.radius;
+
+      // Color gradient along length
+      const colorA = lerpColor(config.strandColorA, config.strandColorB, t);
+      const colorB = lerpColor(config.strandColorB, config.strandColorA, t);
+
+      const pA = project(ax, y, az);
+      const pB = project(bx, y, bz);
+
+      nodes.push({
+        a: { ...pA, z: az, y: y, color: colorA },
+        b: { ...pB, z: bz, y: y, color: colorB },
+        depth: (az + bz) / 2 // for sorting
+      });
+    }
+
+    // Sort by depth so far nodes are drawn first (painter's algorithm)
+    nodes.sort((n1, n2) => n1.depth - n2.depth);
+
+    // Draw rungs first (behind nodes)
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      const avgScale = (node.a.scale + node.b.scale) / 2;
+      const depthFactor = (node.depth + config.radius) / (config.radius * 2); // 0..1
+      const alpha = 0.25 + depthFactor * 0.55;
+
+      ctx.strokeStyle = rgba(config.rungColor, alpha * 0.7);
+      ctx.lineWidth = 1.2 * avgScale;
+      ctx.beginPath();
+      ctx.moveTo(node.a.x, node.a.y);
+      ctx.lineTo(node.b.x, node.b.y);
+      ctx.stroke();
+
+      // Small midpoint accent
+      const mx = (node.a.x + node.b.x) / 2;
+      const my = (node.a.y + node.b.y) / 2;
+      ctx.fillStyle = rgba(config.rungColor, alpha);
+      ctx.beginPath();
+      ctx.arc(mx, my, 1.6 * avgScale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw nodes
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      // Strand A node
+      drawNode(node.a);
+      // Strand B node
+      drawNode(node.b);
+    }
+
+    // Draw connecting strand lines (sinusoidal curves) - draw between consecutive nodes
+    drawStrand(nodes, 'a');
+    drawStrand(nodes, 'b');
+
+    requestAnimationFrame(draw);
+  }
+
+  function drawNode(p) {
+    const depthFactor = (p.z + config.radius) / (config.radius * 2);
+    const alpha = 0.4 + depthFactor * 0.6;
+    const r = config.nodeRadius * p.scale;
+
+    // Glow
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3);
+    gradient.addColorStop(0, rgba(p.color, alpha * 0.9));
+    gradient.addColorStop(0.4, rgba(p.color, alpha * 0.3));
+    gradient.addColorStop(1, rgba(p.color, 0));
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core
+    ctx.fillStyle = rgba(p.color, alpha);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = rgba([255, 255, 255], alpha * 0.6);
+    ctx.beginPath();
+    ctx.arc(p.x - r * 0.3, p.y - r * 0.3, r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawStrand(nodes, key) {
+    // Draw a smooth line through the projected positions
+    if (nodes.length < 2) return;
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const p1 = nodes[i][key];
+      const p2 = nodes[i + 1][key];
+
+      const depthFactor = (p1.z + config.radius) / (config.radius * 2);
+      const alpha = 0.35 + depthFactor * 0.5;
+
+      ctx.strokeStyle = rgba(p1.color, alpha);
+      ctx.lineWidth = 1.8 * p1.scale;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      // Quadratic curve to midpoint for smoothness
+      const mx = (p1.x + p2.x) / 2;
+      const my = (p1.y + p2.y) / 2;
+      ctx.quadraticCurveTo(p1.x, p1.y, mx, my);
+      ctx.stroke();
+    }
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>

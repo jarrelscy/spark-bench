@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Configuration
+        const config = {
+            nodeCount: 60,
+            radius: 120,
+            verticalSpacing: 25,
+            rotationSpeed: 0.03,
+            perspective: 600,
+            glowIntensity: 15,
+            bgColor: '#050510'
+        };
+
+        let rotationOffset = 0;
+
+        // Colors
+        const colors = {
+            strand1: { r: 0, g: 180, b: 255 },   // Cyan/Blue
+            strand2: { r: 255, g: 50, b: 100 },   // Pink/Red
+            rung1: { r: 0, g: 255, b: 180 },      // Greenish
+            rung2: { r: 180, g: 100, b: 255 },    // Purple
+            bg: '#050510'
+        };
+
+        function getColor(t, baseColor) {
+            // Subtle color variation along the helix
+            const hueShift = Math.sin(t * 0.5) * 30;
+            return {
+                r: Math.max(0, Math.min(255, baseColor.r + hueShift)),
+                g: Math.max(0, Math.min(255, baseColor.g + hueShift)),
+                b: Math.max(0, Math.min(255, baseColor.b + hueShift))
+            };
+        }
+
+        function drawGlow(x, y, radius, color, alpha) {
+            ctx.beginPath();
+            ctx.arc(x, y, config.glowIntensity, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha * 0.3})`;
+            ctx.fill();
+        }
+
+        function drawNode(x, y, radius, color, alpha) {
+            // Glow
+            drawGlow(x, y, radius, color, alpha);
+            
+            // Node
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+            ctx.fill();
+            
+            // Bright center
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+            ctx.fill();
+        }
+
+        function drawRung(x1, y1, x2, y2, color1, color2, alpha1, alpha2) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const avgAlpha = (alpha1 + alpha2) / 2;
+            
+            // Create gradient for rung
+            const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+            gradient.addColorStop(0, `rgba(${color1.r}, ${color1.g}, ${color1.b}, ${avgAlpha})`);
+            gradient.addColorStop(0.5, `rgba(${(color1.r + color2.r) / 2}, ${(color1.g + color2.g) / 2}, ${(color1.b + color2.b) / 2}, ${avgAlpha})`);
+            gradient.addColorStop(1, `rgba(${color2.r}, ${color2.g}, ${color2.b}, ${avgAlpha})`);
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw small connection nodes at ends
+            drawNode(x1, y1, 2, color1, avgAlpha * 0.3);
+            drawNode(x2, y2, 2, color2, avgAlpha * 0.3);
+        }
+
+        function animate() {
+            // Clear canvas
+            ctx.fillStyle = config.bgColor;
+            ctx.fillRect(0, 0, width, height);
+
+            // Calculate positions
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            const startY = centerY - totalHeight / 2;
+
+            // Store all nodes for depth sorting
+            const nodes = [];
+            
+            for (let i = 0; i < config.nodeCount; i++) {
+                const t = i / config.nodeCount;
+                const y = startY + i * config.verticalSpacing;
+                
+                // Two strands with phase difference of PI
+                const phase1 = rotationOffset + t * Math.PI * 4;
+                const phase2 = rotationOffset + t * Math.PI * 4 + Math.PI;
+                
+                // Calculate 3D positions (simplified perspective)
+                const x1_3d = Math.cos(phase1) * config.radius;
+                const z1_3d = Math.sin(phase1) * config.radius;
+                const x2_3d = Math.cos(phase2) * config.radius;
+                const z2_3d = Math.sin(phase2) * config.radius;
+                
+                // Perspective projection
+                const scale1 = config.perspective / (config.perspective + z1_3d);
+                const scale2 = config.perspective / (config.perspective + z2_3d);
+                
+                const x1 = centerX + x1_3d * scale1;
+                const y1 = y;
+                const x2 = centerX + x2_3d * scale2;
+                const y2 = y;
+                
+                // Calculate alpha based on depth (z-position)
+                const alpha1 = Math.max(0.1, Math.min(1, scale1));
+                const alpha2 = Math.max(0.1, Math.min(1, scale2));
+                
+                // Calculate colors with variation
+                const color1 = getColor(t + rotationOffset * 0.1, colors.strand1);
+                const color2 = getColor(t + rotationOffset * 0.1, colors.strand2);
+                
+                nodes.push({
+                    index: i,
+                    x1: x1, y1: y1, x2: x2, y2: y2,
+                    z1: z1_3d, z2: z2_3d,
+                    alpha1: alpha1, alpha2: alpha2,
+                    color1: color1, color2: color2,
+                    scale1: scale1, scale2: scale2
+                });
+            }
+
+            // Sort by average depth for proper rendering
+            nodes.sort((a, b) => (a.z1 + a.z2) - (b.z1 + b.z2));
+
+            // Draw rungs and nodes
+            for (const node of nodes) {
+                // Draw rung between strands
+                drawRung(node.x1, node.y1, node.x2, node.y2, 
+                        node.color1, node.color2, node.alpha1, node.alpha2);
+                
+                // Draw nodes
+                drawNode(node.x1, node.y1, 4 * node.scale1, node.color1, node.alpha1);
+                drawNode(node.x2, node.y2, 4 * node.scale2, node.color2, node.alpha2);
+            }
+
+            // Draw connecting lines along each strand
+            ctx.lineWidth = 2;
+            
+            // Strand 1
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const current = nodes[i];
+                const next = nodes[i + 1];
+                
+                const avgAlpha = (current.alpha1 + next.alpha1) / 2;
+                const gradient = ctx.createLinearGradient(current.x1, current.y1, next.x1, next.y1);
+                gradient.addColorStop(0, `rgba(${current.color1.r}, ${current.color1.g}, ${current.color1.b}, ${avgAlpha * 0.8})`);
+                gradient.addColorStop(1, `rgba(${next.color1.r}, ${next.color1.g}, ${next.color1.b}, ${avgAlpha * 0.8})`);
+                
+                ctx.beginPath();
+                ctx.moveTo(current.x1, current.y1);
+                ctx.lineTo(next.x1, next.y1);
+                ctx.strokeStyle = gradient;
+                ctx.stroke();
+            }
+            
+            // Strand 2
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const current = nodes[i];
+                const next = nodes[i + 1];
+                
+                const avgAlpha = (current.alpha2 + next.alpha2) / 2;
+                const gradient = ctx.createLinearGradient(current.x2, current.y2, next.x2, next.y2);
+                gradient.addColorStop(0, `rgba(${current.color2.r}, ${current.color2.g}, ${current.color2.b}, ${avgAlpha * 0.8})`);
+                gradient.addColorStop(1, `rgba(${next.color2.r}, ${next.color2.g}, ${next.color2.b}, ${avgAlpha * 0.8})`);
+                
+                ctx.beginPath();
+                ctx.moveTo(current.x2, current.y2);
+                ctx.lineTo(next.x2, next.y2);
+                ctx.strokeStyle = gradient;
+                ctx.stroke();
+            }
+
+            // Update rotation
+            rotationOffset += config.rotationSpeed;
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

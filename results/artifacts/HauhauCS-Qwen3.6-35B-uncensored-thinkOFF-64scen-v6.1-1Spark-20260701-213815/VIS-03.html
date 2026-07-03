@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+
+        // Configuration
+        const config = {
+            nodeCount: 60,
+            radius: 120,
+            verticalSpacing: 18,
+            rotationSpeed: 0.02,
+            strand1Color: '#00f0ff', // Cyan
+            strand2Color: '#ff0055', // Magenta
+            rungColor: '#ffffff',
+            glowAmount: 15
+        };
+
+        let rotationOffset = 0;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function animate() {
+            // Clear canvas with slight transparency for trail effect (optional, but using full clear here for crispness)
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+
+            // Calculate total height of the DNA structure
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            const startY = (height - totalHeight) / 2;
+            const centerX = width / 2;
+
+            // Update rotation
+            rotationOffset += config.rotationSpeed;
+
+            // We need to draw items in order of their Z-depth (back to front)
+            // To do this, we first calculate the Z-depth (scale) of every node
+            let renderList = [];
+
+            for (let i = 0; i < config.nodeCount; i++) {
+                // Base angle for this node index
+                const baseAngle = i * 0.3; // 0.3 radians per step controls tightness of helix
+                const angle = baseAngle + rotationOffset;
+
+                // 3D coordinates (relative to center of helix axis)
+                // x: horizontal offset from center
+                // y: vertical position
+                // z: depth (0 is center plane, positive is towards viewer)
+                const x = Math.cos(angle) * config.radius;
+                const y = i * config.verticalSpacing;
+                const z = Math.sin(angle) * config.radius;
+
+                // Perspective projection
+                // Scale factor: objects further away (negative z) get smaller, closer (positive z) get bigger
+                // We add an offset to z so the whole helix stays in front of the camera
+                const fov = 800; // Field of view
+                const scale = fov / (fov + z);
+
+                // Projected screen coordinates
+                const screenX = centerX + x * scale;
+                const screenY = startY + y * scale;
+
+                renderList.push({
+                    type: 'node',
+                    index: i,
+                    strand: 1,
+                    screenX: screenX,
+                    screenY: screenY,
+                    scale: scale,
+                    z: z
+                });
+
+                renderList.push({
+                    type: 'node',
+                    index: i,
+                    strand: 2,
+                    screenX: screenX, // Strand 2 is on the opposite side (cos), but same z magnitude for connecting rungs
+                    screenY: startY + y * scale,
+                    scale: scale,
+                    z: z
+                });
+
+                renderList.push({
+                    type: 'rung',
+                    index: i,
+                    screenX: screenX,
+                    screenY: screenY,
+                    scale: scale,
+                    z: z
+                });
+            }
+
+            // Sort all items by Z-depth (furthest first, closest last)
+            // In our projection math, larger scale = closer to camera. 
+            // Smaller scale = further away.
+            // We want to draw smaller scale (further) first.
+            renderList.sort((a, b) => a.scale - b.scale);
+
+            // Draw items
+            for (const item of renderList) {
+                if (item.type === 'node') {
+                    drawNode(item);
+                } else if (item.type === 'rung') {
+                    drawRung(item);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawNode(item) {
+            const baseRadius = 4;
+            const radius = baseRadius * item.scale;
+            const alpha = Math.max(0.2, Math.min(1, (item.scale - 0.8) * 2)); // Fade distant nodes
+
+            ctx.beginPath();
+            ctx.arc(item.screenX, item.screenY, radius, 0, Math.PI * 2);
+
+            // Color based on strand
+            if (item.strand === 1) {
+                ctx.fillStyle = config.strand1Color;
+                // Add subtle glow
+                ctx.shadowColor = config.strand1Color;
+                ctx.shadowBlur = config.glowAmount * item.scale;
+            } else {
+                ctx.fillStyle = config.strand2Color;
+                ctx.shadowColor = config.strand2Color;
+                ctx.shadowBlur = config.glowAmount * item.scale;
+            }
+
+            ctx.globalAlpha = alpha;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0; // Reset shadow for next operations
+        }
+
+        function drawRung(item) {
+            // Calculate the actual 3D X positions for the two strands to draw the line correctly
+            const angle = item.index * 0.3 + rotationOffset;
+            
+            // Strand 1 X
+            const x1 = Math.cos(angle) * config.radius;
+            // Strand 2 X (opposite side)
+            const x2 = Math.cos(angle + Math.PI) * config.radius;
+
+            // Projected X coordinates
+            const pX1 = centerX + x1 * item.scale;
+            const pX2 = centerX + x2 * item.scale;
+
+            // Note: item.screenX is calculated based on strand 1's cos(angle), so it equals pX1
+            // But for the line, we need both endpoints.
+            
+            ctx.beginPath();
+            ctx.moveTo(pX1, item.screenY);
+            ctx.lineTo(pX2, item.screenY);
+
+            // Create a gradient for the rung
+            const gradient = ctx.createLinearGradient(pX1, 0, pX2, 0);
+            gradient.addColorStop(0, config.strand1Color);
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)');
+            gradient.addColorStop(1, config.strand2Color);
+
+            ctx.strokeStyle = gradient;
+            
+            // Rungs should be slightly transparent and thinner
+            ctx.lineWidth = 1.5 * item.scale;
+            ctx.globalAlpha = 0.6;
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+
+        // Start animation
+        animate();
+
+    </script>
+</body>
+</html>

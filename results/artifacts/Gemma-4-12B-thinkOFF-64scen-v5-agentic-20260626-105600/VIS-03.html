@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let animationFrame;
+
+        // Configuration
+        const numNodes = 40;      // Number of pairs in the helix
+        const helixRadius = 100;  // Radius of the spiral
+        const pitch = 0.4;        // How "tight" the spiral is
+        const rotationSpeed = 0.02;
+        
+        let rotation = 0;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear canvas with a slight fade for motion blur effect (optional)
+            ctx.fillStyle = 'rgba(10, 10, 10, 1)';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Draw DNA
+            for (let i = 0; i < numNodes; i++) {
+                // The vertical position (y) goes from top to bottom
+                const y = centerY - (numNodes * 10) / 2 + (i * 10);
+                
+                // The angle of the spiral
+                // Strand 1 and Strand 2 are 180 degrees (PI) apart
+                const angle1 = rotation + (i * pitch);
+                const angle2 = rotation + (i * pitch) + Math.PI;
+
+                // Calculate X positions
+                const x1 = centerX + Math.cos(angle1) * helixRadius;
+                const x2 = centerX + Math.cos(angle2) * helixRadius;
+
+                // Draw connecting "rungs" (base pairs)
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.stroke();
+
+                // Draw Nodes (Strand 1)
+                ctx.beginPath();
+                ctx.fillStyle = '#4488ff'; // Blueish strand
+                ctx.arc(x1, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw Nodes (Strand 2)
+                ctx.beginPath();
+                ctx.fillStyle = '#ff4488'; // Pinkish strand
+                ctx.arc(x2, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Update rotation
+            rotation += rotationSpeed;
+            
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

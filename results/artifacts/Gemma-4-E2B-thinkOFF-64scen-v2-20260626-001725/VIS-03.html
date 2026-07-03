@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0a0a1a; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas" width="800" height="600"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('dnaCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width;
+            const H = canvas.height;
+
+            // DNA Parameters
+            const centerX = W / 2;
+            const centerY = H / 2;
+            const radius = 150; // Overall radius of the helix
+            const strandCount = 20; // Number of nodes per strand
+            const strandSpacing = (2 * Math.PI) / strandCount; // Angular spacing
+            const helixHeight = 200; // Vertical extent of the helix
+            const rungHeight = 15; // Height of the connecting rungs
+
+            let rotationAngle = 0; // Current rotation angle for animation
+
+            // Color definitions (subtle variation)
+            const color1 = 'rgba(0, 150, 255, 0.8)'; // Blueish
+            const color2 = 'rgba(255, 100, 200, 0.8)'; // Pinkish
+
+            /**
+             * Draws a single strand of the DNA helix.
+             * @param {number} offset - Determines the starting phase/offset for the strand.
+             * @param {string} color - The fill color for the strand.
+             */
+            function drawStrand(offset, color) {
+                ctx.beginPath();
+                
+                for (let i = 0; i < strandCount; i++) {
+                    // Calculate angle based on current rotation and strand offset
+                    const angle = (i * strandSpacing) + rotationAngle + offset;
+                    
+                    // Calculate position on the circle (radius determines the spiral shape)
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + helixHeight * Math.sin(angle * 0.5); // Squashing the vertical component slightly
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            /**
+             * Draws the connecting rungs between the two strands.
+             */
+            function drawRungs() {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; // Faint connecting lines
+                ctx.lineWidth = 1;
+
+                for (let i = 0; i < strandCount; i++) {
+                    // Calculate angles for the two strands
+                    const angle1 = (i * strandSpacing) + rotationAngle;
+                    const angle2 = (i * strandSpacing) + rotationAngle + Math.PI / strandCount; // Offset by half a pitch for the second strand
+
+                    // Calculate coordinates for the rung connection points
+                    const x1 = centerX + radius * Math.cos(angle1);
+                    const y1 = centerY + helixHeight * Math.sin(angle1 * 0.5);
+
+                    const x2 = centerX + radius * Math.cos(angle2);
+                    const y2 = centerY + helixHeight * Math.sin(angle2 * 0.5);
+
+                    if (i === 0) {
+                        ctx.moveTo(x1, y1);
+                    } else {
+                        ctx.lineTo(x2, y2);
+                    }
+                }
+                ctx.stroke();
+            }
+
+            /**
+             * Main drawing function.
+             */
+            function draw() {
+                // Clear canvas
+                ctx.fillStyle = '#0a0a1a';
+                ctx.fillRect(0, 0, W, H);
+
+                // 1. Draw Strand 1 (Blueish)
+                drawStrand(0, color1);
+
+                // 2. Draw Strand 2 (Pinkish)
+                drawStrand(strandSpacing / 2, color2);
+
+                // 3. Draw Rungs
+                drawRungs();
+            }
+
+            /**
+             * Animation loop using requestAnimationFrame.
+             */
+            function animate() {
+                // Update rotation angle for smooth, continuous rotation
+                rotationAngle += 0.01; 
+
+                draw();
+
+                requestAnimationFrame(animate);
+            }
+
+            // Start the animation
+            animate();
+        });
+    </script>
+</body>
+</html>

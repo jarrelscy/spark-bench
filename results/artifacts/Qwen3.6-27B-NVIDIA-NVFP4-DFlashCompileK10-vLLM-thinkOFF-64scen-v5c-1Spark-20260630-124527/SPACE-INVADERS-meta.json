@@ -1,0 +1,14 @@
+{
+  "game": "SPACE-INVADERS",
+  "endpoint": "http://127.0.0.1:8000/v1",
+  "model": "qwen36-27b-nvidia-nvfp4-dflash",
+  "max_tokens": 8000,
+  "temperature": 0.3,
+  "finish_reason": "stop",
+  "elapsed_seconds": 95.371,
+  "content_chars": 13901,
+  "html_chars": 13583,
+  "prompt_tokens": 26,
+  "completion_tokens": 4478,
+  "total_tokens": 4504
+}

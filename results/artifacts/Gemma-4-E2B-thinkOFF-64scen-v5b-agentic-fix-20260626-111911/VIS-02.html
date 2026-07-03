@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        // --- Galaxy Parameters ---
+        const NUM_STARS = 500;
+        const CORE_RADIUS = Math.min(width, height) * 0.1;
+        const STAR_COUNT = Math.floor(NUM_STARS / 10); // Stars per spiral arm section
+        const CORE_LUMINOSITY = 255;
+        const STAR_LIFESPAN = 100; // For twinkle effect
+
+        let stars = [];
+        let frameCount = 0;
+
+        // --- Star Class ---
+        class Star {
+            constructor(x, y, distance, angle, colorHue) {
+                this.x = x;
+                this.y = y;
+                this.distance = distance; // Distance from the center
+                this.angle = angle;     // Base angle for spiral placement
+                this.radius = Math.sqrt(x * x + y * y);
+                this.colorHue = colorHue + (Math.random() * 50 - 25); // Subtle color variation
+                this.size = Math.random() * 1.5 + 0.5;
+                this.twinkle = Math.random() * 255; // Initial twinkle intensity
+                this.life = STAR_LIFESPAN;
+            }
+
+            update() {
+                // Calculate spiral position based on distance and angle
+                const spiralRadius = this.distance * 0.1; // Controls how tightly the spiral is wound
+                const currentAngle = this.angle + (frameCount * 0.005); // Rotation speed
+                
+                this.x = CORE_RADIUS * Math.cos(currentAngle) + spiralRadius * Math.cos(currentAngle * 3);
+                this.y = CORE_RADIUS * Math.sin(currentAngle) + spiralRadius * Math.sin(currentAngle * 3);
+
+                // Twinkle effect (flickering brightness)
+                this.twinkle = (this.twinkle + 1) % 256;
+                this.life--;
+            }
+
+            draw() {
+                // Calculate brightness based on twinkle and life
+                const alpha = Math.min(255, (this.twinkle / 255) * 255);
+                const brightness = Math.max(0.1, (this.life / STAR_LIFESPAN) * 255);
+
+                ctx.fillStyle = `hsla(${this.colorHue}, 100%, 70%, ${alpha / 255})`;
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * (0.5 + brightness * 0.5), 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // --- Initialization ---
+        function initializeStars() {
+            for (let i = 0; i < NUM_STARS; i++) {
+                let x, y, distance, angle;
+
+                // Determine star placement based on spiral structure
+                if (i < STAR_COUNT) {
+                    // Stars on the main spiral arms
+                    distance = CORE_RADIUS + Math.random() * (width * 0.3);
+                    angle = (i / STAR_COUNT) * Math.PI * 2; // Spread them around
+                } else {
+                    // Stars in the background/halo
+                    distance = CORE_RADIUS + Math.random() * (width * 0.5);
+                    angle = Math.random() * Math.PI * 2;
+                }
+
+                // Initial position is randomized slightly around the spiral path
+                x = width / 2 + Math.cos(angle) * distance * 0.1;
+                y = height / 2 + Math.sin(angle) * distance * 0.1;
+
+                const colorHue = Math.random() * 360;
+                stars.push(new Star(x, y, distance, angle, colorHue));
+            }
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            // 1. Clear the canvas (with a slight fade for a trailing effect)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Subtle trail effect
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Update and Draw Stars
+            for (let i = stars.length - 1; i >= 0; i--) {
+                const star = stars[i];
+                star.update();
+                star.draw();
+
+                // Remove dead stars
+                if (star.life <= 0) {
+                    stars.splice(i, 1);
+                }
+            }
+
+            // 3. Draw the Bright Core
+            drawCore();
+
+            frameCount++;
+            requestAnimationFrame(animate);
+        }
+
+        function drawCore() {
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Core glow (simulating the bright center)
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, CORE_RADIUS * 2);
+            gradient.addColorStop(0, 'rgba(255, 255, 200, 1)'); // Brightest center
+            gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.5)'); // Orange/Yellow glow
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Fades to black
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, CORE_RADIUS * 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+
+        // --- Resize Handler ---
+        window.addEventListener('resize', () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        });
+
+        // Start the simulation
+        initializeStars();
+        animate();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rotating DNA Double Helix</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      background: #000;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="dnaCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size to window size
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // DNA parameters
+    const helixRadius = Math.min(canvas.width, canvas.height) * 0.25;
+    const helixHeight = Math.min(canvas.width, canvas.height) * 0.6;
+    const turns = 8;
+    const nodesPerTurn = 32;
+    const totalNodes = turns * nodesPerTurn;
+    const strandOffset = Math.PI; // 180 degrees out of phase for second strand
+    const rungLength = helixRadius * 0.4; // Length of horizontal rungs
+    const rotationSpeed = 0.002; // Radians per frame
+
+    // Generate strand points: [x, y, z] for each node
+    const strand1 = [];
+    const strand2 = [];
+
+    for (let i = 0; i < totalNodes; i++) {
+      const t = i / totalNodes; // Normalized position along helix [0,1]
+      const angle = t * turns * 2 * Math.PI;
+      const y = (t - 0.5) * helixHeight; // Centered vertically
+
+      // Strand 1
+      const x1 = Math.cos(angle) * helixRadius;
+      const z1 = Math.sin(angle) * helixRadius;
+      strand1.push([x1, y, z1]);
+
+      // Strand 2: offset by half a turn (PI radians) and slightly varied radius for visual depth
+      const x2 = Math.cos(angle + strandOffset) * helixRadius * 0.95;
+      const z2 = Math.sin(angle + strandOffset) * helixRadius * 0.95;
+      strand2.push([x2, y, z2]);
+    }
+
+    // Animation state
+    let rotationAngle = 0;
+
+    // Simple 3D rotation around Y-axis (vertical axis) and projection to 2D
+    function rotateY(point, angle) {
+      const [x, y, z] = point;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const x2 = x * cosA - z * sinA;
+      const z2 = x * sinA + z * cosA;
+      return [x2, y, z2]; // Return rotated point (we'll ignore z for 2D projection, but keep for depth sorting)
+    }
+
+    function project(point, scale) {
+      const [x, y, z] = point;
+      // Simple perspective: scale based on distance (z) — but we'll use orthographic for simplicity and performance
+      // For subtle depth, we'll use a fixed scale and vary alpha by z
+      const projectedX = x * scale + canvas.width / 2;
+      const projectedY = -y * scale + canvas.height / 2; // Negative y because canvas y increases downward
+      return [projectedX, projectedY, z]; // Return z for depth-based styling
+    }
+
+    // Draw a single strand
+    function drawStrand(points, color, scale) {
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const rotated = rotateY(points[i], rotationAngle);
+        const projected = project(rotated, scale);
+        const [x, y, z] = projected;
+
+        // Use z to modulate alpha and size for depth cue
+        const depthFactor = (z + helixRadius) / (2 * helixRadius); // Normalize z to [0,1]
+        const alpha = 0.6 + 0.4 * depthFactor; // Range: 0.6 to 1.0
+        const radius = 2 + depthFactor * 2; // Range: 2 to 4
+
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw connections between nodes (strand backbone)
+      ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const rotated = rotateY(points[i], rotationAngle);
+        const projected = project(rotated, scale);
+        const [x, y] = projected;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Draw rungs between corresponding nodes of strand1 and strand2
+    function drawRungs(scale) {
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(100, 200, 255, 0.4)'; // Subtle cyan-blue for rungs
+
+      for (let i = 0; i < totalNodes; i++) {
+        const p1 = rotateY(strand1[i], rotationAngle);
+        const p2 = rotateY(strand2[i], rotationAngle);
+        const proj1 = project(p1, scale);
+        const proj2 = project(p2, scale);
+        const [x1, y1] = proj1;
+        const [x2, y2] = proj2;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+    }
+
+    // Main animation loop
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const scale = Math.min(canvas.width, canvas.height) * 0.004; // Scale factor for projection
+
+      // Define strand colors with subtle variation
+      const color1 = { r: 100, g: 200, b: 255 }; // Cyan-blue
+      const color2 = { r: 255, g: 100, b: 200 }; // Magenta-pink
+
+      // Draw rungs first (behind strands)
+      drawRungs(scale);
+
+      // Draw strands
+      drawStrand(strand1, color1, scale);
+      drawStrand(strand2, color2, scale);
+
+      rotationAngle += rotationSpeed;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

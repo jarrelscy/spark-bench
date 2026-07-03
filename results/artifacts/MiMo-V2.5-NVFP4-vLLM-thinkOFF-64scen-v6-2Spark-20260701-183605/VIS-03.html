@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0a0a14;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // DNA parameters
+        const numNodes = 60;
+        const strandSpacing = Math.PI; // phase offset between strands
+        const radius = 80;
+        const verticalSpread = 300;
+        const nodeRadius = 3;
+        const rungWidth = 2;
+
+        let time = 0;
+
+        function getColor(strandIndex, yRatio, alpha) {
+            if (strandIndex === 0) {
+                // Strand A: cyan to teal gradient
+                const r = Math.floor(0 + 40 * yRatio);
+                const g = Math.floor(180 + 75 * yRatio);
+                const b = Math.floor(220 - 20 * yRatio);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            } else {
+                // Strand B: magenta to pink gradient
+                const r = Math.floor(220 - 20 * yRatio);
+                const g = Math.floor(50 + 40 * yRatio);
+                const b = Math.floor(180 + 75 * yRatio);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+        }
+
+        function drawDNA() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Background glow
+            const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.5);
+            gradient.addColorStop(0, 'rgba(20, 20, 50, 0.5)');
+            gradient.addColorStop(1, 'rgba(10, 10, 20, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            const centerY = height / 2;
+            const startX = width / 2;
+
+            // Collect node positions for both strands
+            const strandA = [];
+            const strandB = [];
+
+            for (let i = 0; i <= numNodes; i++) {
+                const t = i / numNodes;
+                const angle = t * Math.PI * 4 + time;
+                const yPos = centerY - verticalSpread + t * verticalSpread * 2;
+
+                // Strand A
+                const xA = startX + Math.cos(angle) * radius;
+                const zA = Math.sin(angle); // depth for size/opacity
+
+                // Strand B (offset by PI)
+                const xB = startX + Math.cos(angle + strandSpacing) * radius;
+                const zB = Math.sin(angle + strandSpacing);
+
+                strandA.push({ x: xA, y: yPos, z: zA });
+                strandB.push({ x: xB, y: yPos, z: zB });
+            }
+
+            // Draw rungs first (behind nodes)
+            for (let i = 0; i < numNodes; i++) {
+                const nodeA = strandA[i];
+                const nodeB = strandB[i];
+
+                const avgZ = (nodeA.z + nodeB.z) / 2;
+                const depthFactor = (avgZ + 1) / 2; // 0 to 1
+                const alpha = 0.15 + depthFactor * 0.5;
+                const lineWidth = 1 + depthFactor * 2;
+
+                ctx.beginPath();
+                ctx.moveTo(nodeA.x, nodeA.y);
+                ctx.lineTo(nodeB.x, nodeB.y);
+                ctx.strokeStyle = `rgba(100, 120, 160, ${alpha})`;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+            }
+
+            // Draw backbone connections for each strand
+            function drawBackbone(strand, strandIndex) {
+                ctx.beginPath();
+                for (let i = 0; i < strand.length; i++) {
+                    const node = strand[i];
+                    const depthFactor = (node.z + 1) / 2;
+                    const alpha = 0.2 + depthFactor * 0.6;
+                    const yRatio = i / numNodes;
+
+                    if (i === 0) {
+                        ctx.moveTo(node.x, node.y);
+                    } else {
+                        ctx.lineTo(node.x, node.y);
+                    }
+                }
+                const baseAlpha = 0.15;
+                ctx.strokeStyle = getColor(strandIndex, 0.5, baseAlpha);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            drawBackbone(strandA, 0);
+            drawBackbone(strandB, 1);
+
+            // Draw nodes for both strands
+            function drawNodes(strand, strandIndex) {
+                for (let i = 0; i < strand.length; i++) {
+                    const node = strand[i];
+                    const depthFactor = (node.z + 1) / 2; // 0 (back) to 1 (front)
+                    const alpha = 0.2 + depthFactor * 0.8;
+                    const size = nodeRadius * (0.5 + depthFactor * 1.2);
+                    const yRatio = i / numNodes;
+
+                    const color = getColor(strandIndex, yRatio, alpha);
+
+                    // Glow effect
+                    const glowSize = size * 3;
+                    const glowGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
+                    glowGrad.addColorStop(0, color);
+                    glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = glowGrad;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, glowSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Node dot
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                }
+            }
+
+            drawNodes(strandA, 0);
+            drawNodes(strandB, 1);
+        }
+
+        function animate() {
+            time += 0.015;
+            drawDNA();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

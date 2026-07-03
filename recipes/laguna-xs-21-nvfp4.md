@@ -54,6 +54,8 @@ We A/B-tested a throughput-tuned config (`--compilation-config cudagraph_capture
 
 **TrueScore 65.1** (Cap 56 · Cal 74 · Rel 80). A narrow coding specialist: **code 86.2 · visual 98.6 · structured 79.8** strong; tool_use/agentic/planning ~35 weak (3B-active limits general breadth). RelGap 20% (inconsistent). Real coding/terminal ability is under-represented by a general suite.
 
+> **Update 2026-07-03 — AEON image v0.24.0** (`ghcr.io/aeon-7/aeon-vllm-ultimate:2026-07-01-v0.24.0`): verified on-device that the `poolside_v1` strict-newline regex is fixed upstream (Gotcha 1's patch likely unnecessary on 0.24 — test tools before relying on it), but `DFlashLagunaForCausalLM` is **still not registered**, so the DFlash section below still applies (the PR #46853 cherry-pick should land nearly clean on the 0.24 base).
+
 ## Optional: DFlash speculative decoding (Phase 2 — not yet applied)
 
 Poolside ships a 5-layer DFlash drafter (`poolside/Laguna-XS-2.1-DFlash-NVFP4`, 0.9 GB, ≤7 tokens/step, ~70% accept on coding, arch `DFlashLagunaForCausalLM`). vLLM support = [PR #46853](https://github.com/vllm-project/vllm/pull/46853) (open — ~420 lines / 5 prod files; the aeon image already has most of the `laguna.py` DFlash side). Cherry-pick it into the container like the parser patch, then add `--speculative-config '{"model":"poolside/Laguna-XS-2.1-DFlash-NVFP4","num_speculative_tokens":7,"method":"dflash"}'` (and **drop** `--async-scheduling`). Expect ~1.5-2× single-stream, quality unchanged. Note the two dead paths: aeon `--speculative-config` as-is loads the wrong (Qwen3-shaped) drafter; scitrera SGLang 0.5.12 predates the SGLang DFlash PR.

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Double Helix</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a1a; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+(function() {
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var NUM_NODES = 40;
+    var TURNS = 3;
+    var STRAND_RADIUS = 120;
+    var RUNG_LENGTH = 180;
+    var NODE_RADIUS = 3.5;
+    var ROTATION_SPEED = 0.015;
+    var TAU = Math.PI * 2;
+
+    var strand1Color = { r: 50, g: 150, b: 255 };
+    var strand2Color = { r: 255, g: 70, b: 130 };
+
+    var nodes1 = [];
+    var nodes2 = [];
+
+    function createNodes() {
+        nodes1 = [];
+        nodes2 = [];
+        for (var i = 0; i < NUM_NODES; i++) {
+            var t = i / (NUM_NODES - 1);
+            var z = (t - 0.5) * 600;
+            var angle1 = t * TAU * TURNS;
+            var angle2 = angle1 + Math.PI;
+
+            nodes1.push({
+                x: Math.cos(angle1) * STRAND_RADIUS,
+                y: Math.sin(angle1) * STRAND_RADIUS,
+                z: z,
+                angle: angle1,
+                t: t,
+                index: i
+            });
+            nodes2.push({
+                x: Math.cos(angle2) * STRAND_RADIUS,
+                y: Math.sin(angle2) * STRAND_RADIUS,
+                z: z,
+                angle: angle2,
+                t: t,
+                index: i
+            });
+        }
+    }
+    createNodes();
+
+    function hsl(h, s, l) {
+        return 'hsl(' + h + ',' + s + '%,' + l + '%)';
+    }
+
+    function drawHelix(rotationOffset) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        var centerX = canvas.width / 2;
+        var centerY = canvas.height / 2;
+
+        // Draw connecting rungs
+        for (var i = 0; i < NUM_NODES; i++) {
+            var n1 = nodes1[i];
+            var n2 = nodes2[i];
+
+            var a1 = n1.angle + rotationOffset;
+            var a2 = n2.angle + rotationOffset;
+
+            var x1 = Math.cos(a1) * STRAND_RADIUS;
+            var y1 = Math.sin(a1) * STRAND_RADIUS;
+            var z1 = n1.z;
+
+            var x2 = Math.cos(a2) * STRAND_RADIUS;
+            var y2 = Math.sin(a2) * STRAND_RADIUS;
+            var z2 = n2.z;
+
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+
+            var avgZ = (z1 + z2) / 2;
+            var depthFactor = (avgZ + 300) / 600;
+            depthFactor = Math.max(0.15, Math.min(1, depthFactor));
+
+            var hue1 = 200 + Math.sin(a1) * 20;
+            var hue2 = 340 + Math.sin(a2) * 20;
+
+            ctx.beginPath();
+            ctx.moveTo(centerX + x1, centerY + y1);
+            ctx.lineTo(centerX + x2, centerY + y2);
+
+            var grad = ctx.createLinearGradient(centerX + x1, centerY + y1, centerX + x2, centerY + y2);
+            grad.addColorStop(0, 'rgba(' + (strand1Color.r * 0.3 + 20) + ',' + (strand1Color.g * 0.3 + 15) + ',' + (strand1Color.b * 0.3 + 40) + ',' + (0.25 * depthFactor) + ')');
+            grad.addColorStop(1, 'rgba(' + (strand2Color.r * 0.3 + 20) + ',' + (strand2Color.g * 0.3 + 15) + ',' + (strand2Color.b * 0.3 + 40) + ',' + (0.25 * depthFactor) + ')');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.5 * depthFactor;
+            ctx.stroke();
+        }
+
+        // Draw strand 1 nodes
+        for (var i = 0; i < NUM_NODES; i++) {
+            var n1 = nodes1[i];
+            var a1 = n1.angle + rotationOffset;
+            var x1 = Math.cos(a1) * STRAND_RADIUS;
+            var y1 = Math.sin(a1) * STRAND_RADIUS;
+            var z1 = n1.z;
+
+            var depthFactor = (z1 + 300) / 600;
+            depthFactor = Math.max(0.2, Math.min(1, depthFactor));
+
+            var nodeSize = NODE_RADIUS * (0.6 + depthFactor * 0.8);
+            var glowSize = 12 * depthFactor;
+
+            var hue = 200 + Math.sin(a1) * 15;
+            var lightness = 55 + depthFactor * 25;
+
+            ctx.beginPath();
+            ctx.arc(centerX + x1, centerY + y1, glowSize, 0, TAU);
+            ctx.fillStyle = 'rgba(50,150,255,' + (0.15 * depthFactor) + ')';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(centerX + x1, centerY + y1, nodeSize, 0, TAU);
+            var nGrad = ctx.createRadialGradient(centerX + x1, centerY + y1, 0, centerX + x1, centerY + y1, nodeSize);
+            nGrad.addColorStop(0, 'rgba(120,200,255,' + (0.9 * depthFactor) + ')');
+            nGrad.addColorStop(0.6, 'rgba(50,150,255,' + (0.7 * depthFactor) + ')');
+            nGrad.addColorStop(1, 'rgba(30,80,180,' + (0.5 * depthFactor) + ')');
+            ctx.fillStyle = nGrad;
+            ctx.fill();
+        }
+
+        // Draw strand 2 nodes
+        for (var i = 0; i < NUM_NODES; i++) {
+            var n2 = nodes2[i];
+            var a2 = n2.angle + rotationOffset;
+            var x2 = Math.cos(a2) * STRAND_RADIUS;
+            var y2 = Math.sin(a2) * STRAND_RADIUS;
+            var z2 = n2.z;
+
+            var depthFactor = (z2 + 300) / 600;
+            depthFactor = Math.max(0.2, Math.min(1, depthFactor));
+
+            var nodeSize = NODE_RADIUS * (0.6 + depthFactor * 0.8);
+            var glowSize = 12 * depthFactor;
+
+            var hue = 340 + Math.sin(a2) * 15;
+            var lightness = 55 + depthFactor * 25;
+
+            ctx.beginPath();
+            ctx.arc(centerX + x2, centerY + y2, glowSize, 0, TAU);
+            ctx.fillStyle = 'rgba(255,70,130,' + (0.15 * depthFactor) + ')';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(centerX + x2, centerY + y2, nodeSize, 0, TAU);
+            var nGrad = ctx.createRadialGradient(centerX + x2, centerY + y2, 0, centerX + x2, centerY + y2, nodeSize);
+            nGrad.addColorStop(0, 'rgba(255,150,190,' + (0.9 * depthFactor) + ')');
+            nGrad.addColorStop(0.6, 'rgba(255,70,130,' + (0.7 * depthFactor) + ')');
+            nGrad.addColorStop(1, 'rgba(180,40,80,' + (0.5 * depthFactor) + ')');
+            ctx.fillStyle = nGrad;
+            ctx.fill();
+        }
+
+        // Draw connecting lines between consecutive nodes on each strand
+        ctx.lineWidth = 2;
+
+        // Strand 1 lines
+        for (var i = 0; i < NUM_NODES - 1; i++) {
+            var n1 = nodes1[i];
+            var n2 = nodes1[i + 1];
+            var a1 = n1.angle + rotationOffset;
+            var a2 = n2.angle + rotationOffset;
+            var x1 = Math.cos(a1) * STRAND_RADIUS;
+            var y1 = Math.sin(a1) * STRAND_RADIUS;
+            var z1 = n1.z;
+            var x2 = Math.cos(a2) * STRAND_RADIUS;
+            var y2 = Math.sin(a2) * STRAND_RADIUS;
+            var z2 = n2.z;
+
+            var avgZ = (z1 + z2) / 2;
+            var depthFactor = (avgZ + 300) / 600;
+            depthFactor = Math.max(0.15, Math.min(1, depthFactor));
+
+            ctx.beginPath();
+            ctx.moveTo(centerX + x1, centerY + y1);
+            ctx.lineTo(centerX + x2, centerY + y2);
+            ctx.strokeStyle = 'rgba(50,150,255,' + (0.4 * depthFactor) + ')';
+            ctx.lineWidth = 2 * depthFactor;
+            ctx.stroke();
+        }
+
+        // Strand 2 lines
+        for (var i = 0; i < NUM_NODES - 1; i++) {
+            var n1 = nodes2[i];
+            var n2 = nodes2[i + 1];
+            var a1 = n1.angle + rotationOffset;
+            var a2 = n2.angle + rotationOffset;
+            var x1 = Math.cos(a1) * STRAND_RADIUS;
+            var y1 = Math.sin(a1) * STRAND_RADIUS;
+            var z1 = n1.z;
+            var x2 = Math.cos(a2) * STRAND_RADIUS;
+            var y2 = Math.sin(a2) * STRAND_RADIUS;
+            var z2 = n2.z;
+
+            var avgZ = (z1 + z2) / 2;
+            var depthFactor = (avgZ + 300) / 600;
+            depthFactor = Math.max(0.15, Math.min(1, depthFactor));
+
+            ctx.beginPath();
+            ctx.moveTo(centerX + x1, centerY + y1);
+            ctx.lineTo(centerX + x2, centerY + y2);
+            ctx.strokeStyle = 'rgba(255,70,130,' + (0.4 * depthFactor) + ')';
+            ctx.lineWidth = 2 * depthFactor;
+            ctx.stroke();
+        }
+    }
+
+    var rotationOffset = 0;
+    var lastTime = 0;
+
+    function animate(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        var dt = timestamp - lastTime;
+        lastTime = timestamp;
+
+        rotationOffset += ROTATION_SPEED * (dt / 16.67);
+
+        drawHelix(rotationOffset);
+        requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

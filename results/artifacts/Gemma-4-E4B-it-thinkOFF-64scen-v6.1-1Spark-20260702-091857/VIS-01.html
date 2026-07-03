@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Solar System Animation</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #00000a;
+    }
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+<body>
+<canvas id="solarSystemCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('solarSystemCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    // --- Configuration ---
+    const SUN_RADIUS = 30;
+    const STAR_COUNT = 100;
+    const PLANETS_CONFIG = [
+        // Name, Radius, Orbital Radius, Orbital Speed (radians/frame), Color
+        { name: "Mercury", radius: 5, orbitRadius: 80, speed: 0.04, color: "#a0a0ff" },
+        { name: "Venus", radius: 8, orbitRadius: 120, speed: 0.025, color: "#ffaa00" },
+        { name: "Earth", radius: 10, orbitRadius: 180, speed: 0.018, color: "#00aaff" },
+        { name: "Mars", radius: 7, orbitRadius: 240, speed: 0.012, color: "#ff4400" },
+        { name: "Jupiter", radius: 15, orbitRadius: 320, speed: 0.008, color: "#cc9966" },
+        { name: "Saturn", radius: 13, orbitRadius: 400, speed: 0.006, color: "#c2c280" }
+    ];
+
+    // --- State Variables ---
+    let planets = [];
+    let stars = [];
+    let time = 0;
+
+    // --- Initialization ---
+
+    // Initialize Stars
+    function createStars() {
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 1.5 + 0.5,
+                opacity: Math.random() * 0.8 + 0.2
+            });
+        }
+    }
+
+    // Initialize Planets
+    function createPlanets() {
+        PLANETS_CONFIG.forEach(config => {
+            planets.push({
+                radius: config.radius,
+                orbitRadius: config.orbitRadius,
+                speed: config.speed,
+                color: config.color,
+                angle: Math.random() * Math.PI * 2, // Start at random angle
+                name: config.name
+            });
+        });
+    }
+
+    // --- Drawing Functions ---
+
+    function drawStars() {
+        ctx.fillStyle = 'white';
+        stars.forEach(star => {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+            ctx.fill();
+        });
+    }
+
+    function drawSun() {
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        // Outer glow effect
+        ctx.shadowBlur = 50;
+        ctx.shadowColor = 'yellow';
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, SUN_RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffaa00';
+        ctx.fill();
+
+        // Inner core
+        ctx.shadowBlur = 0; // Reset shadow
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, SUN_RADIUS * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffdd00';
+        ctx.fill();
+    }
+
+    function drawPlanets() {
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        planets.forEach(planet => {
+            // 1. Calculate position based on orbital mechanics
+            // X = CenterX + OrbitRadius * cos(angle)
+            // Y = CenterY + OrbitRadius * sin(angle)
+            const x = centerX + planet.orbitRadius * Math.cos(planet.angle);
+            const y = centerY + planet.orbitRadius * Math.sin(planet.angle);
+
+            // 2. Draw the planet body
+            ctx.beginPath();
+            ctx.arc(x, y, planet.radius, 0, Math.PI * 2);
+            ctx.fillStyle = planet.color;
+            ctx.fill();
+            
+            // Optional: Add a subtle glow/outline
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        });
+    }
+
+    // --- Animation Loop ---
+
+    function animate() {
+        // 1. Clear the canvas (creates the black space)
+        ctx.fillStyle = 'rgba(0, 0, 10, 0.1)'; // Slight trail effect by not clearing fully
+        ctx.fillRect(0, 0, width, height);
+        
+        // 2. Update positions
+        planets.forEach(planet => {
+            // Update angle: angle = angle + speed
+            planet.angle += planet.speed;
+        });
+
+        // 3. Draw elements
+        drawStars();
+        drawSun();
+        drawPlanets();
+
+        // 4. Request next frame
+        requestAnimationFrame(animate);
+    }
+
+    // --- Event Listeners & Setup ---
+
+    window.addEventListener('resize', () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    });
+
+    // Start the simulation
+    createStars();
+    createPlanets();
+    animate();
+
+</script>
+</body>
+</html>

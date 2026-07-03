@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510; /* Dark background */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    const config = {
+        nodeCount: 60,          // Number of nodes
+        radius: 150,            // Helix radius
+        verticalSpacing: 20,    // Distance between nodes vertically
+        rotationSpeed: 0.03,    // Radians per frame
+        nodeSize: 6,            // Radius of nodes
+        rungOpacity: 0.6,       // Opacity of connecting rungs
+        colors: {
+            strand1: { r: 50, g: 200, b: 255 }, // Cyan
+            strand2: { r: 255, g: 100, b: 150 }, // Pink
+            rung: { r: 255, g: 255, b: 255 }    // White
+        }
+    };
+
+    let width, height;
+    let rotationAngle = 0;
+
+    // Resize canvas to fit window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Helper to calculate 3D position projected to 2D
+    function getHelixPoint(index, angleOffset) {
+        const angle = (index * config.verticalSpacing) / config.radius + angleOffset;
+        
+        // 3D coordinates
+        const x3d = Math.cos(angle) * config.radius;
+        const z3d = Math.sin(angle) * config.radius;
+        const y3d = (index - config.nodeCount / 2) * config.verticalSpacing;
+
+        // Project to 2D (simple perspective projection)
+        // The center of the canvas is the axis
+        const perspective = 800; // Perspective factor
+        const scale = perspective / (perspective + z3d);
+        
+        const x2d = width / 2 + x3d * scale;
+        const y2d = height / 2 + y3d * scale;
+
+        return { x: x2d, y: y2d, z: z3d, scale: scale };
+    }
+
+    function draw() {
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        // 1. Calculate positions for all nodes and determine depth (z-index)
+        const nodes = [];
+        
+        for (let i = 0; i < config.nodeCount; i++) {
+            // Strand 1 (Blue)
+            const p1 = getHelixPoint(i, rotationAngle);
+            // Strand 2 (Pink) - offset by PI (180 degrees)
+            const p2 = getHelixPoint(i, rotationAngle + Math.PI);
+
+            nodes.push({ ...p1, index: i, strand: 1 });
+            nodes.push({ ...p2, index: i, strand: 2 });
+        }
+
+        // Sort all elements (rungs and nodes) by Z-depth to draw back-to-front
+        // We need to create a list of objects to sort
+        const renderList = [];
+
+        // Add nodes
+        nodes.forEach(n => {
+            renderList.push({ type: 'node', ...n });
+        });
+
+        // Add rungs (connect corresponding nodes i and i)
+        for (let i = 0; i < config.nodeCount; i++) {
+            const p1 = getHelixPoint(i, rotationAngle);
+            const p2 = getHelixPoint(i, rotationAngle + Math.PI);
+            
+            // Calculate average Z for sorting
+            const avgZ = (p1.z + p2.z) / 2;
+            
+            renderList.push({ 
+                type: 'rung', 
+                x1: p1.x, y1: p1.y, 
+                x2: p2.x, y2: p2.y, 
+                z: avgZ 
+            });
+        }
+
+        // Sort: Lower Z (further away) draws first
+        renderList.sort((a, b) => a.z - b.z);
+
+        // 2. Draw everything
+        renderList.forEach(item => {
+            if (item.type === 'rung') {
+                // Draw Rung
+                ctx.beginPath();
+                ctx.moveTo(item.x1, item.y1);
+                ctx.lineTo(item.x2, item.y2);
+                
+                // Opacity based on depth (further = darker)
+                const depthAlpha = (item.z + config.radius) / (2 * config.radius);
+                const alpha = 0.3 + (depthAlpha * 0.5);
+                
+                ctx.strokeStyle = `rgba(${config.colors.rung.r}, ${config.colors.rung.g}, ${config.colors.rung.b}, ${alpha})`;
+                ctx.lineWidth = 2 * ((item.x1 + item.x2) / 2 / width); // Slight width scaling
+                ctx.stroke();
+
+            } else if (item.type === 'node') {
+                // Draw Node
+                const color = item.strand === 1 ? config.colors.strand1 : config.colors.strand2;
+                
+                // Depth-based opacity and size
+                const depthFactor = (item.z + config.radius) / (2 * config.radius);
+                const alpha = 0.5 + (depthFactor * 0.5);
+                const size = config.nodeSize * item.scale;
+
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+                ctx.fill();
+                
+                // Glow effect
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0.8)`;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset shadow for performance
+            }
+        });
+
+        // Update rotation
+        rotationAngle += config.rotationSpeed;
+
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    draw();
+
+</script>
+
+</body>
+</html>

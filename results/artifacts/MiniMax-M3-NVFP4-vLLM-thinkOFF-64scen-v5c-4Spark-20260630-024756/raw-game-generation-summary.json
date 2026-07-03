@@ -1,0 +1,48 @@
+[
+  {
+    "model": "minimax-m3",
+    "endpoint": "http://10.0.0.109:8000/v1/chat/completions",
+    "prompt": "Create a complete, self-contained single HTML file that is a playable version of the classic arcade game Frogger.\n\nRequirements:\n- Use HTML5 Canvas for the game\n- Retro pixel art style with vibrant colors and clean sprites\n- The frog can move up, down, left, and right\n- Include moving cars on multiple lanes (different speeds and directions)\n- Include a river section with floating logs and turtles that the frog can ride\n- Add basic collision detection (frog dies when hit by a car or falls in water)\n- Winning condition: frog reaches the top safe zone\n- Score counter and lives system\n- Simple sound effects using Web Audio API (optional but nice)\n- Game should be fully playable\n\nControls:\n- Keyboard: Arrow keys (or WASD)\n- On-screen controller: Small, clean touch-friendly directional pad (D-pad) or four buttons at the bottom of the screen that works well on both mobile and desktop\n- The controller should be clearly visible, responsive, and not overlap the game area\n\nAdditional polish:\n- Responsive design that works on both desktop and mobile\n- Restart button\n- Simple instructions or title at the top\n- Clean, modern retro aesthetic\n- Make the code well-organized and commented where helpful\n\nOutput only the complete HTML code in one file. The game should run immediately when opened in any browser.",
+    "temperature": 0.3,
+    "max_tokens": 12000,
+    "chat_template_kwargs": {
+      "thinking_mode": "disabled",
+      "enable_thinking": false
+    },
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 437,
+      "total_tokens": 8092,
+      "completion_tokens": 7655
+    },
+    "elapsed_seconds": 413.665,
+    "content_chars": 21814,
+    "html_chars": 21802,
+    "raw_sse_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/FROGGER-raw-sse.txt",
+    "raw_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/FROGGER-raw-response.txt",
+    "html_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/FROGGER.html"
+  },
+  {
+    "model": "minimax-m3",
+    "endpoint": "http://10.0.0.109:8000/v1/chat/completions",
+    "prompt": "Create a fully playable Space Invaders game in a single HTML file.",
+    "temperature": 0.3,
+    "max_tokens": 8000,
+    "chat_template_kwargs": {
+      "thinking_mode": "disabled",
+      "enable_thinking": false
+    },
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 177,
+      "total_tokens": 4934,
+      "completion_tokens": 4757
+    },
+    "elapsed_seconds": 259.535,
+    "content_chars": 14066,
+    "html_chars": 13024,
+    "raw_sse_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/SPACE-INVADERS-raw-sse.txt",
+    "raw_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/SPACE-INVADERS-raw-response.txt",
+    "html_path": "/home/raulwesche/projects/spark-bench/results/artifacts/MiniMax-M3-NVFP4-vLLM-thinkOFF-64scen-v5c-4Spark-20260630-024756/SPACE-INVADERS.html"
+  }
+]

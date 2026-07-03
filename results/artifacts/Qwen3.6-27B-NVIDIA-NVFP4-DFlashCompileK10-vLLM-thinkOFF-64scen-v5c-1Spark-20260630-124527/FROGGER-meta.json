@@ -1,0 +1,14 @@
+{
+  "game": "FROGGER",
+  "endpoint": "http://127.0.0.1:8000/v1",
+  "model": "qwen36-27b-nvidia-nvfp4-dflash",
+  "max_tokens": 12000,
+  "temperature": 0.3,
+  "finish_reason": "stop",
+  "elapsed_seconds": 143.123,
+  "content_chars": 19216,
+  "html_chars": 18969,
+  "prompt_tokens": 294,
+  "completion_tokens": 5980,
+  "total_tokens": 6274
+}
