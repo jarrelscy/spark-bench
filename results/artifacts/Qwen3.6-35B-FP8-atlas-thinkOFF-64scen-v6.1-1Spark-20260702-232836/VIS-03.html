@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Configuration
+        const numNodes = 40;
+        const verticalSpacing = 25;
+        const radius = 120;
+        const nodeRadius = 6;
+        const rotationSpeed = 0.02;
+        let rotationAngle = 0;
+
+        // Colors
+        const colorStrand1 = { r: 60, g: 200, b: 255 }; // Cyan
+        const colorStrand2 = { r: 255, g: 80, b: 120 }; // Pink/Red
+
+        function getColor(r, g, b, alpha) {
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function lerpColor(c1, c2, t) {
+            return {
+                r: Math.round(c1.r + (c2.r - c1.r) * t),
+                g: Math.round(c1.g + (c2.g - c1.g) * t),
+                b: Math.round(c1.b + (c2.b - c1.b) * t)
+            };
+        }
+
+        function drawDNA() {
+            // Clear background with slight fade for motion blur effect (optional, using solid clear here for crispness)
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerY = height / 2;
+            const totalHeight = numNodes * verticalSpacing;
+            const startY = centerY - totalHeight / 2;
+
+            // Calculate all node positions first to handle depth sorting
+            const nodes = [];
+
+            for (let i = 0; i < numNodes; i++) {
+                const y = startY + i * verticalSpacing;
+                // Phase difference of PI for the two strands
+                const phase1 = rotationAngle + (i * 0.2);
+                const phase2 = rotationAngle + (i * 0.2) + Math.PI;
+
+                const x1 = width / 2 + Math.sin(phase1) * radius;
+                const z1 = Math.cos(phase1); // -1 to 1, where 1 is front, -1 is back
+
+                const x2 = width / 2 + Math.sin(phase2) * radius;
+                const z2 = Math.cos(phase2);
+
+                nodes.push({
+                    index: i,
+                    y: y,
+                    strand1: { x: x1, z: z1 },
+                    strand2: { x: x2, z: z2 }
+                });
+            }
+
+            // Draw connections (rungs) and nodes
+            // We need to sort all elements (rungs and nodes) by depth (z) to draw back-to-front
+            // However, since rungs connect two nodes, we can't easily sort rungs independently.
+            // Instead, we'll draw rungs first, then nodes, but we need to handle the node z-ordering.
+            // A simpler approach for a double helix:
+            // 1. Draw all rungs. The rungs will be drawn in order. The ones "behind" will be drawn first.
+            //    But since they are lines, the z-sorting is less critical for the lines themselves.
+            // 2. Draw all nodes. We must sort nodes by z-depth.
+
+            // Draw rungs
+            for (let i = 0; i < numNodes; i++) {
+                const node = nodes[i];
+                const p1 = node.strand1;
+                const p2 = node.strand2;
+
+                // Average depth of the rung to determine opacity
+                const avgZ = (p1.z + p2.z) / 2;
+                const alpha = 0.3 + 0.4 * ((avgZ + 1) / 2); // Map -1..1 to 0.3..0.7
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                
+                // Color gradient for rungs
+                const rungColor = lerpColor(colorStrand1, colorStrand2, 0.5);
+                ctx.strokeStyle = getColor(rungColor.r, rungColor.g, rungColor.b, alpha);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Sort nodes by z-depth (back to front)
+            // We create a list of all node positions with their z and index
+            const sortedNodes = [];
+            for (let i = 0; i < numNodes; i++) {
+                sortedNodes.push({ index: i, z: nodes[i].strand1.z, strand: 1 });
+                sortedNodes.push({ index: i, z: nodes[i].strand2.z, strand: 2 });
+            }
+            // Sort by z descending (back to front: -1 is back, 1 is front)
+            sortedNodes.sort((a, b) => a.z - b.z);
+
+            // Draw nodes
+            sortedNodes.forEach(item => {
+                const node = nodes[item.index];
+                const pos = item.strand === 1 ? node.strand1 : node.strand2;
+                const z = pos.z;
+
+                // Map z (-1 to 1) to size and opacity
+                const scale = 0.5 + 0.5 * ((z + 1) / 2); // 0.5 to 1.0
+                const alpha = 0.4 + 0.6 * ((z + 1) / 2); // 0.4 to 1.0
+
+                const currentColor = item.strand === 1 ? colorStrand1 : colorStrand2;
+                const glowColor = item.strand === 1 ? colorStrand2 : colorStrand1; // Complementary glow
+
+                const drawRadius = nodeRadius * scale;
+
+                // Draw glow
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, drawRadius * 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = getColor(glowColor.r, glowColor.g, glowColor.b, alpha * 0.2);
+                ctx.fill();
+
+                // Draw node
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, drawRadius, 0, Math.PI * 2);
+                ctx.fillStyle = getColor(currentColor.r, currentColor.g, currentColor.b, alpha);
+                ctx.fill();
+
+                // Highlight
+                ctx.beginPath(.arc(pos.x - drawRadius * 0.3, pos.y - drawRadius * 0.3, drawRadius * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                ctx.fill();
+            });
+        }
+
+        function animate() {
+            rotationAngle += rotationSpeed;
+            drawDNA();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

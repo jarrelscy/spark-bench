@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050508; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    let width, height;
+    const helixRadius = 120;
+    const nodeCount = 40; // Number of points on the helix
+    const helixHeight = 600; // Total height of the visualized DNA
+    const rotationSpeed = 0.02;
+    let angle = 0;
+    
+    // Colors
+    const colorStrand1 = { h: 0, s: 100, l: 60 }; // Red-ish
+    const colorStrand2 = { h: 240, s: 100, l: 60 }; // Blue-ish
+    const colorRung = { h: 200, s: 60, l: 50 }; // Teal-ish
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 3D Point Object
+    class Point3D {
+        constructor(x, y, z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+    }
+
+    // Projection settings
+    const perspective = 800; // Distance from viewer
+    const focalLength = perspective;
+
+    function project(point) {
+        // Simple perspective projection
+        // We translate the point by the perspective distance to simulate depth
+        const scale = focalLength / (focalLength + point.z);
+        const x2d = point.x * scale + width / 2;
+        const y2d = point.y * scale + height / 2;
+        return { x: x2d, y: y2d, scale: scale };
+    }
+
+    function rotateY(x, z, theta) {
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        return {
+            x: x * cos - z * sin,
+            z: x * sin + z * cos
+        };
+    }
+
+    function draw() {
+        // Clear canvas
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, width, height);
+
+        // Generate points for the current frame
+        const points = [];
+        const verticalSpacing = helixHeight / (nodeCount - 1);
+        const startY = -helixHeight / 2;
+
+        for (let i = 0; i < nodeCount; i++) {
+            // Calculate Y position
+            const y = startY + i * verticalSpacing;
+            
+            // Calculate X and Z using sine/cosine for the helix shape
+            // We offset the second strand by PI radians (180 degrees)
+            const x1 = Math.cos(angle + i * 0.3) * helixRadius;
+            const z1 = Math.sin(angle + i * 0.3) * helixRadius;
+            
+            const x2 = Math.cos(angle + i * 0.3 + Math.PI) * helixRadius;
+            const z2 = Math.sin(angle + i * 0.3 + Math.PI) * helixRadius;
+
+            // Store 3D points
+            const p1 = new Point3D(x1, y, z1);
+            const p2 = new Point3D(x2, y, z2);
+
+            points.push({ p1, p2, zDepth: (z1 + z2) / 2 }); // Average Z for sorting
+        }
+
+        // Sort points by Z depth (Painter's Algorithm)
+        // Draw items furthest away first
+        points.sort((a, b) => a.zDepth - b.zDepth);
+
+        // Draw the DNA
+        for (let i = 0; i < points.length; i++) {
+            const { p1, p2, zDepth } = points[i];
+
+            // Project 3D points to 2D
+            const proj1 = project(p1);
+            const proj2 = project(p2);
+
+            // Calculate opacity based on depth (fog effect)
+            // Z ranges roughly from -Radius to +Radius. 
+            // We want closer items (positive Z) to be brighter.
+            const minZ = -helixRadius * 1.5;
+            const maxZ = helixRadius * 1.5;
+            const alpha = Math.max(0.1, Math.min(1, (zDepth - minZ) / (maxZ - minZ)));
+            
+            // Line width scales with perspective
+            const lineWidth = Math.max(1, proj1.scale * 6);
+
+            // 1. Draw the Rungs (Connections)
+            ctx.beginPath();
+            ctx.moveTo(proj1.x, proj1.y);
+            ctx.lineTo(proj2.x, proj2.y);
+            ctx.strokeStyle = `hsla(${colorRung.h}, ${colorRung.s}%, ${colorRung.l}%, ${alpha * 0.5})`;
+            ctx.lineWidth = lineWidth * 0.6;
+            ctx.stroke();
+
+            // 2. Draw the Nodes (Spheres)
+            // Draw node 1
+            ctx.beginPath();
+            ctx.arc(proj1.x, proj1.y, lineWidth, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${colorStrand1.h}, ${colorStrand1.s}%, ${colorStrand1.l}%, ${alpha})`;
+            ctx.fill();
+
+            // Draw node 2
+            ctx.beginPath();
+            ctx.arc(proj2.x, proj2.y, lineWidth, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${colorStrand2.h}, ${colorStrand2.s}%, ${colorStrand2.l}%, ${alpha})`;
+            ctx.fill();
+
+            // 3. Draw the Backbone Strands (Connecting lines between nodes)
+            // We only draw lines to the *previous* node if the previous node exists
+            // and we draw them sequentially. Since we sorted by Z, drawing lines 
+            // between sorted nodes might look disjointed if the sort order changes drastically 
+            // between adjacent nodes. However, for a simple helix, the Z-sort is usually 
+            // monotonic enough for visual coherence, or we can just draw lines after nodes.
+            
+            // Better approach for strands:
+            // Instead of drawing lines between sorted nodes (which might connect distant parts),
+            // we should draw the strands as paths. But to respect depth, we must draw segments.
+            // A simpler visual hack for this specific "node" style is to draw lines between 
+            // the current node and the previous node in the *original* array, but we need 
+            // to ensure the line is drawn behind the nodes if it's further away.
+            // Since we are drawing node-by-node in Z-order, let's just draw the lines 
+            // connecting to the previous node in the *sorted* list? No, that breaks the helix structure.
+            
+            // Correct approach for strands with depth sorting:
+            // Draw lines connecting p[i] to p[i+1].
+            // But we can't easily sort lines individually without breaking the helix continuity.
+            // Compromise: Draw the lines *before* the nodes in the loop, or use a lower opacity.
+            // Or, strictly, we have to draw segments.
+            
+            // Let's draw the strand segments. We will iterate the original array order for segments
+            // but we can't easily sort them.
+            // Visual trick: We will draw the strand segments in a second pass or simply accept 
+            // that "tubes" are hard in 2D canvas.
+            // Let's stick to the "Node" look which handles depth well.
+            // To connect them, we can draw thin lines.
+            
+            if (i > 0) {
+                // Connect to previous node in the sorted list? No.
+                // We need to connect to the node that is adjacent in the helix structure.
+                // Let's find the index of the previous node in the helix structure.
+                // This is tricky with the sorted array.
+            }
+        }
+
+        // SECOND PASS: Draw the Backbone Lines
+        // To make the strands look continuous, we draw lines between adjacent nodes 
+        // from the original list. We will draw them with a slight transparency 
+        // so they don't clash too much with the depth sorting of the nodes.
+        // Ideally, we'd sort segments, but let's just draw them with lower opacity 
+        // or draw them before the nodes.
+        
+        // Let's re-draw the lines for the strands.
+        // We need to access the projected points again. 
+        // To do this cleanly, let's store the projected points.
+        
+        const projectedPoints = points.map(p => {
+            return {
+                p1: project(p.p1),
+                p2: project(p.p2),
+                z: p.zDepth
+            };
+        });
+        
+        // Sort projected points by Z again to draw lines in correct order
+        // This ensures lines further back are drawn before lines closer to front
+        projectedPoints.sort((a, b) => a.z - b.z);
+
+        // We need to map back to the original index to draw connections correctly
+        // But we lost the original index in the sort.
+        // Let's create a structure that holds original index.
+        
+        const helixData = [];
+        for (let i = 0; i < nodeCount; i++) {
+            const y = startY + i * verticalSpacing;
+            const x1 = Math.cos(angle + i * 0.3) * helixRadius;
+            const z1 = Math.sin(angle + i * 0.3) * helixRadius;
+            const x2 = Math.cos(angle + i * 0.3 + Math.PI) * helixRadius;
+            const z2 = Math.sin(angle + i * 0.3 + Math.PI) * helixRadius;
+            
+            const p1 = project(new Point3D(x1, y, z1));
+            const p2 = project(new Point3D(x2, y, z2));
+            
+            helixData.push({
+                idx: i,
+                p1: p1,
+                p2: p2,
+                z: (z1 + z2) / 2
+            });
+        }
+
+        // Sort by Z
+        helixData.sort((a, b) => a.z - b.z);
+
+        // Draw Rungs and Nodes
+        for (let item of helixData) {
+            const alpha = Math.max(0.1, Math.min(1, (item.z - (-helixRadius*1.5)) / (helixRadius*3)));
+            const lw = Math.max(1, item.p1.scale * 6);
+
+            // Rung
+            ctx.beginPath();
+            ctx.moveTo(item.p1.x, item.p1.y);
+            ctx.lineTo(item.p2.x, item.p2.y);
+            ctx.strokeStyle = `hsla(${colorRung.h}, ${colorRung.s}%, ${colorRung.l}%, ${alpha * 0.4})`;
+            ctx.lineWidth = lw * 0.5;
+            ctx.stroke();
+
+            // Node 1
+            ctx.beginPath();
+            ctx.arc(item.p1.x, item.p1.y, lw * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${colorStrand1.h}, ${colorStrand1.s}%, ${colorStrand1.l}%, ${alpha})`;
+            ctx.fill();
+
+            // Node 2
+            ctx.beginPath();
+            ctx.arc(item.p2.x, item.p2.y, lw * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${colorStrand2.h}, ${colorStrand2.s}%, ${colorStrand2.l}%, ${alpha})`;
+            ctx.fill();
+        }
+
+        // Draw Strands (Backbone)
+        // We iterate through the sorted items. If an item's previous neighbor (in helix structure)
+        // has a lower Z (is further back), we draw the line.
+        // If the previous neighbor is closer, the line should be drawn when we process that neighbor.
+        // This prevents lines from being drawn "in front" of nodes they should be behind.
+        
+        for (let i = 0; i < helixData.length; i++) {
+            const current = helixData[i];
+            
+            // Find previous node in helix structure
+            if (current.idx > 0) {
+                const prevData = helixData.find(d => d.idx === current.idx - 1);
+                
+                // Only draw line if current is closer to camera than previous
+                // This ensures the line is drawn "behind" the previous node if the previous node is in front
+                // Actually, if current is closer (higher Z), we draw it. 
+                // If previous is closer, we wait to draw it when we process 'previous'.
+                
+                if (current.z > prevData.z) {
+                    const alpha = Math.max(0.1, Math.min(1, (current.z - (-helixRadius*1.5)) / (helixRadius*3)));
+                    const lw = Math.max(1, current.p1.scale * 6);
+
+                    // Strand 1
+                    ctx.beginPath();
+                    ctx.moveTo(prevData.p1.x, prevData.p1.y);
+                    ctx.lineTo(current.p1.x, current.p1.y);
+                    ctx.strokeStyle = `hsla(${colorStrand1.h}, ${colorStrand1.s}%, ${colorStrand1.l}%, ${alpha * 0.6})`;
+                    ctx.lineWidth = lw * 0.4;
+                    ctx.stroke();
+
+                    // Strand 2
+                    ctx.beginPath();
+                    ctx.moveTo(prevData.p2.x, prevData.p2.y);
+                    ctx.lineTo(current.p2.x, current.p2.y);
+                    ctx.strokeStyle = `hsla(${colorStrand2.h}, ${colorStrand2.s}%, ${colorStrand2.l}%, ${alpha * 0.6})`;
+                    ctx.lineWidth = lw * 0.4;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Update rotation
+        angle += rotationSpeed;
+
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    draw();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dna"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementById('dna');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const NUM_NODES = 60;
+            const HELIX_RADIUS = 160;
+            const NODE_SPACING = 18;
+            const TWIST = 0.22;
+            const ROTATION_SPEED = 0.008;
+            const PERSPECTIVE = 700;
+
+            const nodes1 = [];
+            const nodes2 = [];
+
+            for (let i = 0; i < NUM_NODES; i++) {
+                const theta = i * TWIST;
+                const y = (i - NUM_NODES / 2) * NODE_SPACING;
+                nodes1.push({
+                    x: HELIX_RADIUS * Math.cos(theta),
+                    y: y,
+                    z: HELIX_RADIUS * Math.sin(theta)
+                });
+                nodes2.push({
+                    x: HELIX_RADIUS * Math.cos(theta + Math.PI),
+                    y: y,
+                    z: HELIX_RADIUS * Math.sin(theta + Math.PI)
+                });
+            }
+
+            let rotation = 0;
+
+            function rotateY(point, angle) {
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                return {
+                    x: point.x * c - point.z * s,
+                    y: point.y,
+                    z: point.x * s + point.z * c
+                };
+            }
+
+            function project(point) {
+                const scale = PERSPECTIVE / (PERSPECTIVE + point.z);
+                return {
+                    x: canvas.width / 2 + point.x * scale,
+                    y: canvas.height / 2 + point.y * scale,
+                    z: point.z,
+                    scale: scale
+                };
+            }
+
+            function draw() {
+                const w = canvas.width;
+                const h = canvas.height;
+
+                // Dark background with subtle radial gradient
+                const bg = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+                bg.addColorStop(0, '#111122');
+                bg.addColorStop(1, '#0a0a12');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, w, h);
+
+                const rotated1 = nodes1.map(n => rotateY(n, rotation));
+                const rotated2 = nodes2.map(n => rotateY(n, rotation));
+
+                const elements = [];
+
+                // Rungs
+                for (let i = 0; i < NUM_NODES; i++) {
+                    const p1 = project(rotated1[i]);
+                    const p2 = project(rotated2[i]);
+                    elements.push({ type: 'rung', z: (p1.z + p2.z) / 2, p1: p1, p2: p2, idx: i });
+                }
+
+                // Strand segments
+                for (let i = 0; i < NUM_NODES - 1; i++) {
+                    const a = project(rotated1[i]);
+                    const b = project(rotated1[i + 1]);
+                    elements.push({ type: 's1', z: (a.z + b.z) / 2, p1: a, p2: b });
+                    const c = project(rotated2[i]);
+                    const d = project(rotated2[i + 1]);
+                    elements.push({ type: 's2', z: (c.z + d.z) / 2, p1: c, p2: d });
+                }
+
+                // Nodes
+                for (let i = 0; i < NUM_NODES; i++) {
+                    const p1 = project(rotated1[i]);
+                    const p2 = project(rotated2[i]);
+                    elements.push({ type: 'n1', z: p1.z, p: p1 });
+                    elements.push({ type: 'n2', z: p2.z, p: p2 });
+                }
+
+                // Depth sort: far to near
+                elements.sort((a, b) => a.z - b.z);
+
+                for (const el of elements) {
+                    if (el.type === 'rung') {
+                        const alpha = 0.25 + 0.5 * Math.min(el.p1.scale, el.p2.scale);
+                        const grad = ctx.createLinearGradient(el.p1.x, el.p1.y, el.p2.x, el.p2.y);
+                        grad.addColorStop(0, `rgba(80, 200, 255, ${alpha * 0.8})`);
+                        grad.addColorStop(0.5, `rgba(200, 180, 255, ${alpha * 0.6})`);
+                        grad.addColorStop(1, `rgba(255, 120, 160, ${alpha * 0.8})`);
+                        ctx.strokeStyle = grad;
+                        ctx.lineWidth = Math.max(0.8, 2.0 * Math.min(el.p1.scale, el.p2.scale));
+                        ctx.beginPath();
+                        ctx.moveTo(el.p1.x, el.p1.y);
+                        ctx.lineTo(el.p2.x, el.p2.y);
+                        ctx.stroke();
+
+                        // Subtle glow on rung
+                        ctx.strokeStyle = `rgba(180, 180, 255, ${alpha * 0.08})`;
+                        ctx.lineWidth = Math.max(2, 6 * Math.min(el.p1.scale, el.p2.scale));
+                        ctx.beginPath();
+                        ctx.moveTo(el.p1.x, el.p1.y);
+                        ctx.lineTo(el.p2.x, el.p2.y);
+                        ctx.stroke();
+
+                    } else if (el.type === 's1') {
+                        const alpha = 0.3 + 0.5 * Math.min(el.p1.scale, el.p2.scale);
+                        ctx.strokeStyle = `rgba(70, 190, 255, ${alpha})`;
+                        ctx.lineWidth = Math.max(1, 2.8 * Math.min(el.p1.scale, el.p2.scale));
+                        ctx.beginPath();
+                        ctx.moveTo(el.p1.x, el.p1.y);
+                        ctx.lineTo(el.p2.x, el.p2.y);
+                        ctx.stroke();
+                        // Glow
+                        ctx.strokeStyle = `rgba(70, 190, 255, ${alpha * 0.15})`;
+                        ctx.lineWidth = Math.max(2, 6 * Math.min(el.p1.scale, el.p2.scale));
+                        ctx.beginPath();
+                        ctx.moveTo(el.p1.x, el.p1.y);
+                        ctx.lineTo(el.p2.x, el.p2.y);
+                        ctx.stroke();
+
+                    } else if (el.type === 's2') {
+                        const alpha = 0.3 + 0.5 * Math.min(el.p1.scale, el.p2.scale);
+                        ctx.strokeStyle = `rgba(255, 110, 150, ${alpha})`;
+                        ctx.lineWidth = Math.max(1, 2.8 * Math.min(el.p1.scale, el.p2.scale));
+                        ctx.beginPath();
+                        ctx.moveTo(el.p1.x, el.p1.y);
+                        ctx.lineTo(el.p2.x, el.p2.y);
+                        ctx.stroke();
+                        ctx.strokeStyle = `rgba(255, 110, 150, ${alpha * 0.15})`;
+                        ctx.lineWidth = Math.max(2, 6 * Math.min(el.p1.scale, el.p2.scale));
+                        ctx.beginPath();
+                        ctx.moveTo(el.p1.x, el.p1.y);
+                        ctx.lineTo(el.p2.x, el.p2.y);
+                        ctx.stroke();
+
+                    } else if (el.type === 'n1') {
+                        const r = Math.max(2.5, 6.5 * el.p.scale);
+                        const alpha = 0.4 + 0.6 * el.p.scale;
+                        // Outer glow
+                        ctx.beginPath();
+                        ctx.arc(el.p.x, el.p.y, r * 3.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(70, 200, 255, ${alpha * 0.08})`;
+                        ctx.fill();
+                        // Mid glow
+                        ctx.beginPath();
+                        ctx.arc(el.p.x, el.p.y, r * 2.0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(70, 200, 255, ${alpha * 0.2})`;
+                        ctx.fill();
+                        // Core
+                        ctx.beginPath();
+                        ctx.arc(el.p.x, el.p.y, r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(100, 215, 255, ${alpha})`;
+                        ctx.fill();
+                        // Highlight
+                        ctx.beginPath();
+                        ctx.arc(el.p.x - r * 0.25, el.p.y - r * 0.25, r * 0.4, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                        ctx.fill();
+
+                    } else if (el.type === 'n2') {
+                        const r = Math.max(2.5, 6.5 * el.p.scale);
+                        const alpha = 0.4 + 0.6 * el.p.scale;
+                        ctx.beginPath();
+                        ctx.arc(el.p.x, el.p.y, r * 3.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 100, 150, ${alpha * 0.08})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(el.p.x, el.p.y, r * 2.0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 100, 150, ${alpha * 0.2})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(el.p.x, el.p.y, r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 130, 170, ${alpha})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(el.p.x - r * 0.25, el.p.y - r * 0.25, r * 0.4, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                        ctx.fill();
+                    }
+                }
+
+                rotation += ROTATION_SPEED;
+                requestAnimationFrame(draw);
+            }
+
+            requestAnimationFrame(draw);
+        })();
+    </script>
+</body>
+</html>

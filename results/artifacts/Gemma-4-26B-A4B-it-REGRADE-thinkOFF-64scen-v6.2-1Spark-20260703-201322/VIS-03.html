@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angleOffset = 0;
+
+        // Configuration
+        const numNodes = 40;       // Number of pairs in the helix
+        const helixRadius = 150;   // Radius of the spiral
+        const helixHeight = 600;   // Total height of the structure
+        const nodeSpacing = helixHeight / numNodes;
+        const rungWidth = 2;       // Thickness of the connecting lines
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear background with a slight fade effect for motion smoothness
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerY = height / 2 - helixHeight / 2;
+            const centerX = width / 2;
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate vertical position
+                const y = centerY + (i * nodeSpacing);
+                
+                // Calculate rotation angle for this specific node
+                // We use i to create the spiral effect
+                const rotation = (i * 0.4) + angleOffset;
+
+                // Calculate 3D-like X and Z positions (simulated via 2D projection)
+                // Strand 1
+                const x1 = centerX + Math.sin(rotation) * helixRadius;
+                const z1 = Math.cos(rotation); // Used for depth/scaling effect
+
+                // Strand 2 (offset by PI to create the double helix)
+                const x2 = centerX + Math.sin(rotation + Math.PI) * helixRadius;
+                const z2 = Math.cos(rotation + Math.PI);
+
+                // Calculate scale based on Z to create 3D depth effect
+                const scale1 = 0.7 + (z1 * 0.3);
+                const scale2 = 0.7 + (z2 * 0.3);
+
+                // Draw Rung (Connecting line)
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.strokeStyle = `rgba(100, 100, 100, ${0.2 + (z1 + z2) * 0.2})`;
+                ctx.lineWidth = rungWidth;
+                ctx.stroke();
+
+                // Draw Strand 1 Node
+                ctx.beginPath();
+                ctx.arc(x1, y, 6 * scale1, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(200, 80%, 60%, ${scale1})`; // Blueish
+                ctx.fill();
+
+                // Draw Strand 2 Node
+                ctx.beginPath();
+                ctx.arc(x2, y, 6 * scale2, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(300, 80%, 60%, ${scale2})`; // Pinkish/Purple
+                ctx.fill();
+            }
+
+            // Increment rotation
+            angleOffset += 0.01;
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

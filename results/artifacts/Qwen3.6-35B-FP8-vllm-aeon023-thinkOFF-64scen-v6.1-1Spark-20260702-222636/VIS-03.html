@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Double Helix</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+background: #0a0a12;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+overflow: hidden;
+}
+canvas {
+display: block;
+}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+
+function resize() {
+width = canvas.width = window.innerWidth;
+height = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Configuration
+const CONFIG = {
+nodeCount: 80,
+radius: 120,
+verticalSpacing: 22,
+rotationSpeed: 0.015,
+nodeSize: 4,
+rungOpacity: 0.35,
+glowIntensity: 0.6,
+perspective: 600,
+};
+
+// Color palettes
+const PALETTE = {
+strandA: {
+base: [0, 180, 255],
+bright: [100, 220, 255],
+dark: [0, 80, 160],
+glow: 'rgba(0, 180, 255,'
+},
+strandB: {
+base: [255, 60, 120],
+bright: [255, 140, 180],
+dark: [160, 0, 60],
+glow: 'rgba(255, 60, 120,'
+},
+rungA: {
+base: [0, 255, 180],
+bright: [100, 255, 220],
+dark: [0, 120, 90],
+glow: 'rgba(0, 255, 180,'
+},
+rungB: {
+base: [255, 200, 0],
+bright: [255, 240, 100],
+dark: [180, 130, 0],
+glow: 'rgba(255, 200, 0,'
+},
+};
+
+// 3D projection
+function project(x, y, z) {
+const scale = CONFIG.perspective / (CONFIG.perspective + z);
+return {
+x: x * scale + width / 2,
+y: y * scale + height / 2,
+scale: scale
+};
+}
+
+// Generate helix points
+function getHelixPoint(index, phase, strandPhase) {
+const t = index * CONFIG.verticalSpacing;
+const angle = index * 0.25 + phase;
+const x = Math.cos(angle + strandPhase) * CONFIG.radius;
+const y = -t;
+const z = Math.sin(angle + strandPhase) * CONFIG.radius;
+return { x, y, z, index };
+}
+
+// Draw a glowing node
+function drawNode(px, py, scale, color, glowColor, isFront) {
+const size = CONFIG.nodeSize * scale;
+const alpha = 0.3 + 0.7 * ((scale - 0.3) / 0.7);
+const clampedAlpha = Math.max(0.15, Math.min(1, alpha));
+
+// Glow
+const glowRadius = size * 4;
+const gradient = ctx.createRadialGradient(px, py, 0, px, py, glowRadius);
+gradient.addColorStop(0, glowColor + (0.4 * clampedAlpha) + ')');
+gradient.addColorStop(0.3, glowColor + (0.15 * clampedAlpha) + ')');
+gradient.addColorStop(1, glowColor + '0)');
+ctx.fillStyle = gradient;
+ctx.beginPath();
+ctx.arc(px, py, glowRadius, 0, Math.PI * 2);
+ctx.fill();
+
+// Core
+const r = color[0], g = color[1], b = color[2];
+const coreGrad = ctx.createRadialGradient(px - size * 0.2, py - size * 0.2, 0, px, py, size);
+coreGrad.addColorStop(0, `rgba(${Math.min(255, r + 80)},${Math.min(255, g + 80)},${Math.min(255, b + 80)},${clampedAlpha})`);
+coreGrad.addColorStop(0.6, `rgba(${r},${g},${b},${clampedAlpha})`);
+coreGrad.addColorStop(1, `rgba(${Math.max(0, r - 40)},${Math.max(0, g - 40)},${Math.max(0, b - 40)},${clampedAlpha * 0.8})`);
+ctx.fillStyle = coreGrad;
+ctx.beginPath();
+ctx.arc(px, py, size, 0, Math.PI * 2);
+ctx.fill();
+}
+
+// Draw a connecting rung
+function drawRung(x1, y1, x2, y2, z1, z2, rungType, isFront) {
+const avgZ = (z1 + z2) / 2;
+const scale = CONFIG.perspective / (CONFIG.perspective + avgZ);
+const clampedAlpha = Math.max(0.05, Math.min(0.6, 0.15 + 0.5 * ((scale - 0.3) / 0.7)));
+
+const palette = rungType === 0 ? PALETTE.rungA : PALETTE.rungB;
+const baseColor = palette.base;
+
+// Gradient along the rung
+const dx = x2 - x1;
+const dy = y2 - y1;
+const len = Math.sqrt(dx * dx + dy * dy);
+if (len < 1) return;
+
+const steps = Math.max(2, Math.floor(len / 3));
+ctx.lineWidth = 1.5 * scale;
+
+for (let i = 0; i < steps; i++) {
+const t = i / steps;
+const cx = x1 + dx * t;
+const cy = y1 + dy * t;
+const cz = z1 + (z2 - z1) * t;
+const cscale = CONFIG.perspective / (CONFIG.perspective + cz);
+
+// Interpolate color
+const r = Math.round(baseColor[0] * (1 - t) + (rungType === 0 ? PALETTE.rungB.base[0] : PALETTE.rungA.base[0]) * t);
+const g = Math.round(baseColor[1] * (1 - t) + (rungType === 0 ? PALETTE.rungB.base[1] : PALETTE.rungA.base[1]) * t);
+const b = Math.round(baseColor[2] * (1 - t) + (rungType === 0 ? PALETTE.rungB.base[2] : PALETTE.rungA.base[2]) * t);
+
+const segAlpha = clampedAlpha * (0.5 + 0.5 * cscale);
+
+ctx.strokeStyle = `rgba(${r},${g},${b},${segAlpha})`;
+ctx.beginPath();
+ctx.moveTo(x1 + dx * t, y1 + dy * t);
+ctx.lineTo(x1 + dx * (t + 1 / steps), y1 + dy * (t + 1 / steps));
+ctx.stroke();
+}
+}
+
+// Main animation
+let phase = 0;
+let lastTime = 0;
+
+function animate(timestamp) {
+if (!lastTime) lastTime = timestamp;
+const dt = (timestamp - lastTime) / 16.67; // normalize to ~60fps
+lastTime = timestamp;
+
+phase += CONFIG.rotationSpeed * dt;
+
+ctx.clearRect(0, 0, width, height);
+
+// Subtle background radial gradient
+const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.6);
+bgGrad.addColorStop(0, '#12121f');
+bgGrad.addColorStop(1, '#0a0a12');
+ctx.fillStyle = bgGrad;
+ctx.fillRect(0, 0, width, height);
+
+// Generate all points
+const pointsA = [];
+const pointsB = [];
+
+for (let i = 0; i < CONFIG.nodeCount; i++) {
+const pA = getHelixPoint(i, phase, 0);
+const pB = getHelixPoint(i, phase, Math.PI);
+pointsA.push(pA);
+pointsB.push(pB);
+}
+
+// Create render list: {type: 'rung'|'node', index, strandA, strandB, z}
+const renderList = [];
+
+// Rungs
+for (let i = 0; i < CONFIG.nodeCount; i++) {
+const rungZ = (pointsA[i].z + pointsB[i].z) / 2;
+renderList.push({
+type: 'rung',
+index: i,
+z: rungZ,
+rungType: i % 2
+});
+}
+
+// Nodes
+for (let i = 0; i < CONFIG.nodeCount; i++) {
+renderList.push({
+type: 'node',
+index: i,
+strand: 'A',
+z: pointsA[i].z
+});
+renderList.push({
+type: 'node',
+index: i,
+strand: 'B',
+z: pointsB[i].z
+});
+}
+
+// Sort back to front
+renderList.sort((a, b) => b.z - a.z);
+
+// Draw everything
+for (const item of renderList) {
+if (item.type === 'rung') {
+const pA = pointsA[item.index];
+const pB = pointsB[item.index];
+const projA = project(pA.x, pA.y, pA.z);
+const projB = project(pB.x, pB.y, pB.z);
+drawRung(projA.x, projA.y, projB.x, projB.y, pA.z, pB.z, item.rungType, true);
+} else if (item.type === 'node') {
+const p = item.strand === 'A' ? pointsA[item.index] : pointsB[item.index];
+const proj = project(p.x, p.y, p.z);
+
+// Color based on z-depth
+const depthFactor = (p.z + CONFIG.radius) / (2 * CONFIG.radius);
+const palette = item.strand === 'A' ? PALETTE.strandA : PALETTE.strandB;
+
+const r = Math.round(palette.base[0] * (1 - depthFactor) + palette.dark[0] * depthFactor);
+const g = Math.round(palette.base[1] * (1 - depthFactor) + palette.dark[1] * depthFactor);
+const b = Math.round(palette.base[2] * (1 - depthFactor) + palette.dark[2] * depthFactor);
+
+const brightR = Math.round(palette.base[0] * (1 - depthFactor) + palette.bright[0] * depthFactor);
+const brightG = Math.round(palette.base[1] * (1 - depthFactor) + palette.bright[1] * depthFactor);
+const brightB = Math.round(palette.base[2] * (1 - depthFactor) + palette.bright[2] * depthFactor);
+
+drawNode(proj.x, proj.y, proj.scale,
+[item.strand === 'A' ? brightR : r, item.strand === 'A' ? brightG : g, item.strand === 'A' ? brightB : b],
+palette.glow, true);
+}
+}
+
+// Draw connecting lines between consecutive nodes on each strand
+function drawStrandLine(points, palette) {
+ctx.lineWidth = 2;
+for (let i = 0; i < points.length - 1; i++) {
+const p1 = project(points[i].x, points[i].y, points[i].z);
+const p2 = project(points[i + 1].x, points[i + 1].y, points[i + 1].z);
+const avgZ = (points[i].z + points[i + 1].z) / 2;
+const scale = CONFIG.perspective / (CONFIG.perspective + avgZ);
+const depthFactor = (avgZ + CONFIG.radius) / (2 * CONFIG.radius);
+
+const r = Math.round(palette.base[0] * (1 - depthFactor) + palette.dark[0] * depthFactor);
+const g = Math.round(palette.base[1] * (1 - depthFactor) + palette.dark[1] * depthFactor);
+const b = Math.round(palette.base[2] * (1 - depthFactor) + palette.dark[2] * depthFactor);
+
+const alpha = Math.max(0.1, Math.min(0.7, 0.2 + 0.5 * scale));
+
+ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+ctx.beginPath();
+ctx.moveTo(p1.x, p1.y);
+ctx.lineTo(p2.x, p2.y);
+ctx.stroke();
+}
+}
+
+// We need to draw strand lines sorted with other elements. Let's do a second pass.
+// Actually, let's integrate strand lines into the render list.
+// For simplicity, let's redraw strand lines as a separate overlay, sorted by z.
+
+const strandLineList = [];
+for (let s = 0; s < 2; s++) {
+const points = s === 0 ? pointsA : pointsB;
+const palette = s === 0 ? PALETTE.strandA : PALETTE.strandB;
+for (let i = 0; i < points.length - 1; i++) {
+strandLineList.push({
+type: 'line',
+index: i,
+strand: s,
+z: (points[i].z + points[i + 1].z) / 2
+});
+}
+}
+strandLineList.sort((a, b) => b.z - a.z);
+
+for (const item of strandLineList) {
+const points = item.strand === 0 ? pointsA : pointsB;
+const palette = item.strand === 0 ? PALETTE.strandA : PALETTE.strandB;
+const p1 = project(points[item.index].x, points[item.index].y, points[item.index].z);
+const p2 = project(points[item.index + 1].x, points[item.index + 1].y, points[item.index + 1].z);
+const depthFactor = (item.z + CONFIG.radius) / (2 * CONFIG.radius);
+
+const r = Math.round(palette.base[0] * (1 - depthFactor) + palette.dark[0] * depthFactor);
+const g = Math.round(palette.base[1] * (1 - depthFactor) + palette.dark[1] * depthFactor);
+const b = Math.round(palette.base[2] * (1 - depthFactor) + palette.dark[2] * depthFactor);
+
+const alpha = Math.max(0.08, Math.min(0.6, 0.15 + 0.45 * ((CONFIG.perspective / (CONFIG.perspective + item.z) - 0.3) / 0.7)));
+
+ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+ctx.lineWidth = 1.5 * (CONFIG.perspective / (CONFIG.perspective + item.z));
+ctx.beginPath();
+ctx.moveTo(p1.x, p1.y);
+ctx.lineTo(p2.x, p2.y);
+ctx.stroke();
+}
+
+requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

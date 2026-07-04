@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotationOffset = 0;
+
+        // Configuration
+        const config = {
+            nodeCount: 40,
+            radius: 100,
+            verticalSpacing: 25,
+            rotationSpeed: 0.02,
+            perspective: 800, // Focal length for pseudo-3D
+            color1: { r: 255, g: 100, b: 100 }, // Red/Pink strand
+            color2: { r: 100, g: 200, b: 255 }, // Blue strand
+            rungColor: { r: 255, g: 255, b: 255 }
+        };
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Helper: Interpolate color
+        function lerpColor(c1, c2, factor) {
+            const r = Math.round(c1.r + (c2.r - c1.r) * factor);
+            const g = Math.round(c1.g + (c2.g - c1.g) * factor);
+            const b = Math.round(c1.b + (c2.b - c1.b) * factor);
+            return `rgb(${r},${g},${b})`;
+        }
+
+        // Helper: Draw a glowing node
+        function drawNode(x, y, scale, colorBase) {
+            const radius = 4 * scale;
+            
+            // Glow effect
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
+            gradient.addColorStop(0, colorBase);
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Core
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+        }
+
+        function drawRung(x1, y1, x2, y2, scale, depthFactor) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            
+            // Opacity based on depth (closer = brighter)
+            const alpha = 0.2 + (depthFactor * 0.4); 
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.lineWidth = 1.5 * scale;
+            ctx.stroke();
+        }
+
+        function drawStrand(nodes, colorBase, colorEnd) {
+            if (nodes.length < 2) return;
+
+            ctx.beginPath();
+            
+            // Draw the connecting line for the backbone
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                if (i === 0) {
+                    ctx.moveTo(node.x, node.y);
+                } else {
+                    ctx.lineTo(node.x, node.y);
+                }
+            }
+
+            // Create gradient along the strand
+            // We approximate a vertical gradient by using the first and last node's depth
+            // Actually, let's just use a linear gradient from top to bottom of canvas
+            const grad = ctx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, `rgba(${colorBase.r}, ${colorBase.g}, ${colorBase.b}, 0.8)`);
+            grad.addColorStop(0.5, `rgba(${colorEnd.r}, ${colorEnd.g}, ${colorEnd.b}, 0.9)`);
+            grad.addColorStop(1, `rgba(${colorBase.r}, ${colorBase.g}, ${colorBase.b}, 0.8)`);
+
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+
+        function animate() {
+            // Clear canvas with slight fade for trail effect (optional, but let's keep it clean)
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+
+            // Calculate nodes
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // We need to render back-to-front for correct 3D occlusion
+            // Collect all renderable elements: Rungs, Strands, Nodes
+            let renderList = [];
+
+            for (let i = 0; i < config.nodeCount; i++) {
+                // Calculate angle for this node
+                // i * verticalSpacing determines Y position
+                // rotationOffset + i * frequency determines X/Z rotation
+                
+                const yOffset = (i - config.nodeCount / 2) * config.verticalSpacing;
+                
+                // Two strands are 180 degrees (PI) apart
+                const angle1 = rotationOffset + (i * 0.15);
+                const angle2 = angle1 + Math.PI;
+
+                // 3D to 2D Projection
+                // x' = x * perspective / (z + perspective)
+                
+                // Strand 1
+                const x1_raw = Math.cos(angle1) * config.radius;
+                const z1_raw = Math.sin(angle1) * config.radius;
+                const scale1 = config.perspective / (config.perspective + z1_raw);
+                const x1 = centerX + x1_raw * scale1;
+                const y1 = centerY + yOffset;
+
+                // Strand 2
+                const x2_raw = Math.cos(angle2) * config.radius;
+                const z2_raw = Math.sin(angle2) * config.radius;
+                const scale2 = config.perspective / (config.perspective + z2_raw);
+                const x2 = centerX + x2_raw * scale2;
+                const y2 = centerY + yOffset;
+
+                // Store data for rendering
+                renderList.push({
+                    type: 'rung',
+                    y: y1, // Use Y for sorting primarily, but we need to sort by Z later
+                    z: (z1_raw + z2_raw) / 2, // Average depth for rung
+                    data: { x1, y1, x2, y2, scale1, scale2 }
+                });
+
+                renderList.push({
+                    type: 'node',
+                    strand: 1,
+                    z: z1_raw,
+                    y: y1,
+                    data: { x: x1, y: y1, scale: scale1 }
+                });
+
+                renderList.push({
+                    type: 'node',
+                    strand: 2,
+                    z: z2_raw,
+                    y: y2,
+                    data: { x: x2, y: y2, scale: scale2 }
+                });
+            }
+
+            // Sort by Z-depth (painter's algorithm)
+            // Lower Z (further away) should be drawn first. 
+            // Note: In our coordinate system, negative Z is "behind" the center?
+            // Actually, standard projection: z increases away from camera? 
+            // Let's assume Camera is at +Z looking towards -Z.
+            // So larger Z is closer. Smaller Z is further.
+            // We want to draw Smallest Z (furthest) first.
+            
+            renderList.sort((a, b) => a.z - b.z);
+
+            // Render
+            for (const item of renderList) {
+                if (item.type === 'rung') {
+                    const { x1, y1, x2, y2, scale1, scale2 } = item.data;
+                    // Average scale for line width
+                    const avgScale = (scale1 + scale2) / 2;
+                    // Use average Z for opacity
+                    const avgZ = (item.data.x1 - centerX)/config.radius; // rough proxy or use stored z
+                    drawRung(x1, y1, x2, y2, avgScale, (item.z + config.radius) / (2 * config.radius));
+                } else if (item.type === 'node') {
+                    const { x, y, scale } = item.data;
+                    const color = item.strand === 1 ? config.color1 : config.color2;
+                    drawNode(x, y, scale, color);
+                }
+            }
+
+            // Draw backbone lines (Strands)
+            // Since backbone lines are continuous, drawing them after nodes might look weird if nodes are "on top"
+            // But if we draw backbone before nodes, nodes cover the line.
+            // However, backbone lines cross behind each other.
+            // To do this perfectly, we should split strands into segments.
+            // For simplicity, let's draw strands as a background layer but with depth consideration is hard for a single path.
+            // Let's draw the strands *before* the nodes in the loop, but we need to split them by Z.
+            
+            // Alternative: Draw strands as a single pass, but it might look flat.
+            // Let's try drawing strands as a background layer, then nodes/rungs on top.
+            // To make the strands look 3D, we can draw them in segments.
+            
+            // Let's implement segment drawing for strands to handle occlusion properly.
+            
+            let strandSegments1 = [];
+            let strandSegments2 = [];
+
+            for (let i = 0; i < config.nodeCount - 1; i++) {
+                const yOffset1 = (i - config.nodeCount / 2) * config.verticalSpacing;
+                const yOffset2 = (i + 1 - config.nodeCount / 2) * config.verticalSpacing;
+                
+                const angle1 = rotationOffset + (i * 0.15);
+                const angle2 = angle1 + Math.PI;
+                
+                const angle3 = rotationOffset + ((i+1) * 0.15);
+                const angle4 = angle3 + Math.PI;
+
+                const x1_raw = Math.cos(angle1) * config.radius;
+                const z1_raw = Math.sin(angle1) * config.radius;
+                const scale1 = config.perspective / (config.perspective + z1_raw);
+                const x1 = centerX + x1_raw * scale1;
+                const y1 = centerY + yOffset1;
+
+                const x2_raw = Math.cos(angle2) * config.radius;
+                const z2_raw = Math.sin(angle2) * config.radius;
+                const scale2 = config.perspective / (config.perspective + z2_raw);
+                const x2 = centerX + x2_raw * scale2;
+                const y2 = centerY + yOffset2;
+
+                // Segment 1 (Strand 1)
+                strandSegments1.push({
+                    x1, y1, x2, y2, scale: scale1, z: z1_raw
+                });
+
+                // Segment 2 (Strand 2)
+                const x3_raw = Math.cos(angle3) * config.radius;
+                const z3_raw = Math.sin(angle3) * config.radius;
+                const scale3 = config.perspective / (config.perspective + z3_raw);
+                const x3 = centerX + x3_raw * scale3;
+                const y3 = centerY + yOffset2;
+
+                const x4_raw = Math.cos(angle4) * config.radius;
+                const z4_raw = Math.sin(angle4) * config.radius;
+                const scale4 = config.perspective / (config.perspective + z4_raw);
+                const x4 = centerX + x4_raw * scale4;
+                const y4 = centerY + yOffset2; // Wait, yOffset2 is for node i+1.
+
+                // Correction: 
+                // Node i: y = (i - N/2) * spacing
+                // Node i+1: y = (i+1 - N/2) * spacing
+                
+                strandSegments2.push({
+                    x1: x3, y1: y3, x2: x4, y2: y4, scale: scale3, z: z3_raw
+                });
+            }
+
+            // Merge strand segments into the render list? 
+            // Or just draw them separately. Drawing separately is easier but breaks perfect Z-sorting between strand1 and strand2 segments.
+            // Let's merge them into the main list for perfect sorting.
+            
+            for (const seg of strandSegments1) {
+                renderList.push({
+                    type: 'strand-segment',
+                    strand: 1,
+                    z: seg.z,
+                    data: seg
+                });
+            }
+            for (const seg of strandSegments2) {
+                renderList.push({
+                    type: 'strand-segment',
+                    strand: 2,
+                    z: seg.z,
+                    data: seg
+                });
+            }
+
+            // Re-sort everything
+            renderList.sort((a, b) => a.z - b.z);
+
+            // Final Render Pass
+            for (const item of renderList) {
+                if (item.type === 'rung') {
+                    const { x1, y1, x2, y2, scale1, scale2 } = item.data;
+                    const avgScale = (scale1 + scale2) / 2;
+                    const depthFactor = (item.z + config.radius) / (2 * config.radius);
+                    drawRung(x1, y1, x2, y2, avgScale, depthFactor);
+                } 
+                else if (item.type === 'node') {
+                    const { x, y, scale } = item.data;
+                    const color = item.strand === 1 ? config.color1 : config.color2;
+                    drawNode(x, y, scale, color);
+                }
+                else if (item.type === 'strand-segment') {
+                    const { x1, y1, x2, y2, scale, strand } = item.data;
+                    const color = strand === 1 ? config.color1 : config.color2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    
+                    // Gradient for the segment based on depth
+                    const alpha = 0.4 + (item.z + config.radius) / (2 * config.radius) * 0.6;
+                    ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+                    ctx.lineWidth = 2 * scale;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+            }
+
+            // Update rotation
+            rotationOffset += config.rotationSpeed;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

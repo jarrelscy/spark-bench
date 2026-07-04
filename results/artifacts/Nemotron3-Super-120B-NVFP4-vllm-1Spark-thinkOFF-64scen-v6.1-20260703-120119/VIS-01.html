@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar System Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            background: #000;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="solarCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('solarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Starfield: generate random stars
+        const stars = [];
+        for (let i = 0; i < 200; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2,
+                alpha: Math.random() * 0.6 + 0.2
+            });
+        }
+
+        // Sun
+        const sun = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 40,
+            color: 'rgba(255, 200, 50, 0.9)',
+            glow: true
+        };
+
+        // Planets: [name, radius, orbitRadius, speed, color, size]
+        const planets = [
+            ['Mercury', 0.38, 80, 0.04, '#aaa', 4],
+            ['Venus', 0.95, 120, 0.02, '#ffb347', 6],
+            ['Earth', 1.0, 160, 0.015, '#4a90e2', 7],
+            ['Mars', 0.53, 200, 0.01, '#e27d60', 5],
+            ['Jupiter', 11.2, 280, 0.008, '#d4a373', 12],
+            ['Saturn', 9.45, 350, 0.006, '#f4d35e', 10]
+        ];
+
+        // Animation loop
+        let angle = 0;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw starfield
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+                ctx.fill();
+            });
+
+            // Draw Sun with glow
+            ctx.save();
+            ctx.shadowColor = 'rgba(255, 200, 50, 0.8)';
+            ctx.shadowBlur = 30;
+            ctx.beginPath();
+            ctx.arc(sun.x, sun.y, sun.radius, 0, Math.PI * 2);
+            ctx.fillStyle = sun.color;
+            ctx.fill();
+            ctx.restore();
+
+            // Draw planets
+            planets.forEach(planet => {
+                const [name, sizeRatio, orbitRadius, speed, color, planetSize] = planet;
+                const x = sun.x + Math.cos(angle * speed) * orbitRadius;
+                const y = sun.y + Math.sin(angle * speed) * orbitRadius;
+
+                // Optional: draw orbit path (subtle)
+                ctx.beginPath();
+                ctx.arc(sun.x, sun.y, orbitRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw planet
+                ctx.beginPath();
+                ctx.arc(x, y, planetSize, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                // Optional: add subtle glow to planets
+                ctx.shadowColor = color.replace(')', ', 0.4)').replace('rgb', 'rgba').replace('hsl', 'hsla');
+                ctx.shadowBlur = 8;
+                ctx.fill();
+                ctx.shadowBlur = 0; // reset
+            });
+
+            angle += 0.5; // controls overall speed
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Solar System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="solarCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('solarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const planets = [];
+        const stars = [];
+
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Generate Starfield
+        for (let i = 0; i < 400; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 1.5,
+                opacity: Math.random()
+            });
+        }
+
+        // Planet Class
+        class Planet {
+            constructor(radius, orbitRadius, color, size, speed) {
+                this.radius = radius; // Planet size
+                this.orbitRadius = orbitRadius;
+                this.color = color;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = speed;
+            }
+
+            draw() {
+                // Draw Orbit Path
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, this.orbitRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Calculate Position
+                const x = centerX + Math.cos(this.angle) * this.orbitRadius;
+                const y = centerY + Math.sin(this.angle) * this.orbitRadius;
+
+                // Draw Planet
+                ctx.beginPath();
+                ctx.arc(x, y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset shadow for other elements
+
+                // Update position
+                this.angle += this.speed;
+            }
+        }
+
+        // Initialize Planets (Radius, Orbit, Color, Size, Speed)
+        planets.push(new Planet(4, 60, '#A5A5A5', 4, 0.02));    // Mercury-like
+        planets.push(new Planet(7, 90, '#E3BB76', 7, 0.015));   // Venus-like
+        planets.push(new Planet(8, 130, '#2271B3', 8, 0.01));   // Earth-like
+        planets.push(new Planet(6, 170, '#E27B58', 6, 0.008));  // Mars-like
+        planets.push(new Planet(15, 230, '#D39C7E', 15, 0.005)); // Jupiter-like
+        planets.push(new Planet(12, 300, '#B4E1FF', 12, 0.003)); // Saturn-like
+
+        function drawSun() {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
+            ctx.shadowBlur = 50;
+            ctx.shadowColor = '#FF8C00';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawStars() {
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.opacity;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                // Twinkle effect
+                star.opacity += (Math.random() - 0.5) * 0.05;
+                if (star.opacity < 0) star.opacity = 0;
+                if (star.opacity > 1) star.opacity = 1;
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        function animate() {
+            // Clear background
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            drawStars();
+            drawSun();
+            planets.forEach(planet => planet.draw());
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const config = {
+            nodeCount: 60,
+            radius: 150,
+            verticalSpacing: 18,
+            rotationSpeed: 0.015,
+            fov: 600, // Field of view for perspective
+            bgColor: '#050510',
+            colors: {
+                strand1: { r: 255, g: 80, b: 80 },   // Red
+                strand2: { r: 80, g: 120, b: 255 },  // Blue
+                rung: { r: 100, g: 180, b: 255 }     // Light Blue
+            }
+        };
+
+        let rotationOffset = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Helper to map a value between two ranges
+        function mapRange(value, inMin, inMax, outMin, outMax) {
+            return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+        }
+
+        function draw() {
+            // Clear canvas with dark background
+            ctx.fillStyle = config.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            const startY = centerY - (totalHeight / 2);
+
+            // Calculate positions for all nodes
+            const nodes = [];
+
+            for (let i = 0; i < config.nodeCount; i++) {
+                // Calculate the base angle for this node along the helix
+                const t = i * 0.15; 
+                
+                // Strand 1 (Phase 0)
+                const angle1 = t + rotationOffset;
+                const x1 = Math.cos(angle1) * config.radius;
+                const z1 = Math.sin(angle1) * config.radius;
+                const y1 = i * config.verticalSpacing;
+
+                // Strand 2 (Phase PI - opposite side)
+                const angle2 = t + Math.PI + rotationOffset;
+                const x2 = Math.cos(angle2) * config.radius;
+                const z2 = Math.sin(angle2) * config.radius;
+                const y2 = i * config.verticalSpacing;
+
+                // Apply perspective projection
+                // Scale factor based on Z-depth (z1, z2 are relative to center)
+                const scale1 = config.fov / (config.fov + z1);
+                const scale2 = config.fov / (config.fov + z2);
+
+                nodes.push({
+                    index: i,
+                    y: y1, // Both strands have same Y
+                    // Strand 1
+                    x1: centerX + x1 * scale1,
+                    y1: startY + y1,
+                    z1: z1,
+                    scale1: scale1,
+                    // Strand 2
+                    x2: centerX + x2 * scale2,
+                    y2: startY + y2,
+                    z2: z2,
+                    scale2: scale2
+                });
+            }
+
+            // Sort all visual elements by depth (painter's algorithm)
+            // We need to draw rungs and nodes from back (lowest scale) to front (highest scale)
+            const drawList = [];
+
+            nodes.forEach(node => {
+                // Add rung
+                drawList.push({
+                    type: 'rung',
+                    index: node.index,
+                    y: node.y,
+                    scale: (node.scale1 + node.scale2) / 2, // Average scale for sorting
+                    node: node
+                });
+
+                // Add Strand 1 node
+                drawList.push({
+                    type: 'node',
+                    strand: 1,
+                    index: node.index,
+                    scale: node.scale1,
+                    node: node
+                });
+
+                // Add Strand 2 node
+                drawList.push({
+                    type: 'node',
+                    strand: 2,
+                    index: node.index,
+                    scale: node.scale2,
+                    node: node
+                });
+            });
+
+            // Sort by scale (depth) ascending (back to front)
+            drawList.sort((a, b) => a.scale - b.scale);
+
+            // Draw everything
+            drawList.forEach(item => {
+                if (item.type === 'rung') {
+                    drawRung(item.node);
+                } else {
+                    drawNode(item.node, item.strand);
+                }
+            });
+
+            // Update rotation
+            rotationOffset += config.rotationSpeed;
+
+            requestAnimationFrame(draw);
+        }
+
+        function drawNode(node, strand) {
+            let x, y, scale;
+            let color;
+
+            if (strand === 1) {
+                x = node.x1;
+                y = node.y1;
+                scale = node.scale1;
+                color = config.colors.strand1;
+            } else {
+                x = node.x2;
+                y = node.y2;
+                scale = node.scale2;
+                color = config.colors.strand2;
+            }
+
+            // Calculate size based on depth
+            const baseRadius = 6;
+            const radius = baseRadius * scale;
+
+            // Calculate opacity based on depth (z-value)
+            // Map z from -radius to +radius to opacity 0.3 to 1.0
+            const depthFactor = (node.z1 + config.radius) / (2 * config.radius);
+            const opacity = mapRange(depthFactor, 0, 1, 0.3, 1.0);
+
+            // Create gradient for 3D effect
+            const gradient = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
+            gradient.addColorStop(0, `rgba(${Math.min(255, color.r + 80)}, ${Math.min(255, color.g + 80)}, ${Math.min(255, color.b + 80)}, ${opacity})`);
+            gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`);
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Add a subtle glow
+            ctx.shadowBlur = 10 * scale;
+            ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`;
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset shadow
+        }
+
+        function drawRung(node) {
+            const x1 = node.x1;
+            const y1 = node.y1;
+            const x2 = node.x2;
+            const y2 = node.y2;
+
+            // Calculate average depth for color/opacity
+            const avgZ = (node.z1 + node.z2) / 2;
+            const depthFactor = (avgZ + config.radius) / (2 * config.radius);
+            const opacity = mapRange(depthFactor, 0, 1, 0.1, 0.6);
+            
+            const color = config.colors.rung;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
+            ctx.lineWidth = 2 * ((node.scale1 + node.scale2) / 2);
+            ctx.stroke();
+        }
+
+        // Start animation
+        draw();
+    </script>
+</body>
+</html>

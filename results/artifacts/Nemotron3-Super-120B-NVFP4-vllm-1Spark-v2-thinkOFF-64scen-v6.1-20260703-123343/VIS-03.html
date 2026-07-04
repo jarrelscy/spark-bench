@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rotating DNA Double Helix</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="dnaCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) * 0.35;
+    const turns = 8;
+    const nodesPerTurn = 12;
+    const totalNodes = turns * nodesPerTurn;
+    const phaseOffset = Math.PI; // 180 degrees out of phase for second strand
+    const rotationSpeed = 0.002;
+    let angle = 0;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw strands and rungs
+      for (let i = 0; i < totalNodes; i++) {
+        const t = i / (totalNodes - 1);
+        const theta = t * turns * 2 * Math.PI + angle;
+        const y = (t - 0.5) * radius * 2; // vertical position along axis
+
+        // Strand 1
+        const x1 = centerX + radius * Math.cos(theta);
+        const y1 = centerY + y + radius * 0.15 * Math.sin(theta * 2); // subtle helical wobble
+        // Strand 2 (phase shifted)
+        const x2 = centerX + radius * Math.cos(theta + phaseOffset);
+        const y2 = centerY + y + radius * 0.15 * Math.sin((theta + phaseOffset) * 2);
+
+        // Draw rung between strands
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = 'rgba(100, 200, 255, 0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Draw nodes
+        ctx.beginPath();
+        ctx.arc(x1, y1, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(30, 144, 255, 0.8)'; // Strand 1: DodgerBlue
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x2, y2, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 99, 71, 0.8)'; // Strand 2: Tomato
+        ctx.fill();
+      }
+
+      angle += rotationSpeed;
+      requestAnimationFrame(draw);
+    }
+
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
