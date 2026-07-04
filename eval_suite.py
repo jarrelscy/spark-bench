@@ -895,6 +895,37 @@ T_CAL_READ = {"type": "function", "function": {
         "day": {"type": "string", "description": "Day to check, e.g. 'monday', 'next_friday', 'tomorrow', 'thursday'"}},
         "required": ["day"]}}}
 
+# v6.4: nested-schema tools — parameters must stay nested; the simulator rejects
+# flattened calls with an explicit error so recovery is possible (and gradable).
+T_TASKS = {"type": "function", "function": {
+    "name": "query_tasks", "description": "Query the task tracker. filters.date_range is a REQUIRED nested object.",
+    "parameters": {"type": "object", "properties": {
+        "filters": {"type": "object", "properties": {
+            "date_range": {"type": "object", "properties": {
+                "start": {"type": "string", "description": "ISO date, e.g. '2026-06-01'"},
+                "end": {"type": "string", "description": "ISO date"}},
+                "required": ["start", "end"]},
+            "status": {"type": "string", "enum": ["open", "overdue", "done"]},
+            "assignee": {"type": "string"}},
+            "required": ["date_range"]},
+        "sort": {"type": "object", "properties": {
+            "field": {"type": "string", "enum": ["priority", "created", "due"]},
+            "order": {"type": "string", "enum": ["asc", "desc"]}}},
+        "limit": {"type": "integer"}},
+        "required": ["filters"]}}}
+
+T_TICKET = {"type": "function", "function": {
+    "name": "create_ticket", "description": "File a tracking ticket. metadata is a REQUIRED nested object.",
+    "parameters": {"type": "object", "properties": {
+        "title": {"type": "string"},
+        "priority": {"type": "string", "enum": ["P1", "P2", "P3"]},
+        "metadata": {"type": "object", "properties": {
+            "component": {"type": "string"},
+            "severity": {"type": "string", "enum": ["low", "medium", "high"]},
+            "tags": {"type": "array", "items": {"type": "string"}}},
+            "required": ["component", "severity"]}},
+        "required": ["title", "priority", "metadata"]}}}
+
 T_CAL_CANCEL = {"type": "function", "function": {
     "name": "cancel_event", "description": "Cancel (delete) a calendar event by title and day.",
     "parameters": {"type": "object", "properties": {
@@ -2578,6 +2609,139 @@ HARD_SCENARIOS = [
 SCENARIOS = SCENARIOS + HARD_SCENARIOS
 
 
+# ── v6.4 expert agentic scenarios ─────────────────────────────────────────── #
+# Design goal (2026-07-03): the v6.x agentic set saturated (multiple models at
+# 95+ on short 6-7 step checklists — the tau2-bench genre models are tuned for).
+# These add what real agent use demands and benchmarks miss: deep dependency
+# chains, recovery from injected tool failures, nested parameter schemas, and
+# instructions buried in long noisy context. Difficulty weighting makes them
+# dominate the domain, so it can no longer be maxed on the easy tier alone.
+
+def _briefing_noise(n_chars, inserts):
+    """Deterministic filler ops-briefing prose with facts inserted at fractional
+    positions. No randomness — identical text every run."""
+    topics = ["infra migration", "Q3 budget review", "customer escalation", "release planning",
+              "security audit", "vendor renewal", "hiring pipeline", "roadmap sync"]
+    people = ["Alex", "Jordan", "Sam", "Riley", "Casey", "Morgan", "Devon", "Quinn"]
+    verbs = ["circulated", "flagged", "deferred", "approved", "escalated", "reviewed", "drafted", "archived"]
+    lines, i, size = [], 0, 0
+    while size < n_chars:
+        s = (f"[{i:04d}] {people[i % 8]} {verbs[(i * 3) % 8]} the {topics[(i * 5) % 8]} notes; "
+             f"action items rolled to sprint {40 + (i % 9)}, no blockers reported.\n")
+        lines.append(s)
+        size += len(s)
+        i += 1
+    text = "".join(lines)
+    for frac, fact in sorted(inserts, reverse=True):  # insert back-to-front so positions hold
+        pos = text.find("\n", int(len(text) * frac)) + 1
+        text = text[:pos] + fact + "\n" + text[pos:]
+    return text
+
+
+_AG11_BRIEFING = _briefing_noise(30000, [
+    (0.25, "NOTE (important): the war-room booking code for this incident is SPARK-7741."),
+    (0.55, "REMINDER: the incident postmortem MUST be scheduled on next_thursday — the only day legal signed off."),
+    (0.80, "Escalation contact for this incident is priya@corp.com (NOT the usual oncall alias)."),
+])
+
+_AG12_BRIEFING = _briefing_noise(30000, [
+    (0.15, "DRAFT (superseded): offsite budget proposal $62,000 pending review — see final approval later in this document."),
+    (0.60, "FINAL APPROVAL: offsite budget locked at $48,500. Finance sign-off code FIN-2231."),
+    (0.85, "All budget confirmations go to finance-ops@corp.com and must reference the sign-off code."),
+])
+
+V64_SCENARIOS = [
+    dict(id="AG-07", domain="agentic", group="capability", tier="expert", difficulty=4.6,
+         max_tokens=1000, agentic=True, max_turns=32, turn_budget=26,
+         tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
+         messages=_msg("Plan a two-city work trip. Every step depends on earlier results — do them IN ORDER:\n"
+                       "1-4. Check the weather in Austin, San Francisco, Seattle and London.\n"
+                       "5. Identify the TWO warmest cities from those results.\n"
+                       "6-7. Check my calendar for saturday and sunday.\n"
+                       "8-9. For each of the two warmest cities, create a calendar event 'Visit <city>' — "
+                       "one on saturday 09:00, one on sunday 09:00 (warmest city gets saturday), 480 min each.\n"
+                       "10-11. Email travel@corp.com once PER city: subject 'Travel booking <city>', body must "
+                       "include that city's temperature and forecast from step 1-4.\n"
+                       "12-13. Re-check saturday and sunday calendars to confirm the bookings don't conflict.\n"
+                       "14. Email boss@corp.com subject 'Trip plan' summarizing: both cities, their exact "
+                       "temperatures, and which day each visit is on.\n"
+                       "Do not skip steps. Do not guess values you can look up."),
+         grade=None),
+    dict(id="AG-08", domain="agentic", group="capability", tier="expert", difficulty=4.8,
+         max_tokens=1000, agentic=True, max_turns=30, turn_budget=24,
+         env_patch={"failure_plan": {"check_calendar": [1], "send_email": [1]}},
+         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
+         messages=_msg("You're running incident response. Some services are flaky today — if a tool returns a "
+                       "transient error, RETRY the same call until it works. Steps IN ORDER:\n"
+                       "1. Check tomorrow's calendar.\n"
+                       "2. Create 'Incident Review' tomorrow at 15:00, 60 minutes.\n"
+                       "3. Email oncall@corp.com subject 'Incident Review scheduled' with the time. Keep retrying "
+                       "until you get a delivery confirmation.\n"
+                       "4. Email status@corp.com subject 'Status update' summarizing what's scheduled.\n"
+                       "5. Re-check tomorrow's calendar to verify.\n"
+                       "6. Final summary: list every transient failure you hit and how you recovered."),
+         grade=None),
+    dict(id="AG-09", domain="agentic", group="capability", tier="expert", difficulty=4.5,
+         max_tokens=1000, agentic=True, max_turns=24, turn_budget=18,
+         tools=[T_TASKS, T_TICKET, T_EMAIL],
+         messages=_msg("Backlog sweep. The task tracker uses NESTED query parameters — keep them nested exactly "
+                       "as the schema requires. Steps IN ORDER:\n"
+                       "1. Query all OVERDUE tasks between 2026-06-01 and 2026-06-30 "
+                       "(filters.date_range.start/end + filters.status), sorted by priority descending, limit 5.\n"
+                       "2. File a ticket titled 'June overdue sweep', priority P1, with metadata component "
+                       "'backlog', severity 'high', tags ['june','sweep'].\n"
+                       "3. Email pm@corp.com subject 'Overdue sweep' — include the overdue task count and the "
+                       "new ticket's id.\n"
+                       "4. Final summary of what you found and filed."),
+         grade=None),
+    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=5.2,
+         max_tokens=1000, agentic=True, max_turns=34, turn_budget=28,
+         env_patch={"failure_plan": {"create_event": [1], "send_email": [2]}},
+         tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
+         messages=_msg("Severe weather response drill. Services are flaky — RETRY any call that returns a "
+                       "transient error. Steps IN ORDER:\n"
+                       "1-2. Check weather in Denver and Boulder.\n"
+                       "3-4. Check my calendar for monday and tuesday.\n"
+                       "5. Create 'Storm Contingency Briefing' on tuesday 09:00, 60 min.\n"
+                       "6-8. Email facilities@corp.com, manager@corp.com and staff@corp.com — subject 'Storm "
+                       "contingency', each body must state both cities' temperatures.\n"
+                       "9. Check next_monday's calendar.\n"
+                       "10. Create 'Storm Retro' on next_monday 11:00, 45 min.\n"
+                       "11. Email manager@corp.com subject 'Storm retro invite' with the retro day/time.\n"
+                       "12. Final report: both temperatures, every event created, every email sent, and every "
+                       "failure you recovered from."),
+         grade=None),
+    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=4.7,
+         max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
+         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
+         messages=_msg("Below is a long ops briefing. Buried somewhere in it are: (a) a war-room booking code, "
+                       "(b) the REQUIRED day for the incident postmortem, and (c) the escalation contact. "
+                       "Find all three, then:\n"
+                       "1. Create a calendar event titled 'Postmortem <booking code>' on the required day, "
+                       "10:00, 60 min.\n"
+                       "2. Email the escalation contact, subject 'Postmortem scheduled' — include the booking "
+                       "code and the day.\n"
+                       "3. One-paragraph summary naming all three facts.\n\n"
+                       "--- BRIEFING START ---\n" + _AG11_BRIEFING + "\n--- BRIEFING END ---"),
+         grade=None),
+    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=5.0,
+         max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
+         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
+         messages=_msg("Below is a long planning document. It contains a SUPERSEDED draft budget and, later, a "
+                       "FINAL approved budget with a finance sign-off code and a confirmation contact. Use ONLY "
+                       "the final approved values:\n"
+                       "1. Email the confirmation contact, subject 'Budget Confirmed' — state the final approved "
+                       "amount and cite the sign-off code.\n"
+                       "2. Create a calendar event 'Offsite Budget Review <sign-off code>' on next_tuesday "
+                       "14:00, 60 min.\n"
+                       "3. One-paragraph summary: final amount, code, and why the other figure was wrong.\n\n"
+                       "--- DOCUMENT START ---\n" + _AG12_BRIEFING + "\n--- DOCUMENT END ---"),
+         grade=None),
+]
+
+SCENARIOS = SCENARIOS + V64_SCENARIOS
+
+
 # --------------------------------------------------------------------------- #
 # runner + aggregation
 # --------------------------------------------------------------------------- #
@@ -2613,6 +2777,9 @@ def _make_env():
         },
         "events_created": [],
         "emails_sent": [],
+        "tickets_created": [],
+        "call_counts": {},     # v6.4: per-tool call counter (error injection + retry grading)
+        "failure_plan": {},    # v6.4: {tool_name: [call_indices_that_fail]} set via scenario env_patch
         "weather": {
             "new york":   {"temp_c": -2, "condition": "snow", "forecast": "Heavy snow expected"},
             "london":     {"temp_c": 8, "condition": "rain", "forecast": "Light rain"},
@@ -2631,6 +2798,39 @@ def _sim_tool(name, args, env):
     """Simulate a tool call and return a result string."""
     name = name.lower().strip()
     args = args or {}
+
+    # v6.4: deterministic error injection — the Nth call to a tool fails if the
+    # scenario's failure_plan says so. The error text tells the model to retry,
+    # so recovery is possible and gradable via call_counts.
+    n_call = env["call_counts"].get(name, 0) + 1
+    env["call_counts"][name] = n_call
+    if n_call in (env.get("failure_plan") or {}).get(name, []):
+        return (f"ERROR: transient service failure in '{name}' (attempt {n_call}). "
+                f"The service is briefly unavailable — retry the same call.")
+
+    if name == "query_tasks":
+        filters = args.get("filters")
+        if not isinstance(filters, dict) or not isinstance(filters.get("date_range"), dict) \
+                or not filters["date_range"].get("start") or not filters["date_range"].get("end"):
+            return ("ERROR: invalid query — 'filters.date_range.start' and 'filters.date_range.end' "
+                    "are required NESTED fields (filters: {date_range: {start, end}}). Do not flatten.")
+        status = str(filters.get("status", "")).lower()
+        if status == "overdue":
+            return ("7 overdue tasks found (2026-06-01..2026-06-30): TASK-101..TASK-107. "
+                    "Highest priority: P1 TASK-103 'payment webhook dead-letter backlog'.")
+        return "12 tasks found in range (all statuses). Filter by status='overdue' for the overdue subset."
+
+    if name == "create_ticket":
+        md = args.get("metadata")
+        if not isinstance(md, dict) or not md.get("component") or not md.get("severity"):
+            return ("ERROR: 'metadata' must be a NESTED object with 'component' and 'severity' "
+                    "(metadata: {component, severity, tags}). Do not flatten.")
+        ticket = {"title": args.get("title", "Untitled"), "priority": args.get("priority", "P3"),
+                  "component": md.get("component"), "severity": md.get("severity"),
+                  "tags": md.get("tags") or []}
+        env["tickets_created"].append(ticket)
+        return (f"Ticket TCK-88 created: '{ticket['title']}' (priority {ticket['priority']}, "
+                f"component {ticket['component']}, severity {ticket['severity']}).")
 
     if name == "get_weather":
         city = (args.get("city") or args.get("location") or "").lower().strip()
@@ -2697,6 +2897,9 @@ def _sim_tool(name, args, env):
 def _run_agentic(sc, chat_fn, extra_base, temperature, timeout):
     """Run a multi-turn agentic scenario. Returns (score, reason, latency, text, token_ratio)."""
     env = _make_env()
+    # v6.4: scenarios may patch the env (e.g. failure_plan for error injection)
+    for k, v in (sc.get("env_patch") or {}).items():
+        env[k] = json.loads(json.dumps(v))  # deep copy — runs must not share state
     system_prompt = {
         "role": "system",
         "content": ("You are an autonomous AI agent with access to tools. Your task has multiple steps — "
@@ -2707,7 +2910,7 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout):
     }
     messages = [system_prompt] + list(sc["messages"])
     tools = sc.get("tools")
-    max_turns = 20
+    max_turns = sc.get("max_turns", 20)
     mt = sc.get("max_tokens", 1000)
     total_latency = 0.0
     total_text = []
@@ -2740,13 +2943,14 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout):
             messages.append({"role": "tool", "tool_call_id": f"call_{turn}_{i}", "content": result})
 
     # Grade based on task completion
-    score, reason = _grade_agentic(sc["id"], env, tool_call_log, total_text, turn + 1)
+    score, reason = _grade_agentic(sc["id"], env, tool_call_log, total_text, turn + 1,
+                                   turn_budget=sc.get("turn_budget", 15))
     token_ratio = 1.0  # agentic scenarios don't have reasoning tokens
     full_text = "\n".join(total_text)
     return score, reason, total_latency, full_text, token_ratio
 
 
-def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns):
+def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget=15):
     """Grade an agentic scenario based on tool calls made and task completion."""
     # Build a map of what was called
     tools_called = [t["tool"].lower() for t in tool_log]
@@ -2887,6 +3091,125 @@ def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns):
             ("3+ emails sent", n_emails >= 3),
         ]
 
+    elif scenario_id == "AG-07":
+        # Deep chain: 4 weather → pick 2 warmest → 2 events on free days →
+        # 2 travel emails → recheck days → boss summary with both temps
+        wcities = {_arg(t, "city") for t in tool_log if t["tool"].lower() == "get_weather"}
+        etitles = " ".join(e["title"].lower() for e in env["events_created"])
+        edays = {str(e["day"]).lower() for e in env["events_created"]}
+        travel = [e for e in emails if e["to"] == "travel@corp.com"]
+        boss = [e for e in emails if e["to"] == "boss@corp.com"]
+        boss_body = " ".join((e["subject"] + " " + e["body"]).lower() for e in boss)
+        satsun_reads = [t for t in tool_log if t["tool"].lower() == "check_calendar"
+                        and any(d in _arg(t, "day") for d in ("saturday", "sunday"))]
+        checks = [
+            ("all 4 cities' weather checked", {"austin", "san francisco", "seattle", "london"} <= wcities),
+            ("events for the 2 warmest (austin+SF)", "austin" in etitles and "san francisco" in etitles),
+            ("no event for the cold cities", len(env["events_created"]) >= 1
+             and "seattle" not in etitles and "london" not in etitles),
+            ("events on the free days (sat+sun)", "saturday" in edays and "sunday" in edays),
+            ("2+ travel emails", len(travel) >= 2),
+            ("travel emails name the cities", sum(1 for e in travel if "austin" in e["body"].lower()
+                                                  or "san francisco" in e["body"].lower()) >= 2),
+            ("sat/sun rechecked after booking", len(satsun_reads) >= 4),
+            ("boss summary names both cities", "austin" in boss_body and "san francisco" in boss_body),
+            ("boss summary has both temps (22, 15)", "22" in boss_body and "15" in boss_body),
+        ]
+
+    elif scenario_id == "AG-08":
+        # Error recovery: first check_calendar and first send_email fail —
+        # graded on retrying and still completing everything
+        cc = env["call_counts"]
+        oncall = [e for e in emails if e["to"] == "oncall@corp.com"]
+        status = [e for e in emails if e["to"] == "status@corp.com"]
+        has_event = any("incident" in e["title"].lower() for e in env["events_created"])
+        checks = [
+            ("calendar retried after failure", cc.get("check_calendar", 0) >= 2),
+            ("incident review event created", has_event),
+            ("oncall email delivered despite failure", len(oncall) >= 1),
+            ("email retried after failure", cc.get("send_email", 0) >= len(emails) + 1 and len(emails) >= 1),
+            ("status email delivered", len(status) >= 1),
+            ("calendar re-verified at the end", cc.get("check_calendar", 0) >= 3),
+            ("summary reports the failures", "retr" in all_text or "fail" in all_text or "transient" in all_text),
+        ]
+
+    elif scenario_id == "AG-09":
+        # Nested schemas: query_tasks with nested filters.date_range, ticket with
+        # nested metadata, then email the results
+        def _nested_ok(t):
+            a = t.get("args", {})
+            f = a.get("filters") if isinstance(a, dict) else None
+            dr = f.get("date_range") if isinstance(f, dict) else None
+            return isinstance(dr, dict) and bool(dr.get("start")) and bool(dr.get("end"))
+        q_ok = [t for t in tool_log if t["tool"].lower() == "query_tasks" and _nested_ok(t)]
+        q_overdue = [t for t in q_ok if str((t["args"].get("filters") or {}).get("status", "")).lower() == "overdue"]
+        tickets = env["tickets_created"]
+        good_ticket = [tk for tk in tickets if tk.get("component") == "backlog" and tk.get("severity") == "high"]
+        pm = [e for e in emails if e["to"] == "pm@corp.com"]
+        pm_body = " ".join((e["subject"] + " " + e["body"]).lower() for e in pm)
+        checks = [
+            ("query with properly NESTED date_range", len(q_ok) >= 1),
+            ("overdue status filter used", len(q_overdue) >= 1),
+            ("ticket filed with nested metadata", len(tickets) >= 1),
+            ("metadata component=backlog, severity=high", len(good_ticket) >= 1),
+            ("PM emailed", len(pm) >= 1),
+            ("email has the count (7) and ticket id", "7" in pm_body and "tck-88" in pm_body),
+        ]
+
+    elif scenario_id == "AG-10":
+        # Deep chain + error injection combined (create_event #1 and send_email #2 fail)
+        cc = env["call_counts"]
+        wcities = {_arg(t, "city") for t in tool_log if t["tool"].lower() == "get_weather"}
+        cal_days = {_arg(t, "day") for t in tool_log if t["tool"].lower() == "check_calendar"}
+        etitles = " ".join(e["title"].lower() for e in env["events_created"])
+        retro = [e for e in env["events_created"] if "retro" in e["title"].lower()
+                 and "next_monday" in str(e["day"]).lower().replace(" ", "_")]
+        rcpts = {e["to"] for e in emails}
+        checks = [
+            ("denver + boulder weather checked", {"denver", "boulder"} <= wcities),
+            ("monday + tuesday calendar checked", any("monday" in d for d in cal_days)
+             and any("tuesday" in d for d in cal_days)),
+            ("briefing event created despite failure", "briefing" in etitles),
+            ("event creation retried", cc.get("create_event", 0) >= len(env["events_created"]) + 1
+             and len(env["events_created"]) >= 1),
+            ("email retried after failure", cc.get("send_email", 0) >= len(emails) + 1 and len(emails) >= 2),
+            ("all 3 teams emailed", {"facilities@corp.com", "manager@corp.com", "staff@corp.com"} <= rcpts),
+            ("retro event on next monday", len(retro) >= 1),
+            ("final report has both temps (-7, -9)", "-7" in all_text and "-9" in all_text),
+        ]
+
+    elif scenario_id == "AG-11":
+        # Long context: booking code, required day, and contact buried in ~30K chars
+        good_event = [e for e in env["events_created"] if "7741" in e["title"]
+                      and "thursday" in str(e["day"]).lower()]
+        wrong_day = [e for e in env["events_created"] if "7741" in e["title"]
+                     and "thursday" not in str(e["day"]).lower()]
+        priya = [e for e in emails if e["to"] == "priya@corp.com"]
+        priya_body = " ".join((e["subject"] + " " + e["body"]).lower() for e in priya)
+        checks = [
+            ("event titled with the buried code", any("7741" in e["title"] for e in env["events_created"])),
+            ("event on the buried required day", len(good_event) >= 1 and not wrong_day),
+            ("buried escalation contact emailed", len(priya) >= 1),
+            ("email contains the booking code", "spark-7741" in priya_body or "7741" in priya_body),
+            ("summary names the required day", "thursday" in all_text),
+        ]
+
+    elif scenario_id == "AG-12":
+        # Long context + distractor: use the FINAL budget ($48,500 / FIN-2231),
+        # not the superseded draft ($62,000)
+        fin = [e for e in emails if e["to"] == "finance-ops@corp.com"]
+        fin_body = " ".join((e["subject"] + " " + e["body"]).lower() for e in fin)
+        used_final = ("48,500" in fin_body or "48500" in fin_body)
+        used_draft = ("62,000" in fin_body or "62000" in fin_body)
+        ev = [e for e in env["events_created"] if "fin-2231" in e["title"].lower()]
+        checks = [
+            ("finance-ops emailed", len(fin) >= 1),
+            ("FINAL amount used ($48,500)", used_final),
+            ("superseded draft ($62,000) rejected", not used_draft and len(fin) >= 1),
+            ("sign-off code cited", "fin-2231" in fin_body),
+            ("review event with sign-off code", len(ev) >= 1),
+        ]
+
     else:
         return 0.0, f"unknown agentic scenario {scenario_id}"
 
@@ -2895,11 +3218,10 @@ def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns):
     total = len(checks)
     base_score = passed / total if total > 0 else 0.0
 
-    # Penalty for excessive turns (wastes steps)
-    if n_turns > 15:
+    # Penalty for exceeding the scenario's turn budget (v6.4: budget is
+    # per-scenario — deep chains legitimately need 25-30 turns)
+    if n_turns > turn_budget:
         base_score *= 0.8
-    elif n_turns > 20:
-        base_score *= 0.6
 
     # Bonus for efficiency (completing in fewer turns)
     if n_turns <= 8 and base_score >= 0.8:
