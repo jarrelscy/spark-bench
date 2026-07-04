@@ -848,6 +848,23 @@ def expect_multi_turn_state(final_answer_check, context_msgs):
     return check
 
 
+def expect_no_extra_keys(allowed):
+    """Penalise JSON with keys not in the allowed set — models that add
+    extra fields should not score full marks on a 'no extra fields' prompt."""
+    def check(resp):
+        obj = _first_json(resp.get("text", "") or "")
+        if obj is None:
+            return (1.0, "")  # let expect_nested_json handle parse failures
+        if not isinstance(obj, dict):
+            return (1.0, "")
+        extras = [k for k in obj if k not in allowed]
+        if not extras:
+            return (1.0, "")
+        penalty = 0.2 * len(extras)
+        return (max(0.0, 1.0 - penalty), f"extra keys: {extras}")
+    return check
+
+
 def expect_nested_json(schema_check):
     """Deep nested JSON validation. schema_check is a dict where each key maps
     to either a type, a set, a callable, or a nested dict of the same structure.
@@ -2072,11 +2089,13 @@ HARD_SCENARIOS = [
               '{"city": "Tokyo", "temperature_c": 22, "condition": "clear", '
               '"humidity": 60}'},
          ],
-         grade=expect_nested_json({
-             "location": str,
-             "temperature_celsius": lambda v: isinstance(v, (int, float)),
-             "condition": str,
-             "recommendation": lambda v: isinstance(v, str) and len(v) > 3})),
+         grade=all_of(
+             expect_nested_json({
+                 "location": lambda v: isinstance(v, str) and v.lower().strip() in ("tokyo", "tokyo, japan"),
+                 "temperature_celsius": lambda v: isinstance(v, (int, float)) and 20 <= v <= 24,
+                 "condition": lambda v: isinstance(v, str) and v.lower() in ("clear", "sunny"),
+                 "recommendation": lambda v: isinstance(v, str) and len(v) > 3}),
+             expect_no_extra_keys(["location", "temperature_celsius", "condition", "recommendation"]))),
 
     dict(id="SOH-04", domain="structured", group="capability", tier="hard",
          difficulty=2.4, max_tokens=600,
@@ -2101,15 +2120,17 @@ HARD_SCENARIOS = [
              {"role": "tool", "tool_call_id": "call00002", "content":
               '{"ticker": "AAPL", "price": 192.45, "currency": "USD"}'},
          ],
-         grade=expect_nested_json({
-             "weather": {
-                 "city": str,
-                 "temp_c": lambda v: isinstance(v, (int, float)),
-                 "condition": str},
-             "market": {
-                 "ticker": str,
-                 "price": lambda v: isinstance(v, (int, float)),
-                 "currency": str}})),
+         grade=all_of(
+             expect_nested_json({
+                 "weather": {
+                     "city": lambda v: isinstance(v, str) and "francisco" in v.lower(),
+                     "temp_c": lambda v: isinstance(v, (int, float)) and 16 <= v <= 20,
+                     "condition": lambda v: isinstance(v, str) and v.lower() in ("foggy", "fog")},
+                 "market": {
+                     "ticker": lambda v: isinstance(v, str) and v.upper() == "AAPL",
+                     "price": lambda v: isinstance(v, (int, float)) and 190 <= v <= 195,
+                     "currency": lambda v: isinstance(v, str) and v.upper() == "USD"}}),
+             expect_no_extra_keys(["weather", "market"]))),
 
     # ---- advanced adversarial safety -------------------------------------- #
     dict(id="SAH-02", domain="safety", group="calibration", tier="hard",
