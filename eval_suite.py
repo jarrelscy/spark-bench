@@ -2727,7 +2727,7 @@ _AG12_BRIEFING = _briefing_noise(30000, [
 ])
 
 V64_SCENARIOS = [
-    dict(id="AG-07", domain="agentic", group="capability", tier="expert", difficulty=4.6,
+    dict(id="AG-07", domain="agentic", group="capability", tier="expert", difficulty=3.0,
          max_tokens=1000, agentic=True, max_turns=32, turn_budget=26,
          tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
          messages=_msg("Plan a two-city work trip. Every step depends on earlier results — do them IN ORDER:\n"
@@ -2743,7 +2743,7 @@ V64_SCENARIOS = [
                        "temperatures, and which day each visit is on.\n"
                        "Do not skip steps. Do not guess values you can look up."),
          grade=None),
-    dict(id="AG-08", domain="agentic", group="capability", tier="expert", difficulty=4.8,
+    dict(id="AG-08", domain="agentic", group="capability", tier="expert", difficulty=3.2,
          max_tokens=1000, agentic=True, max_turns=30, turn_budget=24,
          env_patch={"failure_plan": {"check_calendar": [1], "send_email": [1]}},
          tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
@@ -2757,7 +2757,7 @@ V64_SCENARIOS = [
                        "5. Re-check tomorrow's calendar to verify.\n"
                        "6. Final summary: list every transient failure you hit and how you recovered."),
          grade=None),
-    dict(id="AG-09", domain="agentic", group="capability", tier="expert", difficulty=4.5,
+    dict(id="AG-09", domain="agentic", group="capability", tier="expert", difficulty=2.8,
          max_tokens=1000, agentic=True, max_turns=24, turn_budget=18,
          tools=[T_TASKS, T_TICKET, T_EMAIL],
          messages=_msg("Backlog sweep. The task tracker uses NESTED query parameters — keep them nested exactly "
@@ -2770,7 +2770,7 @@ V64_SCENARIOS = [
                        "new ticket's id.\n"
                        "4. Final summary of what you found and filed."),
          grade=None),
-    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=5.2,
+    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=3.5,
          max_tokens=1000, agentic=True, max_turns=34, turn_budget=28,
          env_patch={"failure_plan": {"create_event": [1], "send_email": [2]}},
          tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
@@ -2787,7 +2787,7 @@ V64_SCENARIOS = [
                        "12. Final report: both temperatures, every event created, every email sent, and every "
                        "failure you recovered from."),
          grade=None),
-    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=4.7,
+    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=3.0,
          max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
          tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
          messages=_msg("Below is a long ops briefing. Buried somewhere in it are: (a) a war-room booking code, "
@@ -2800,7 +2800,7 @@ V64_SCENARIOS = [
                        "3. One-paragraph summary naming all three facts.\n\n"
                        "--- BRIEFING START ---\n" + _AG11_BRIEFING + "\n--- BRIEFING END ---"),
          grade=None),
-    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=5.0,
+    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=3.2,
          max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
          tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
          messages=_msg("Below is a long planning document. It contains a SUPERSEDED draft budget and, later, a "
