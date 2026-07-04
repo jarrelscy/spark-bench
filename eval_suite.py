@@ -2724,23 +2724,20 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout):
             # Model stopped calling tools — either done or gave up
             break
 
-        # Add assistant response to conversation
-        assistant_msg = {"role": "assistant", "content": text}
-        messages.append(assistant_msg)
-
-        # Process each tool call and add results as user messages with continuation cue
-        for tc in tool_calls:
-            func = tc.get("function", {}) or tc
-            tname = func.get("name") or tc.get("name") or ""
-            try:
-                import json as _json
-                raw_args = func.get("arguments", tc.get("args", {}))
-                targs = _json.loads(raw_args) if isinstance(raw_args, str) else (raw_args or {})
-            except Exception:
-                targs = {}
-            result = _sim_tool(tname, targs, env)
-            tool_call_log.append({"tool": tname, "args": targs, "result": result})
-            messages.append({"role": "user", "content": f"[Tool Result] {tname}: {result}\n\nContinue with the next step of your task."})
+        # v6.3: standard tool protocol. The assistant turn keeps its tool_calls
+        # and results return as role:"tool" with a matching tool_call_id —
+        # protocol-strict models (Qwen etc.) stop mid-chain if tool results
+        # arrive as user messages with the tool_calls stripped from history.
+        tc_msgs = [
+            {"id": f"call_{turn}_{i}", "type": "function",
+             "function": {"name": tc["name"], "arguments": json.dumps(tc["args"])}}
+            for i, tc in enumerate(tool_calls)
+        ]
+        messages.append({"role": "assistant", "content": text or "", "tool_calls": tc_msgs})
+        for i, tc in enumerate(tool_calls):
+            result = _sim_tool(tc["name"], tc["args"], env)
+            tool_call_log.append({"tool": tc["name"], "args": tc["args"], "result": result})
+            messages.append({"role": "tool", "tool_call_id": f"call_{turn}_{i}", "content": result})
 
     # Grade based on task completion
     score, reason = _grade_agentic(sc["id"], env, tool_call_log, total_text, turn + 1)
