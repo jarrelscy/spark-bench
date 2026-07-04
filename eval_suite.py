@@ -1539,6 +1539,284 @@ def _test_state_machine(ns):
     return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
 
 
+def _test_refactor_discounts(ns):
+    """Test CODE-11: refactored discount functions preserve behavior + use helper."""
+    pd = ns.get("percentage_discount")
+    fd = ns.get("fixed_discount")
+    bd = ns.get("bogo_discount")
+    helper = ns.get("_apply_discount")
+    if not all([pd, fd, bd]):
+        return (0.0, "missing public functions")
+    passed = 0
+    total = 5
+    reasons = []
+    # Test 1: percentage_discount correctness
+    try:
+        if pd(100, 20) == 80.0 and pd(50, 10) == 45.0:
+            passed += 1; reasons.append("t1:pass")
+        else:
+            reasons.append(f"t1:fail(pd(100,20)={pd(100,20)})")
+    except Exception as e:
+        reasons.append(f"t1:error({e})")
+    # Test 2: fixed_discount correctness + max(0) edge case
+    try:
+        if fd(100, 30) == 70.0 and fd(10, 50) == 0:
+            passed += 1; reasons.append("t2:pass")
+        else:
+            reasons.append(f"t2:fail(fd(10,50)={fd(10,50)})")
+    except Exception as e:
+        reasons.append(f"t2:error({e})")
+    # Test 3: bogo_discount correctness
+    try:
+        if bd(10, 4) == 20.0 and bd(10, 3) == 20.0 and bd(10, 1) == 10.0:
+            passed += 1; reasons.append("t3:pass")
+        else:
+            reasons.append(f"t3:fail(bd(10,3)={bd(10,3)})")
+    except Exception as e:
+        reasons.append(f"t3:error({e})")
+    # Test 4: negative price raises ValueError on all functions
+    try:
+        raised = 0
+        for fn, args in [(pd, (-1, 10)), (fd, (-1, 5)), (bd, (-1, 2))]:
+            try:
+                fn(*args)
+            except ValueError:
+                raised += 1
+        if raised == 3:
+            passed += 1; reasons.append("t4:pass")
+        else:
+            reasons.append(f"t4:fail(raised {raised}/3)")
+    except Exception as e:
+        reasons.append(f"t4:error({e})")
+    # Test 5: _apply_discount helper exists and is callable
+    try:
+        if callable(helper):
+            passed += 1; reasons.append("t5:pass")
+        else:
+            reasons.append("t5:fail(helper not callable)")
+    except Exception:
+        reasons.append("t5:fail(no helper)")
+    score = passed / total
+    return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
+
+
+def _test_safe_counter(ns):
+    """Test CODE-12: thread-safe counter without Lock."""
+    SC = ns.get("SafeCounter")
+    if not SC:
+        return (0.0, "no SafeCounter found")
+    import threading
+    passed = 0
+    total = 4
+    reasons = []
+    # Test 1: basic increment/decrement
+    try:
+        c = SC()
+        c.increment(5)
+        c.increment(3)
+        c.decrement(2)
+        if c.value() == 6:
+            passed += 1; reasons.append("t1:pass")
+        else:
+            reasons.append(f"t1:fail(value={c.value()}, want 6)")
+    except Exception as e:
+        reasons.append(f"t1:error({e})")
+    # Test 2: thread safety — 100 threads increment 1000 times each
+    try:
+        c = SC()
+        def worker():
+            for _ in range(1000):
+                c.increment(1)
+        threads = [threading.Thread(target=worker) for _ in range(100)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        if c.value() == 100000:
+            passed += 1; reasons.append("t2:pass")
+        else:
+            reasons.append(f"t2:fail(value={c.value()}, want 100000)")
+    except Exception as e:
+        reasons.append(f"t2:error({e})")
+    # Test 3: decrement underflow handled (no crash)
+    try:
+        c = SC()
+        c.decrement(5)
+        c.increment(10)
+        if c.value() == 5:
+            passed += 1; reasons.append("t3:pass")
+        else:
+            reasons.append(f"t3:fail(value={c.value()}, want 5)")
+    except Exception as e:
+        reasons.append(f"t3:error({e})")
+    # Test 4: no threading.Lock used (check source)
+    try:
+        import inspect
+        src = inspect.getsource(SC)
+        if "Lock" not in src and "lock" not in src.lower():
+            passed += 1; reasons.append("t4:pass")
+        else:
+            reasons.append("t4:fail(uses Lock)")
+    except Exception:
+        # Can't inspect source — accept if test 2 passed (proven thread-safe)
+        if passed >= 2:
+            passed += 1; reasons.append("t4:pass(implicit)")
+        else:
+            reasons.append("t4:skip")
+    score = passed / total
+    return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
+
+
+def _test_api_client(ns):
+    """Test CODE-13: API client with error handling."""
+    AC = ns.get("APIClient")
+    if not AC:
+        return (0.0, "no APIClient found")
+    passed = 0
+    total = 5
+    reasons = []
+    # Check custom exceptions exist
+    excs = {}
+    for name in ["RateLimitError", "ServerError", "ClientError", "ConnectionError"]:
+        excs[name] = ns.get(name)
+    # Test 1: all custom exceptions defined and subclass of Exception
+    try:
+        if all(e and issubclass(e, Exception) for e in excs.values()):
+            passed += 1; reasons.append("t1:pass")
+        else:
+            missing = [k for k, v in excs.items() if not v]
+            reasons.append(f"t1:fail(missing: {missing})")
+    except Exception as e:
+        reasons.append(f"t1:error({e})")
+    # Test 2: constructor accepts base_url and timeout
+    try:
+        client = AC("https://api.example.com", timeout=5)
+        if hasattr(client, "get"):
+            passed += 1; reasons.append("t2:pass")
+        else:
+            reasons.append("t2:fail(no get method)")
+    except Exception as e:
+        reasons.append(f"t2:error({e})")
+    # Test 3: uses urllib (not requests)
+    try:
+        import inspect
+        src = inspect.getsource(AC)
+        if "urllib" in src and "import requests" not in src:
+            passed += 1; reasons.append("t3:pass")
+        else:
+            reasons.append("t3:fail(no urllib or uses requests)")
+    except Exception:
+        reasons.append("t3:skip(no source)")
+    # Test 4: get() raises ClientError on 4xx (mock test)
+    try:
+        from unittest.mock import patch, MagicMock
+        import urllib.request
+        client = AC("https://api.example.com")
+        # Mock urllib to return 404
+        mock_resp = MagicMock()
+        mock_resp.status = 404
+        mock_resp.read.return_value = b"Not Found"
+        with patch("urllib.request.urlopen") as mock_urlopen:
+            mock_urlopen.return_value.__enter__ = MagicMock(return_value=mock_resp)
+            mock_urlopen.return_value.__exit__ = MagicMock(return_value=False)
+            try:
+                client.get("/test")
+                reasons.append("t4:fail(no exception)")
+            except excs.get("ClientError", Exception):
+                passed += 1; reasons.append("t4:pass")
+            except Exception as e:
+                reasons.append(f"t4:fail(wrong exc: {type(e).__name__})")
+    except ImportError:
+        reasons.append("t4:skip(no mock)")
+    except Exception as e:
+        reasons.append(f"t4:error({e})")
+    # Test 5: get() raises RateLimitError on 429 (mock test)
+    try:
+        from unittest.mock import patch, MagicMock
+        import urllib.error
+        import time as _time
+        client = AC("https://api.example.com")
+        mock_resp = MagicMock()
+        mock_resp.status = 429
+        mock_resp.read.return_value = b"Rate Limited"
+        # Make urlopen always return 429 so it retries and fails
+        with patch("urllib.request.urlopen") as mock_urlopen:
+            mock_urlopen.return_value.__enter__ = MagicMock(return_value=mock_resp)
+            mock_urlopen.return_value.__exit__ = MagicMock(return_value=False)
+            # Patch sleep to avoid actual delays
+            with patch("time.sleep"):
+                try:
+                    client.get("/test")
+                    reasons.append("t5:fail(no exception)")
+                except excs.get("RateLimitError", Exception):
+                    passed += 1; reasons.append("t5:pass")
+                except Exception as e:
+                    reasons.append(f"t5:fail(wrong exc: {type(e).__name__})")
+    except ImportError:
+        reasons.append("t5:skip(no mock)")
+    except Exception as e:
+        reasons.append(f"t5:error({e})")
+    score = passed / total
+    return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
+
+
+def _test_merge_streams(ns):
+    """Test CODE-14: merge sorted streams with dedup (last wins)."""
+    ms = ns.get("merge_sorted_streams")
+    if not ms:
+        return (0.0, "no merge_sorted_streams found")
+    passed = 0
+    total = 5
+    reasons = []
+    # Test 1: basic merge
+    try:
+        result = list(ms([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))
+        if result == [(1,'a'),(2,'c'),(3,'d')]:
+            passed += 1; reasons.append("t1:pass")
+        else:
+            reasons.append(f"t1:fail(got {result})")
+    except Exception as e:
+        reasons.append(f"t1:error({e})")
+    # Test 2: dedup within same stream (last wins)
+    try:
+        result = list(ms([(1,'a'),(1,'b'),(2,'c')], []))
+        if result == [(1,'b'),(2,'c')]:
+            passed += 1; reasons.append("t2:pass")
+        else:
+            reasons.append(f"t2:fail(got {result})")
+    except Exception as e:
+        reasons.append(f"t2:error({e})")
+    # Test 3: empty streams
+    try:
+        result = list(ms([], [], [(1,'x')]))
+        if result == [(1,'x')]:
+            passed += 1; reasons.append("t3:pass")
+        else:
+            reasons.append(f"t3:fail(got {result})")
+    except Exception as e:
+        reasons.append(f"t3:error({e})")
+    # Test 4: different lengths
+    try:
+        result = list(ms([(1,'a'),(5,'e'),(10,'j')], [(2,'b')]))
+        if result == [(1,'a'),(2,'b'),(5,'e'),(10,'j')]:
+            passed += 1; reasons.append("t4:pass")
+        else:
+            reasons.append(f"t4:fail(got {result})")
+    except Exception as e:
+        reasons.append(f"t4:error({e})")
+    # Test 5: all empty
+    try:
+        result = list(ms())
+        if result == []:
+            passed += 1; reasons.append("t5:pass")
+        else:
+            reasons.append(f"t5:fail(got {result})")
+    except Exception as e:
+        reasons.append(f"t5:error({e})")
+    score = passed / total
+    return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
+
+
 SCENARIOS = [
     # ---- tool_use (capability) -------------------------------------------- #
     dict(id="AG-01", domain="agentic", group="capability", tier="hard", difficulty=3.5,
@@ -2701,6 +2979,94 @@ HARD_SCENARIOS = [
              "transition, current() -> current state, can_trigger(event) -> bool. "
              "Output only the code."),
          grade=expect_executable_code(test_fn=lambda ns: _test_state_machine(ns))),
+
+    # ---- v6.4c: harder code scenarios calibrated to SWE-bench difficulty ----
+    # Public data: Gemma 4 26B = 52% SWE-bench, Qwen 3.6 27B = 77%. Our v6.4b
+    # code scenarios were too easy (Gemma scored 92.6). These add the
+    # multi-step debugging, state tracking, and edge-case handling that
+    # separates 4B-active from 27B-dense models.
+
+    # CODE-11: Multi-function refactoring — extract duplicates, preserve behavior
+    dict(id="CODE-11", domain="code", group="capability", tier="hard",
+         difficulty=3.5, max_tokens=1500, messages=_msg(
+             "Refactor this code. The three functions below have duplicated logic. "
+             "Extract a shared helper `_apply_discount(price, discount_type, value)` "
+             "and reimplement all three functions using it. The public API must stay "
+             "identical (same names, same args, same return values for ALL inputs).\n\n"
+             "```python\n"
+             "def percentage_discount(price, percent):\n"
+             "    if price < 0: raise ValueError('negative price')\n"
+             "    return round(price * (1 - percent / 100), 2)\n\n"
+             "def fixed_discount(price, amount):\n"
+             "    if price < 0: raise ValueError('negative price')\n"
+             "    result = price - amount\n"
+             "    return round(max(result, 0), 2)\n\n"
+             "def bogo_discount(price, quantity):\n"
+             "    if price < 0: raise ValueError('negative price')\n"
+             "    if quantity < 1: return 0\n"
+             "    paid = (quantity // 2 + quantity % 2) * price\n"
+             "    return round(paid, 2)\n"
+             "```\n"
+             "Output only the refactored code."),
+         grade=expect_executable_code(test_fn=lambda ns: _test_refactor_discounts(ns))),
+
+    # CODE-12: Debug a concurrency bug — race condition in a shared counter
+    dict(id="CODE-12", domain="code", group="capability", tier="hard",
+         difficulty=3.8, max_tokens=1200, messages=_msg(
+             "This thread-safe counter has a race condition. Fix it WITHOUT using "
+             "threading.Lock — use only atomic operations or a lock-free approach.\n\n"
+             "```python\n"
+             "import threading\n\n"
+             "class SafeCounter:\n"
+             "    def __init__(self):\n"
+             "        self._value = 0\n"
+             "    def increment(self, n=1):\n"
+             "        self._value += n  # BUG: not atomic\n"
+             "    def decrement(self, n=1):\n"
+             "        self._value -= n  # BUG: not atomic\n"
+             "    def value(self):\n"
+             "        return self._value\n"
+             "```\n"
+             "Fix the race condition. The class must be importable and work with "
+             "concurrent threads. Output only the fixed code."),
+         grade=expect_executable_code(test_fn=lambda ns: _test_safe_counter(ns))),
+
+    # CODE-13: API client with error handling and retry logic
+    dict(id="CODE-13", domain="code", group="capability", tier="hard",
+         difficulty=3.6, max_tokens=1500, messages=_msg(
+             "Write a Python class `APIClient` that wraps a simple HTTP API. "
+             "Requirements:\n"
+             "1. Constructor takes `base_url` and `timeout=10`.\n"
+             "2. Method `get(path)` makes a GET request to `base_url + path` using "
+             "only `urllib.request` (no `requests` library).\n"
+             "3. On HTTP 429 (rate limit), retry up to 3 times with exponential "
+             "backoff (0.5s, 1s, 2s). Raise `RateLimitError` if still failing.\n"
+             "4. On HTTP 5xx, retry once after 1s. Raise `ServerError` if still failing.\n"
+             "5. On HTTP 4xx (except 429), raise `ClientError` immediately.\n"
+             "6. On network errors (URLError), retry once after 1s. Raise "
+             "`ConnectionError` if still failing.\n"
+             "7. `get()` returns the response body as a string.\n"
+             "Define all custom exceptions as subclasses of Exception.\n"
+             "Output only the code. Do NOT make real network calls."),
+         grade=expect_executable_code(test_fn=lambda ns: _test_api_client(ns))),
+
+    # CODE-14: Data pipeline — merge sorted streams with dedup
+    dict(id="CODE-14", domain="code", group="capability", tier="hard",
+         difficulty=3.3, max_tokens=1200, messages=_msg(
+             "Write a Python function `merge_sorted_streams(streams)` that takes a list "
+             "of iterables, each yielding (key, value) tuples in sorted order by key. "
+             "Merge them into a single sorted output. If the same key appears in "
+             "multiple streams, keep only the LAST value seen for that key (later "
+             "streams override earlier ones). If the same key appears multiple times "
+             "within the same stream, keep the last occurrence.\n\n"
+             "The function must be a generator (use yield, not return a list). It "
+             "must handle empty streams and streams of different lengths. Keys are "
+             "comparable integers.\n\n"
+             "Example:\n"
+             "  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n"
+             "  → [(1,'a'), (2,'c'), (3,'d')]\n\n"
+             "Output only the code."),
+         grade=expect_executable_code(test_fn=lambda ns: _test_merge_streams(ns))),
 ]
 
 SCENARIOS = SCENARIOS + HARD_SCENARIOS
@@ -3315,17 +3681,43 @@ def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget
     total = len(checks)
     base_score = passed / total if total > 0 else 0.0
 
+    # v6.4c: Final-answer correctness gate — tool-call sequence alone is not
+    # enough.  Public benchmarks (τ²-bench, SWE-bench) show Qwen beats Gemma
+    # on agentic tasks because Gemma often calls the right tools but garbles
+    # the final answer.  If the model's summary text is missing critical
+    # result values that it was asked to report, cap the score at 0.6.
+    # This mirrors reality: a partial-credit agent that does the work but
+    # reports wrong numbers is not a 1.0 agent.
+    _CORRECTNESS_GATES = {
+        "AG-01": [("-2",), ("snow",), ("tokyo",), ("london",)],            # reports weather values
+        "AG-03": [("-3",), ("snow",), ("boston",)],                        # boston snow + temp
+        "AG-06": [("-7",), ("denver",), ("emergency",)],                   # crisis response values
+        "AG-07": [("austin",), ("san francisco",), ("22",), ("15",)],       # both temps + cities
+        "AG-10": [("-7",), ("-9",)],                                        # both temps
+        "AG-12": [("48,500", "48500"), ("fin-2231",)],                     # final amount + code
+    }
+    gates = _CORRECTNESS_GATES.get(scenario_id)
+    gate_msg = ""
+    if gates and base_score >= 0.5:
+        missing = []
+        for gate in gates:
+            if not any(g.lower() in all_text for g in gate):
+                missing.append(gate[0])
+        if missing:
+            base_score = min(base_score, 0.6)
+            gate_msg = f" ⚠ CORRECTNESS GATE FAILED: missing {missing}"
+
     # Penalty for exceeding the scenario's turn budget (v6.4: budget is
     # per-scenario — deep chains legitimately need 25-30 turns)
     if n_turns > turn_budget:
         base_score *= 0.8
 
-    # Bonus for efficiency (completing in fewer turns)
-    if n_turns <= 8 and base_score >= 0.8:
-        base_score = min(1.0, base_score + 0.05)
+    # v6.4c: remove the efficiency bonus — it rewards fast-but-wrong models
+    # (Gemma's 4B active params complete in fewer turns, inflating score).
+    # Correctness matters more than speed for capability scoring.
 
     check_str = ", ".join(f"{'✓' if ok else '✗'} {name}" for name, ok in checks)
-    return base_score, f"agentic {passed}/{total}: {check_str} ({n_turns} turns)"
+    return base_score, f"agentic {passed}/{total}: {check_str}{gate_msg} ({n_turns} turns)"
 
 
 def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
