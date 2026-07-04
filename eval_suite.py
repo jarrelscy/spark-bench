@@ -390,29 +390,26 @@ def expect_code(fname, cases, forbid_imports=None):
             for imp in forbid_imports:
                 if re.search(rf"\bimport\s+{imp}\b", code):
                     return (0.0, f"used forbidden import {imp}")
-        try:
+        def _graded():
             ns = {}
-            def _load_code():
-                exec(code, ns)  # noqa: S102 - sandboxed-ish eval of model code
-            _run_with_timeout(_load_code, 5)
+            exec(code, ns)  # noqa: S102 - runs inside _sandboxed child only
             fn = ns.get(fname)
             if not callable(fn):
                 return (0.0, f"{fname} not callable")
+            passed = 0
+            for args, expected in cases:
+                try:
+                    if _run_with_timeout(lambda: fn(*args), 5) == expected:
+                        passed += 1
+                except Exception:
+                    pass
+            return (passed / len(cases), f"{passed}/{len(cases)} cases")
+        try:
+            return _sandboxed(_graded, timeout=12)
         except _EvalTimeout:
             return (0.0, "exec timeout")
         except Exception as e:
-            return (0.0, f"exec error: {type(e).__name__}")
-        passed = 0
-        for args, expected in cases:
-            try:
-                got = _run_with_timeout(lambda: fn(*args), 5)
-                if got == expected:
-                    passed += 1
-            except _EvalTimeout:
-                pass
-            except Exception:
-                pass
-        return (passed / len(cases), f"{passed}/{len(cases)} cases")
+            return (0.0, f"exec error: {str(e)[:60]}")
     return check
 
 
@@ -521,6 +518,81 @@ class _EvalTimeout(Exception):
     pass
 
 
+def _sandboxed(fn, timeout=8, mem_mb=768):
+    """Run fn() in a forked child process and return its (picklable) result.
+
+    Model-generated code must NEVER execute in the grader process: a hostile
+    or buggy payload could read the box, open sockets, or hang the run
+    (flagged as an RCE risk in the v6 review; fixed 2026-07-04). The child:
+      - gets its own session/process group (killable as a unit on timeout)
+      - CPU / address-space / file-size rlimits; fork/spawn disabled
+      - socket.socket disabled (no network)
+      - runs in a fresh temp cwd
+    Raises _EvalTimeout on wall-clock overrun; re-raises child errors as
+    RuntimeError. Only the returned value crosses back (via pipe + pickle).
+    """
+    import os, pickle, select, signal as _sig, tempfile, time as _time
+    r, w = os.pipe()
+    pid = os.fork()
+    if pid == 0:  # ---- child ----
+        try:
+            os.close(r)
+            os.setsid()
+            import resource
+            resource.setrlimit(resource.RLIMIT_CPU, (timeout, timeout + 2))
+            resource.setrlimit(resource.RLIMIT_AS, (mem_mb << 20, mem_mb << 20))
+            resource.setrlimit(resource.RLIMIT_FSIZE, (1 << 20, 1 << 20))
+            try:
+                resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+            except (ValueError, OSError):
+                pass
+            import socket as _sock
+
+            def _blocked(*a, **k):
+                raise OSError("network disabled in grader sandbox")
+            _sock.socket = _blocked
+            os.chdir(tempfile.mkdtemp(prefix="sbx-"))
+            payload = pickle.dumps(("ok", fn()))
+        except BaseException as e:
+            try:
+                payload = pickle.dumps(("err", f"{type(e).__name__}: {e}"[:200]))
+            except Exception:
+                payload = pickle.dumps(("err", "unpicklable child error"))
+        try:
+            os.write(w, payload)
+        finally:
+            os._exit(0)
+    # ---- parent ----
+    os.close(w)
+    deadline = _time.time() + timeout
+    chunks = []
+    while True:
+        remain = deadline - _time.time()
+        if remain <= 0:
+            break
+        ready, _, _ = select.select([r], [], [], min(remain, 0.25))
+        if ready:
+            chunk = os.read(r, 65536)
+            if not chunk:
+                break
+            chunks.append(chunk)
+    os.close(r)
+    try:
+        done, _status = os.waitpid(pid, os.WNOHANG)
+        if done == 0:
+            os.killpg(pid, _sig.SIGKILL)
+            os.waitpid(pid, 0)
+            raise _EvalTimeout(f"sandbox timeout after {timeout}s")
+    except ChildProcessError:
+        pass
+    if not chunks:
+        raise _EvalTimeout("sandbox died without producing a result")
+    status, out = pickle.loads(b"".join(chunks))
+    if status == "err":
+        raise RuntimeError(out)
+    return out
+
+
 def _run_with_timeout(fn, timeout=5):
     """Run fn with a wall-clock timeout; used around untrusted model code."""
     if not timeout or timeout <= 0:
@@ -594,45 +666,47 @@ def expect_executable_code(setup="", tests=None, test_fn=None, extract_fn=None):
         if not code:
             return (0.0, "no python code found")
 
-        # Execute with setup
-        success, ns, err = _run_python_safely(code, setup_code=setup)
+        def _graded():
+            # everything below touches untrusted code — child process only
+            success, ns, err = _run_python_safely(code, setup_code=setup)
+            if not success:
+                return (0.0, f"execution failed: {err}")
+            if test_fn:
+                try:
+                    return _run_with_timeout(lambda: test_fn(ns), 5)
+                except _EvalTimeout:
+                    return (0.0, "test timeout")
+            if not tests:
+                return (1.0, "executed successfully")
+            passed = 0
+            total = len(tests)
+            reasons = []
+            for i, (test_code, check_fn) in enumerate(tests):
+                try:
+                    local_ns = dict(ns) if ns else {}
 
-        if not success:
-            return (0.0, f"execution failed: {err}")
+                    def _exec_test():
+                        exec(test_code, local_ns)
+                    _run_with_timeout(_exec_test, 5)
+                    result = local_ns.get("__result__", None)
+                    if check_fn(result):
+                        passed += 1
+                        reasons.append(f"test{i+1}:pass")
+                    else:
+                        reasons.append(f"test{i+1}:fail(got {repr(result)[:50]})")
+                except _EvalTimeout:
+                    reasons.append(f"test{i+1}:timeout")
+                except Exception as e:
+                    reasons.append(f"test{i+1}:error({e})")
+            score = passed / total
+            return (score, f"{passed}/{total} tests passed: " + ", ".join(reasons))
 
-        # Run tests
-        if test_fn:
-            try:
-                return _run_with_timeout(lambda: test_fn(ns), 5)
-            except _EvalTimeout:
-                return (0.0, "test timeout")
-
-        if not tests:
-            return (1.0, "executed successfully")
-
-        passed = 0
-        total = len(tests)
-        reasons = []
-
-        for i, (test_code, check_fn) in enumerate(tests):
-            try:
-                local_ns = dict(ns) if ns else {}
-                def _exec_test():
-                    exec(test_code, local_ns)
-                _run_with_timeout(_exec_test, 5)
-                result = local_ns.get("__result__", None)
-                if check_fn(result):
-                    passed += 1
-                    reasons.append(f"test{i+1}:pass")
-                else:
-                    reasons.append(f"test{i+1}:fail(got {repr(result)[:50]})")
-            except _EvalTimeout:
-                reasons.append(f"test{i+1}:timeout")
-            except Exception as e:
-                reasons.append(f"test{i+1}:error({e})")
-
-        score = passed / total
-        return (score, f"{passed}/{total} tests passed: " + ", ".join(reasons))
+        try:
+            return _sandboxed(_graded, timeout=15)
+        except _EvalTimeout:
+            return (0.0, "sandbox timeout")
+        except Exception as e:
+            return (0.0, f"sandbox error: {str(e)[:60]}")
 
     return check
 
@@ -660,20 +734,19 @@ def expect_sql_code(schema_sql="", test_queries=None):
             else:
                 return (0.0, "no SQL query found")
 
-        try:
+        def _graded():
+            # model SQL runs against sqlite in the sandbox child only (ATTACH
+            # can write files; runaway CTEs can spin CPU)
             conn = sqlite3.connect(":memory:")
             conn.executescript(schema_sql)
             cursor = conn.execute(sql)
             rows = cursor.fetchall()
-
             if not test_queries:
                 conn.close()
                 return (1.0, f"query executed: {len(rows)} rows")
-
             passed = 0
             total = len(test_queries)
             reasons = []
-
             for i, (desc, check_fn) in enumerate(test_queries):
                 try:
                     if check_fn(rows, cursor):
@@ -683,13 +756,16 @@ def expect_sql_code(schema_sql="", test_queries=None):
                         reasons.append(f"{desc}:fail")
                 except Exception as e:
                     reasons.append(f"{desc}:error({e})")
-
             conn.close()
             score = passed / total
             return (score, f"{passed}/{total} checks passed: " + ", ".join(reasons))
 
+        try:
+            return _sandboxed(_graded, timeout=10)
+        except _EvalTimeout:
+            return (0.0, "sandbox timeout")
         except Exception as e:
-            return (0.0, f"SQL error: {e}")
+            return (0.0, f"SQL error: {str(e)[:60]}")
 
     return check
 

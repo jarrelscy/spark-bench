@@ -540,13 +540,225 @@ def _build_haystack(approx_tokens, passcode, depth=0.5):
 
 
 # --------------------------------------------------------------------------- #
+# Integrity gates (added 2026-07-04 after the v5 parser and v6.1 auto-pass
+# grader incidents). Order per eval run:
+#   1. golden gate  — grader must reproduce known scores on canned transcripts
+#   2. provenance   — grader git hash stamped on the run; dirty tree refuses
+#   3. box lock     — one eval per endpoint box, enforced by lockfile
+#   4. preflight    — endpoint serves the REQUESTED model and its tool-call
+#                     parsing actually works, else abort (never record zeros)
+#   5. run marker   — .STARTED heartbeat file so watchers verify from disk,
+#                     never from pgrep
+# --------------------------------------------------------------------------- #
+GRADER_FILES = ["eval_suite.py", "spark_bench.py", "golden_gate.py"]
+
+
+def _abort_run(ctx, why, detail=""):
+    ctx.add("eval", "provenance", "aborted", why, "", notes=detail[:120])
+    ctx.flush()
+    print(f"\n[gate] RUN ABORTED: {why}  {detail}", file=sys.stderr)
+    sys.exit(2)
+
+
+def _grader_provenance(ctx, allow_dirty=False):
+    """Short git hash of the grader; refuses to run on uncommitted grader code."""
+    try:
+        h = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=HERE,
+                           capture_output=True, text=True).stdout.strip() or "unknown"
+        dirty = subprocess.run(["git", "status", "--porcelain", "--"] + GRADER_FILES,
+                               cwd=HERE, capture_output=True, text=True).stdout.strip()
+    except Exception:
+        h, dirty = "unknown", ""
+    if dirty:
+        if not allow_dirty:
+            _abort_run(ctx, "grader_dirty",
+                       "uncommitted changes in " + ", ".join(
+                           ln.split()[-1] for ln in dirty.splitlines()) +
+                       " — commit first (or --allow-dirty for dev runs)")
+        h += "-dirty"
+    return h
+
+
+def _get_model_ids(endpoint, timeout=10):
+    url = endpoint.rstrip("/") + "/models"
+    key = (os.environ.get("SPARK_BENCH_API_KEY")
+           or os.environ.get("OPENROUTER_API_KEY")
+           or os.environ.get("OPENAI_API_KEY") or "none")
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        data = json.loads(r.read().decode())
+    return [m.get("id", "") for m in data.get("data", [])]
+
+
+def preflight_endpoint(ctx, args):
+    """Abort unless the endpoint (a) serves the requested model and (b) returns
+    parseable structured tool_calls. A failed tool probe means agentic scores
+    would measure the serving config, not the model — the v5 disaster."""
+    print("\n[gate] preflight: endpoint identity + tool-call parse probe")
+    # -- (a) model identity ------------------------------------------------- #
+    try:
+        ids = _get_model_ids(args.endpoint)
+    except Exception as e:
+        ids = None
+        detail = f"{type(e).__name__}: {str(e)[:60]}"
+    if ids is None:
+        if args.preflight_loose:
+            print(f"  [warn] /models unavailable ({detail}) — continuing (--preflight-loose)")
+            ctx.add("eval", "provenance", "served_model", "UNAVAILABLE", "", notes=detail)
+        else:
+            _abort_run(ctx, "preflight_models_unavailable", detail)
+    else:
+        req = args.model.lower()
+        match = [i for i in ids if i.lower() == req or req in i.lower() or i.lower() in req]
+        ctx.add("eval", "provenance", "served_model", ";".join(ids)[:200], "")
+        if not match:
+            _abort_run(ctx, "preflight_wrong_model",
+                       f"requested '{args.model}' but endpoint serves: {ids}")
+        print(f"  [ok ] endpoint serves requested model: {match[0]}")
+    # -- (b) tool-call parse probe ------------------------------------------ #
+    import eval_suite as ev
+    calls, last = [], None
+    for attempt in (1, 2):
+        try:
+            last = chat_stream(args.endpoint, args.model,
+                               [{"role": "user", "content": TOOL_PROMPT}],
+                               max_tokens=512, temperature=0.0,
+                               tools=WEATHER_TOOL, timeout=min(args.timeout, 180))
+            calls = ev.assemble_tool_calls(last)
+        except Exception as e:
+            last = {"text": f"error {type(e).__name__}: {str(e)[:60]}"}
+        if calls:
+            break
+    if not calls:
+        ctx.add("eval", "provenance", "preflight_tool_probe", "FAIL", "",
+                notes=(last or {}).get("text", "")[:100])
+        _abort_run(ctx, "preflight_dead_tool_parser",
+                   "endpoint never emitted structured tool_calls on an explicit "
+                   "tool prompt (2 attempts) — check --tool-call-parser matches "
+                   "the model family; agentic scores would be invalid")
+    names = ",".join(c["name"] for c in calls)
+    ctx.add("eval", "provenance", "preflight_tool_probe", "PASS", "", notes=names)
+    print(f"  [ok ] tool-call probe parsed: {names}")
+
+
+def _lock_path(endpoint):
+    host = re.sub(r"[^\w.-]+", "_", (endpoint or "local").split("//")[-1].rstrip("/"))
+    d = os.path.join(DEFAULT_OUT, ".locks")
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, host + ".lock")
+
+
+def _acquire_box_lock(endpoint, run_id):
+    """One eval per endpoint box. Returns lock path; exits if busy."""
+    p = _lock_path(endpoint)
+    if os.path.exists(p):
+        try:
+            with open(p) as f:
+                info = json.load(f)
+        except Exception:
+            info = {}
+        pid = info.get("pid")
+        if pid and os.path.exists(f"/proc/{pid}"):
+            print(f"FATAL: box busy — {p} held by run "
+                  f"{info.get('run_id')} (pid {pid} still alive). "
+                  f"One eval per box.", file=sys.stderr)
+            sys.exit(3)
+        print(f"[gate] stale lock (run {info.get('run_id')}, pid {pid} dead) — replacing")
+    with open(p, "w") as f:
+        json.dump({"run_id": run_id, "pid": os.getpid(),
+                   "started": time.strftime("%Y-%m-%dT%H:%M:%S")}, f)
+    return p
+
+
+def _release_box_lock(path):
+    try:
+        with open(path) as f:
+            if json.load(f).get("pid") == os.getpid():
+                os.remove(path)
+    except Exception:
+        pass
+
+
+class _RunMarker:
+    """On-disk liveness: <run_id>.STARTED written immediately and re-written
+    every 30s (mtime = heartbeat); <run_id>.DONE written on completion.
+    Watchers verify runs from these files, never from process names."""
+
+    def __init__(self, run_id, out_dir):
+        d = os.path.join(out_dir, "runs")
+        os.makedirs(d, exist_ok=True)
+        self.run_id = run_id
+        self.path = os.path.join(d, run_id + ".STARTED")
+        self.done_path = os.path.join(d, run_id + ".DONE")
+        self.n_done = 0
+        self._t0 = time.strftime("%Y-%m-%dT%H:%M:%S")
+        self._stop = threading.Event()
+
+    def _write(self, path, **extra):
+        with open(path, "w") as f:
+            json.dump(dict(run_id=self.run_id, pid=os.getpid(), started=self._t0,
+                           last_beat=time.strftime("%Y-%m-%dT%H:%M:%S"),
+                           scenarios_done=self.n_done, **extra), f)
+
+    def start(self):
+        self._write(self.path)
+        threading.Thread(target=self._beat, daemon=True).start()
+        print(f"  [gate] run marker: {self.path}")
+
+    def _beat(self):
+        while not self._stop.wait(30):
+            self._write(self.path)
+
+    def tick(self):
+        self.n_done += 1
+
+    def done(self, summary=""):
+        self._stop.set()
+        self._write(self.done_path, finished=time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    summary=summary)
+
+
+# --------------------------------------------------------------------------- #
 # Eval : deep graded multi-domain score (see eval_suite.py)
 # --------------------------------------------------------------------------- #
 def run_eval(ctx, args):
     import eval_suite as ev
+
+    # ---- gate 1: golden gate — grader proves itself on known transcripts ----
+    gate_note = "SKIPPED (--skip-golden-gate)"
+    if not args.skip_golden_gate:
+        from golden_gate import run_gate
+        print("\n[gate] golden gate: grader self-check on canned transcripts")
+        gate_ok, gate_note = run_gate(verbose=True)
+        if not gate_ok:
+            ctx.add("eval", "provenance", "golden_gate", "FAIL", "", notes=gate_note)
+            _abort_run(ctx, "golden_gate_failed",
+                       "grader does not reproduce known scores — fix the grader "
+                       "before grading any model")
+    ctx.add("eval", "provenance", "golden_gate",
+            "PASS" if not args.skip_golden_gate else "SKIPPED", "", notes=gate_note)
+
+    # ---- gate 2: provenance — stamp grader version, refuse dirty tree ----
+    grader_git = _grader_provenance(ctx, allow_dirty=args.allow_dirty)
+    ctx.add("eval", "provenance", "grader_git", grader_git, "")
+    print(f"[gate] grader version: {grader_git}")
+
+    # ---- gate 4: preflight — right model, working tool-call parse ----
+    if not args.skip_preflight:
+        preflight_endpoint(ctx, args)
+    else:
+        ctx.add("eval", "provenance", "preflight_tool_probe",
+                "SKIPPED (--skip-preflight)", "")
+
+    # ---- gate 5: on-disk run marker + heartbeat ----
+    marker = _RunMarker(ctx.run_id, args.out_dir)
+    marker.start()
+
     ctx.mdln(f"# Deep Eval ({ctx.run_id})\n")
     ctx.mdln(f"- model `{ctx.model}` @ `{ctx.endpoint}`  thinking `{args.thinking}` "
              f"repeats `{args.repeats}` temp `{args.temperature}`\n")
+    ctx.mdln(f"- grader `{grader_git}` · golden gate {gate_note} · "
+             f"preflight {'skipped' if args.skip_preflight else 'passed'}\n")
 
     def chat_fn(messages, max_tokens, temperature, tools, extra):
         return chat_stream(ctx.endpoint, ctx.model, messages, max_tokens,
@@ -560,6 +772,7 @@ def run_eval(ctx, args):
             weights[k.strip()] = float(v)
 
     def progress(rec):
+        marker.tick()
         print(f"  [eval] {rec['id']:<6} {rec['domain']:<14} "
               f"score={rec['score']:.2f} cons={rec['consistency']:.2f} "
               f"({rec['reason'][:48]})")
@@ -573,6 +786,40 @@ def run_eval(ctx, args):
                        progress=progress)
     ov = res["overall"]
     grade, stars, label = ov["rating"]
+
+    # ---- quarantine gate: degenerate score patterns never auto-publish ----
+    # The v6.1 auto-pass signature was a capability domain flat at exactly
+    # 100.0; the v5 dead-parser signature was agentic flat at ~0. Either way,
+    # a domain where every scenario scores identically at an extreme is a
+    # harness symptom until a human clears it.
+    qflags = []
+    by_dom = {}
+    for s in res["scenarios"]:
+        if s["group"] == "capability":
+            by_dom.setdefault(s["domain"], []).append(round(s["score"], 6))
+    for dname, scores in sorted(by_dom.items()):
+        if len(scores) >= 3 and len(set(scores)) == 1 and scores[0] in (0.0, 1.0):
+            qflags.append(f"FLAT_DOMAIN:{dname}={scores[0]:g}")
+        # near-dead: the v5 parser bug scored a *uniform-ish* ~0, not an exact
+        # flat 0 (stray partial credit). >=80% exact zeros + tiny mean is a
+        # harness symptom, not a model this bad at everything.
+        elif (len(scores) >= 5
+              and sum(1 for x in scores if x == 0.0) >= 0.8 * len(scores)
+              and statistics.mean(scores) < 0.05):
+            qflags.append(f"DEAD_DOMAIN:{dname}")
+    allcap = [x for v in by_dom.values() for x in v]
+    if len(allcap) >= 6 and len(set(allcap)) == 1:
+        qflags.append(f"FLAT_ALL:{allcap[0]:g}")
+    if not res.get("trial_stats", {}).get("valid", True):
+        qflags.append(f"ERROR_RATE:{res['trial_stats'].get('error_rate')}%")
+    ctx.add("eval", "provenance", "quarantine",
+            ";".join(qflags) if qflags else "clean", "")
+    if qflags:
+        print(f"\n  *** QUARANTINED: {';'.join(qflags)} — degenerate score "
+              f"pattern; leaderboard will exclude this run until a human "
+              f"verifies it is real model behaviour. ***", file=sys.stderr)
+        ctx.mdln(f"> ⚠️ **QUARANTINED** — `{';'.join(qflags)}`: degenerate score "
+                 f"pattern (harness symptom until verified).\n")
 
     # ---- CSV rows ---- #
     for k in ("truescore", "capability_score", "operational_score", "quality",
@@ -672,6 +919,8 @@ def run_eval(ctx, args):
     if args.skip_throughput:
         ctx.mdln("## Serving Throughput Sweep\n")
         ctx.mdln("Skipped by `--skip-throughput`.\n")
+        marker.done(f"truescore={ov['truescore']:.1f} "
+                    f"quarantine={';'.join(qflags) if qflags else 'clean'}")
         return
 
     ctx.mdln("## Serving Throughput Sweep\n")
@@ -686,6 +935,8 @@ def run_eval(ctx, args):
         timeout=args.timeout,
     )
     run_tier2(ctx, sweep_args, title="Serving throughput detail", heading_level=3)
+    marker.done(f"truescore={ov['truescore']:.1f} "
+                f"quarantine={';'.join(qflags) if qflags else 'clean'}")
 
 
 # --------------------------------------------------------------------------- #
@@ -754,6 +1005,15 @@ def main():
                     help="override composite weights e.g. quality=0.5,responsiveness=0.1")
     se.add_argument("--skip-throughput", action="store_true",
                     help="skip the automatic v5c serving throughput sweep")
+    se.add_argument("--skip-golden-gate", action="store_true",
+                    help="DEV ONLY: skip the grader self-test gate")
+    se.add_argument("--skip-preflight", action="store_true",
+                    help="DEV ONLY: skip endpoint identity + tool-parse preflight")
+    se.add_argument("--preflight-loose", action="store_true",
+                    help="downgrade a missing /models endpoint to a warning")
+    se.add_argument("--allow-dirty", action="store_true",
+                    help="DEV ONLY: run with uncommitted grader changes "
+                         "(stamps grader_git as <hash>-dirty)")
     se.add_argument("--throughput-contexts", default="1024,8192,32768",
                     help="prompt contexts for automatic eval throughput sweep")
     se.add_argument("--throughput-concurrency", default="1,2,4,8",
@@ -786,7 +1046,12 @@ def main():
         run_tier2(ctx, args)
         run_tier3(ctx, args)
     elif args.cmd == "eval":
-        run_eval(ctx, args)
+        # gate 3: one eval per endpoint box, enforced on disk
+        lock = _acquire_box_lock(args.endpoint, ctx.run_id)
+        try:
+            run_eval(ctx, args)
+        finally:
+            _release_box_lock(lock)
     ctx.flush()
 
 
