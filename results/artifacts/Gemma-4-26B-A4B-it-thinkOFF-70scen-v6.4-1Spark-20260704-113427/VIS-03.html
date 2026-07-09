@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const numNodes = 40;      // Number of pairs
+        const helixRadius = 150;  // Radius of the spiral
+        const helixHeight = 12;   // Vertical spacing between nodes
+        const rotationSpeed = 0.02;
+        const rungColor = 'rgba(100, 100, 100, 0.3)';
+        const strand1Color = '#00f2ff'; // Cyan
+        const strand2Color = '#ff007f'; // Magenta
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear background with a slight trail effect
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Calculate vertical bounds to center the helix
+            const totalHeight = numNodes * helixHeight;
+            const startY = centerY - totalHeight / 2;
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate the phase for each node to create the spiral
+                const phase = i * 0.4;
+                const y = startY + i * helixHeight;
+
+                // Calculate 3D-like rotation using Sine and Cosine
+                // We use Math.sin/cos to get the X and Z (depth) positions
+                const rotation = angle + phase;
+                
+                // Strand 1 Position
+                const x1 = centerX + Math.cos(rotation) * helixRadius;
+                const z1 = Math.sin(rotation); // Used for depth/scaling effect
+                
+                // Strand 2 Position (180 degrees/PI offset from Strand 1)
+                const x2 = centerX + Math.cos(rotation + Math.PI) * helixRadius;
+                const z2 = Math.sin(rotation + Math.PI);
+
+                // Scaling effect to simulate 3D perspective
+                const scale1 = 0.7 + (z1 * 0.3);
+                const scale2 = 0.7 + (z2 * 0.3);
+
+                // Draw Rungs (Connecting lines)
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + (z1 + z2 + 2) / 4})`; // Subtle depth effect
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw Strand 1 Node
+                ctx.beginPath();
+                ctx.arc(x1, y, 5 * scale1, 0, Math.PI * 2);
+                ctx.fillStyle = strand1Color;
+                ctx.shadowBlur = 15 * scale1;
+                ctx.shadowColor = strand1Color;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset shadow for performance
+
+                // Draw Strand 2 Node
+                ctx.beginPath();
+                ctx.arc(x2, y, 5 * scale2, 0, Math.PI * 2);
+                ctx.fillStyle = strand2Color;
+                ctx.shadowBlur = 15 * scale2;
+                ctx.shadowColor = strand2Color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            angle += rotationSpeed;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

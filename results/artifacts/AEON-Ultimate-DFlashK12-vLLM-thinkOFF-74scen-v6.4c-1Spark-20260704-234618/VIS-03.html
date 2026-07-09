@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let time = 0;
+
+        // Configuration
+        const config = {
+            strandColor1: '#00d4ff', // Cyan
+            strandColor2: '#ff00ff', // Magenta
+            rungColor: '#ffffff',
+            nodeSize: 4,
+            rungOpacity: 0.4,
+            rotationSpeed: 0.02,
+            verticalSpacing: 30, // Distance between nodes vertically
+            helixRadius: 120,
+            fov: 600, // Field of view for 3D projection
+            totalNodes: 30 // How many nodes to show on screen
+        };
+
+        // Resize canvas to fill screen
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 3D Projection Helper
+        // Converts 3D coordinates (x, y, z) to 2D canvas coordinates
+        function project(x, y, z) {
+            // Perspective projection
+            // We shift z so that 0 is the center, and we add the FOV to avoid division by zero
+            // The formula scales x and y based on how deep (z) they are
+            const scale = config.fov / (config.fov + z);
+            const x2d = x * scale + width / 2;
+            const y2d = y * scale + height / 2;
+            return { x: x2d, y: y2d, scale: scale };
+        }
+
+        function draw() {
+            // Clear screen with a slight fade effect for trails (optional, but clean clear is better for this)
+            ctx.clearRect(0, 0, width, height);
+
+            // Calculate the starting Y offset so the helix is centered vertically
+            // We generate nodes from top to bottom of the screen
+            const centerY = height / 2;
+            const startY = centerY - (config.totalNodes * config.verticalSpacing) / 2;
+
+            // Store node data to draw rungs and nodes in correct Z-order
+            const nodes = [];
+
+            // Generate the geometry
+            for (let i = 0; i < config.totalNodes; i++) {
+                // Calculate base 3D position
+                // Y moves linearly down
+                const y3d = startY + i * config.verticalSpacing - centerY; // Centered around 0
+                
+                // X and Z oscillate using sin/cos
+                // We add 'time' to rotate the whole helix, and 'i' to create the spiral
+                const angle = time + i * 0.2; // 0.2 controls the tightness of the spiral
+
+                // Strand 1
+                const x1 = Math.cos(angle) * config.helixRadius;
+                const z1 = Math.sin(angle) * config.helixRadius;
+
+                // Strand 2 (offset by PI to be on the opposite side)
+                const x2 = Math.cos(angle + Math.PI) * config.helixRadius;
+                const z2 = Math.sin(angle + Math.PI) * config.helixRadius;
+
+                // Store node info including depth (z) for sorting
+                nodes.push({
+                    i: i,
+                    y3d: y3d,
+                    x1: x1, z1: z1,
+                    x2: x2, z2: z2
+                });
+            }
+
+            // Sort nodes by average Z depth (painter's algorithm)
+            // This ensures that nodes further back are drawn first
+            nodes.sort((a, b) => ((a.z1 + a.z2) / 2) - ((b.z1 + b.z2) / 2));
+
+            // Draw the sorted nodes
+            nodes.forEach(node => {
+                // Project 3D to 2D
+                const p1 = project(node.x1, node.y3d, node.z1);
+                const p2 = project(node.x2, node.y3d, node.z2);
+
+                // Calculate average scale for opacity/size adjustments
+                const avgScale = (p1.scale + p2.scale) / 2;
+
+                // Draw Rung (Connection)
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${config.rungOpacity * avgScale})`;
+                ctx.lineWidth = 2 * avgScale;
+                ctx.stroke();
+
+                // Draw Strand 1 Node
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, config.nodeSize * avgScale, 0, Math.PI * 2);
+                ctx.fillStyle = config.strandColor1;
+                ctx.globalAlpha = avgScale; // Fade out in distance
+                ctx.fill();
+                ctx.globalAlpha = 1.0; // Reset
+
+                // Draw Strand 2 Node
+                ctx.beginPath();
+                ctx.arc(p2.x, p2.y, config.nodeSize * avgScale, 0, Math.PI * 2);
+                ctx.fillStyle = config.strandColor2;
+                ctx.globalAlpha = avgScale;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            });
+
+            // Update time for animation
+            time += config.rotationSpeed;
+
+            // Request next frame
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+
+    </script>
+</body>
+</html>

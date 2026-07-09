@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0a0a0f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // DNA parameters
+        const numNodes = 40;          // Number of node pairs along the helix
+        const helixRadius = 120;      // Radius of the helix
+        const helixLength = 600;      // Total length of the helix
+        const phaseSpeed = 0.02;      // Rotation speed (radians per frame)
+        const verticalSpacing = helixLength / numNodes;
+        
+        // Colors for the two strands
+        const strandAColor = { r: 30, g: 144, b: 255 };  // Blue-ish
+        const strandBColor = { r: 255, g: 70, b: 100 };   // Red-ish
+
+        let angle = 0;
+
+        function drawDNA() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Background glow effect
+            const gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) / 2);
+            gradient.addColorStop(0, '#10101a');
+            gradient.addColorStop(1, '#05050a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Collect all nodes to sort by depth (z-axis) for correct rendering order
+            let nodes = [];
+
+            for (let i = 0; i <= numNodes; i++) {
+                const y = centerY - helixLength / 2 + i * verticalSpacing;
+                const zAngle = angle + i * 0.2; // Spiral angle
+
+                // Strand A position
+                const xA = centerX + Math.cos(zAngle) * helixRadius;
+                const zA = Math.sin(zAngle) * helixRadius;
+                
+                // Strand B position (offset by PI radians)
+                const xB = centerX + Math.cos(zAngle + Math.PI) * helixRadius;
+                const zB = Math.sin(zAngle + Math.PI) * helixRadius;
+
+                // Calculate depth factor (0 to 1, where 1 is furthest away)
+                const depthA = (zA + helixRadius) / (2 * helixRadius);
+                const depthB = (zB + helixRadius) / (2 * helixRadius);
+
+                nodes.push({
+                    type: 'node',
+                    strand: 'A',
+                    x: xA,
+                    y: y,
+                    z: zA,
+                    depth: depthA,
+                    index: i
+                });
+                nodes.push({
+                    type: 'node',
+                    strand: 'B',
+                    x: xB,
+                    y: y,
+                    z: zB,
+                    depth: depthB,
+                    index: i
+                });
+            }
+
+            // Sort nodes by z-coordinate (back to front)
+            nodes.sort((a, b) => a.z - b.z);
+
+            // Draw rungs first (behind nodes), then nodes
+            // Actually, we need to interleave rungs and nodes based on depth
+            
+            // Create render objects: nodes and rungs
+            let renderObjects = [];
+
+            for (let i = 0; i <= numNodes; i++) {
+                const y = centerY - helixLength / 2 + i * verticalSpacing;
+                const zAngle = angle + i * 0.2;
+
+                const xA = centerX + Math.cos(zAngle) * helixRadius;
+                const zA = Math.sin(zAngle) * helixRadius;
+                const xB = centerX + Math.cos(zAngle + Math.PI) * helixRadius;
+                const zB = Math.sin(zAngle + Math.PI) * helixRadius;
+
+                const depthA = (zA + helixRadius) / (2 * helixRadius);
+                const depthB = (zB + helixRadius) / (2 * helixRadius);
+
+                // Node A
+                renderObjects.push({
+                    type: 'node',
+                    x: xA,
+                    y: y,
+                    z: zA,
+                    depth: depthA,
+                    color: strandAColor,
+                    radius: 4
+                });
+
+                // Node B
+                renderObjects.push({
+                    type: 'node',
+                    x: xB,
+                    y: y,
+                    z: zB,
+                    depth: depthB,
+                    color: strandBColor,
+                    radius: 4
+                });
+
+                // Rung between A and B at this level
+                if (i % 2 === 0) { // Every other node pair gets a rung
+                    const avgZ = (zA + zB) / 2;
+                    const avgDepth = (depthA + depthB) / 2;
+                    renderObjects.push({
+                        type: 'rung',
+                        x1: xA,
+                        y1: y,
+                        x2: xB,
+                        y2: y,
+                        z: avgZ,
+                        depth: avgDepth,
+                        color: { r: 100, g: 100, b: 120 },
+                        width: 2
+                    });
+                }
+            }
+
+            // Sort all render objects by depth (back to front)
+            renderObjects.sort((a, b) => a.z - b.z);
+
+            // Render each object
+            renderObjects.forEach(obj => {
+                // Depth-based opacity and size scaling
+                const alpha = 0.3 + obj.depth * 0.7;
+                const scale = 0.7 + obj.depth * 0.3;
+
+                if (obj.type === 'node') {
+                    // Draw node
+                    const radius = obj.radius * scale;
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${obj.color.r}, ${obj.color.g}, ${obj.color.b}, ${alpha})`;
+                    ctx.fill();
+
+                    // Glow effect
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, radius * 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${obj.color.r}, ${obj.color.g}, ${obj.color.b}, ${alpha * 0.15})`;
+                    ctx.fill();
+                } else if (obj.type === 'rung') {
+                    // Draw rung
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x1, obj.y1);
+                    ctx.lineTo(obj.x2, obj.y2);
+                    ctx.strokeStyle = `rgba(${obj.color.r}, ${obj.color.g}, ${obj.color.b}, ${alpha * 0.6})`;
+                    ctx.lineWidth = obj.width * scale;
+                    ctx.stroke();
+                }
+            });
+
+            // Update angle for next frame
+            angle += phaseSpeed;
+
+            requestAnimationFrame(drawDNA);
+        }
+
+        drawDNA();
+    </script>
+</body>
+</html>

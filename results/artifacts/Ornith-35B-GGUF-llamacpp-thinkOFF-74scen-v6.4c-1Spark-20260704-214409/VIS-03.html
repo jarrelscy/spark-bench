@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Configuration
+        const numNodes = 60;
+        const radius = 120;
+        const verticalSpacing = 25;
+        const phaseShift = Math.PI; // 180 degrees between strands
+        const rotationSpeed = 0.02;
+        const nodeRadius = 4;
+        const rungColor = 'rgba(255, 255, 255, 0.1)';
+
+        let angle = 0;
+
+        // Color palettes for the two strands
+        const color1 = { r: 0, g: 150, b: 255 };   // Cyan/Blue
+        const color2 = { r: 255, g: 50, b: 100 };   // Pink/Red
+
+        function interpolateColor(c1, c2, alpha) {
+            // alpha between 0 and 1
+            const r = Math.round(c1.r + (c2.r - c1.r) * alpha);
+            const g = Math.round(c1.g + (c2.g - c1.g) * alpha);
+            const b = Math.round(c1.b + (c2.b - c1.b) * alpha);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function drawNode(x, y, color, alpha) {
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = alpha;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawRung(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = rungColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawStrandLine(points, color) {
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const totalHeight = numNodes * verticalSpacing;
+            const startY = centerY - totalHeight / 2;
+
+            const strand1Points = [];
+            const strand2Points = [];
+
+            for (let i = 0; i < numNodes; i++) {
+                const y = startY + i * verticalSpacing;
+                const phase = angle + i * 0.15;
+
+                // Strand 1
+                const x1 = centerX + Math.cos(phase) * radius;
+                const z1 = Math.sin(phase); // Depth indicator
+                strand1Points.push({ x: x1, y: y, z: z1 });
+
+                // Strand 2
+                const phase2 = phase + phaseShift;
+                const x2 = centerX + Math.cos(phase2) * radius;
+                const z2 = Math.sin(phase2);
+                strand2Points.push({ x: x2, y: y, z: z2 });
+            }
+
+            // Draw rungs (connecting bars)
+            for (let i = 0; i < numNodes; i++) {
+                const p1 = strand1Points[i];
+                const p2 = strand2Points[i];
+                drawRung(p1.x, p1.y, p2.x, p2.y);
+            }
+
+            // Draw strand lines
+            drawStrandLine(strand1Points, interpolateColor(color1, color2, 0.3));
+            drawStrandLine(strand2Points, interpolateColor(color1, color2, 0.7));
+
+            // Draw nodes (front to back for proper layering)
+            const allNodes = [];
+            for (let i = 0; i < numNodes; i++) {
+                allNodes.push({ ...strand1Points[i], color: color1, index: i });
+                allNodes.push({ ...strand2Points[i], color: color2, index: i });
+            }
+
+            // Sort by z-depth (back to front)
+            allNodes.sort((a, b) => a.z - b.z);
+
+            for (const node of allNodes) {
+                const alpha = 0.5 + 0.5 * node.z; // Brighter when closer
+                drawNode(node.x, node.y, node.color, alpha);
+            }
+
+            angle += rotationSpeed;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

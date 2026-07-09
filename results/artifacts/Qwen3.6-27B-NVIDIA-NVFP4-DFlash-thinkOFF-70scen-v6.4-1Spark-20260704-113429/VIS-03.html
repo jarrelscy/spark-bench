@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510; /* Dark background */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let rotationOffset = 0;
+
+    // Configuration
+    const config = {
+        strandWidth: 3,
+        rungWidth: 1.5,
+        nodeRadius: 4,
+        amplitude: 120,    // Width of the helix
+        frequency: 0.02,   // How tight the spiral is
+        speed: 0.03,       // Rotation speed
+        nodeSpacing: 12,   // Vertical distance between nodes
+        depthScale: 0.4,   // Perspective scaling factor
+        colors: {
+            strand1: '#00d2ff', // Cyan
+            strand2: '#ff0055', // Pink/Red
+            rung: '#ffffff'
+        }
+    };
+
+    // Resize canvas to fit window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    /**
+     * Calculates the 3D position of a node on the helix based on vertical position (y) and rotation.
+     * Returns an object with x, y, z coordinates.
+     */
+    function getNodePosition(y, rotation, strandIndex) {
+        // Calculate angle based on Y position and global rotation
+        // Strand 2 is offset by PI (180 degrees)
+        const angle = (y * config.frequency) + rotation + (strandIndex * Math.PI);
+        
+        const x = Math.cos(angle) * config.amplitude;
+        const z = Math.sin(angle) * config.amplitude;
+        
+        return { x, y, z };
+    }
+
+    /**
+     * Projects 3D coordinates to 2D canvas coordinates with perspective.
+     */
+    function project(x, y, z) {
+        // Center the origin
+        const screenX = x + width / 2;
+        const screenY = y + height / 2;
+        
+        // Simple perspective scaling
+        // We scale based on Z depth. 
+        // Z ranges roughly from -amplitude to +amplitude.
+        // We want objects further back (negative Z relative to camera? or positive?)
+        // Let's assume standard 3D: Z+ is coming towards camera.
+        
+        const scale = 1 / (1 - (z * config.depthScale) / (config.amplitude * 2));
+        
+        // Apply scale relative to center
+        const finalX = (screenX - width/2) * scale + width/2;
+        const finalY = (screenY - height/2) * scale + height/2;
+        
+        return { x: finalX, y: finalY, scale: scale };
+    }
+
+    function draw() {
+        // Clear canvas
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate total nodes needed to cover height with padding
+        const totalNodes = Math.ceil(height / config.nodeSpacing) + 20;
+        
+        // Store all points for this frame to sort them later
+        // Each item in 'segments' represents a visual element to draw (line or circle)
+        // We need to sort them by Z depth to handle occlusion correctly
+        const segments = [];
+
+        // Generate vertical range to cover screen
+        const startY = -height / 2 - 100;
+        const endY = height / 2 + 100;
+
+        // Generate nodes
+        for (let i = 0; i < totalNodes; i++) {
+            const y = startY + (i * config.nodeSpacing);
+            
+            // Get positions for both strands
+            const p1 = getNodePosition(y, rotationOffset, 0);
+            const p2 = getNodePosition(y, rotationOffset, 1);
+            
+            // Project to 2D
+            const proj1 = project(p1.x, p1.y, p1.z);
+            const proj2 = project(p2.x, p2.y, p2.z);
+
+            // 1. Add Rungs (Connections)
+            // The "depth" of a rung can be approximated by the average Z of its endpoints
+            const avgZ = (p1.z + p2.z) / 2;
+            
+            segments.push({
+                type: 'rung',
+                z: avgZ,
+                p1: proj1,
+                p2: proj2
+            });
+
+            // 2. Add Strand Lines (Connecting to previous node)
+            if (i > 0) {
+                // Previous node positions (recalculate or store, recalculating is cheap enough here)
+                const prevY = startY + ((i - 1) * config.nodeSpacing);
+                const prev1 = getNodePosition(prevY, rotationOffset, 0);
+                const prev2 = getNodePosition(prevY, rotationOffset, 1);
+                const prevProj1 = project(prev1.x, prev1.y, prev1.z);
+                const prevProj2 = project(prev2.x, prev2.y, prev2.z);
+
+                // Strand 1 Line
+                segments.push({
+                    type: 'line',
+                    strand: 1,
+                    z: (p1.z + prev1.z) / 2,
+                    start: prevProj1,
+                    end: proj1
+                });
+
+                // Strand 2 Line
+                segments.push({
+                    type: 'line',
+                    strand: 2,
+                    z: (p2.z + prev2.z) / 2,
+                    start: prevProj2,
+                    end: proj2
+                });
+            }
+
+            // 3. Add Nodes (Circles)
+            segments.push({
+                type: 'node',
+                strand: 1,
+                z: p1.z,
+                pos: proj1
+            });
+            
+            segments.push({
+                type: 'node',
+                strand: 2,
+                z: p2.z,
+                pos: proj2
+            });
+        }
+
+        // Sort segments by Z depth (Painter's Algorithm)
+        // Draw furthest items first (lowest Z)
+        segments.sort((a, b) => a.z - b.z);
+
+        // Draw sorted segments
+        segments.forEach(seg => {
+            ctx.beginPath();
+            
+            // Determine opacity based on depth for subtle 3D effect
+            // Z ranges roughly -amplitude to +amplitude.
+            // Normalize to 0-1
+            const depthNorm = (seg.z + config.amplitude) / (config.amplitude * 2);
+            const alpha = 0.3 + (depthNorm * 0.7); // Range 0.3 to 1.0
+
+            if (seg.type === 'rung') {
+                ctx.moveTo(seg.p1.x, seg.p1.y);
+                ctx.lineTo(seg.p2.x, seg.p2.y);
+                ctx.strokeStyle = config.colors.rung;
+                ctx.globalAlpha = alpha * 0.6; // Rungs slightly transparent
+                ctx.lineWidth = config.rungWidth * ((seg.p1.scale + seg.p2.scale)/2);
+                ctx.stroke();
+            } 
+            else if (seg.type === 'line') {
+                ctx.moveTo(seg.start.x, seg.start.y);
+                ctx.lineTo(seg.end.x, seg.end.y);
+                ctx.strokeStyle = seg.strand === 1 ? config.colors.strand1 : config.colors.strand2;
+                ctx.globalAlpha = alpha;
+                ctx.lineWidth = config.strandWidth * ((seg.start.scale + seg.end.scale)/2);
+                ctx.stroke();
+            } 
+            else if (seg.type === 'node') {
+                ctx.arc(seg.pos.x, seg.pos.y, config.nodeRadius * seg.pos.scale, 0, Math.PI * 2);
+                ctx.fillStyle = seg.strand === 1 ? config.colors.strand1 : config.colors.strand2;
+                ctx.globalAlpha = alpha;
+                ctx.fill();
+            }
+        });
+
+        // Reset global alpha
+        ctx.globalAlpha = 1.0;
+
+        // Update rotation
+        rotationOffset += config.speed;
+
+        // Loop
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    draw();
+
+</script>
+
+</body>
+</html>

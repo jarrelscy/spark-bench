@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotationOffset = 0;
+
+        // Configuration
+        const config = {
+            numNodes: 40,        // Number of rungs/nodes
+            radius: 120,         // Width of the helix
+            verticalSpacing: 25, // Distance between nodes
+            rotationSpeed: 0.03, // Radians per frame
+            nodeRadius: 4,
+            rungColor: 'rgba(255, 255, 255, 0.3)',
+            strand1Color: '#00d2ff', // Cyan
+            strand2Color: '#ff0055', // Magenta
+            glowAmount: 15
+        };
+
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+
+            // Center of the helix on the canvas
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Calculate total height of the DNA structure to center it vertically
+            const totalHeight = config.numNodes * config.verticalSpacing;
+            const startY = centerY - (totalHeight / 2);
+
+            // We need to sort all visual elements by Z-depth to draw correctly (Painter's Algorithm)
+            // Each node pair has a Z-value based on the sine wave.
+            // We'll store objects to draw: { type: 'rung'|'node', z: value, ...data }
+            let drawQueue = [];
+
+            for (let i = 0; i < config.numNodes; i++) {
+                // Y position (vertical)
+                const y = startY + (i * config.verticalSpacing);
+                
+                // Calculate angles for the two strands
+                // Strands are 180 degrees (PI) apart
+                const angle1 = i * 0.2 + rotationOffset;
+                const angle2 = angle1 + Math.PI;
+
+                // Calculate 3D coordinates (simulated)
+                // x is horizontal offset from center
+                // z is depth (used for opacity and drawing order)
+                const x1 = centerX + Math.cos(angle1) * config.radius;
+                const z1 = Math.sin(angle1); // -1 to 1
+
+                const x2 = centerX + Math.cos(angle2) * config.radius;
+                const z2 = Math.sin(angle2);
+
+                // Store elements for sorting
+                // Rungs connect the two strands
+                drawQueue.push({
+                    type: 'rung',
+                    z: (z1 + z2) / 2, // Average Z for the rung
+                    x1: x1, y1: y,
+                    x2: x2, y2: y
+                });
+
+                // Node 1
+                drawQueue.push({
+                    type: 'node',
+                    z: z1,
+                    x: x1,
+                    y: y,
+                    color: config.strand1Color,
+                    angle: angle1
+                });
+
+                // Node 2
+                drawQueue.push({
+                    type: 'node',
+                    z: z2,
+                    x: x2,
+                    y: y,
+                    color: config.strand2Color,
+                    angle: angle2
+                });
+            }
+
+            // Sort by Z value (lowest Z first draws at bottom, highest Z draws on top)
+            // Assuming Z is -1 (far back) to 1 (close front)
+            drawQueue.sort((a, b) => a.z - b.z);
+
+            // Draw sorted elements
+            drawQueue.forEach(item => {
+                if (item.type === 'rung') {
+                    ctx.beginPath();
+                    ctx.moveTo(item.x1, item.y1);
+                    ctx.lineTo(item.x2, item.y2);
+                    ctx.strokeStyle = config.rungColor;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else if (item.type === 'node') {
+                    // Calculate opacity based on depth (z)
+                    // z is between -1 and 1. Map to 0.2 to 1.0 opacity
+                    const opacity = (item.z + 1) / 2; 
+                    const finalOpacity = 0.2 + (opacity * 0.8);
+
+                    ctx.beginPath();
+                    ctx.arc(item.x, item.y, config.nodeRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = item.color;
+                    ctx.globalAlpha = finalOpacity;
+                    
+                    // Add a subtle glow
+                    ctx.shadowBlur = config.glowAmount * finalOpacity;
+                    ctx.shadowColor = item.color;
+                    
+                    ctx.fill();
+                    
+                    // Reset shadow for next operations
+                    ctx.shadowBlur = 0;
+                    ctx.globalAlpha = 1.0;
+                }
+            });
+
+            // Update rotation
+            rotationOffset += config.rotationSpeed;
+
+            // Request next frame
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let rotationAngle = 0;
+
+    // Configuration
+    const config = {
+        nodeCount: 40,           // Number of rungs
+        helixRadius: 80,         // Width of the spiral
+        verticalSpacing: 15,     // Distance between nodes
+        rotationSpeed: 0.03,     // Speed of animation
+        strandColor1: 'hsl(200, 80%, 60%)', // Cyan/Blue
+        strandColor2: 'hsl(340, 80%, 60%)', // Magenta/Pink
+        rungColor: 'rgba(255, 255, 255, 0.2)'
+    };
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        // Clear screen
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate center and total height of the DNA
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const totalHeight = config.nodeCount * config.verticalSpacing;
+
+        // Arrays to store calculated points for drawing connections
+        const strand1Points = [];
+        const strand2Points = [];
+
+        // Update rotation
+        rotationAngle += config.rotationSpeed;
+
+        // Calculate points first
+        for (let i = 0; i < config.nodeCount; i++) {
+            // Y position relative to center
+            const y = (i * config.verticalSpacing) - (totalHeight / 2);
+
+            // Calculate angle for this specific node
+            // We add a constant to offset the second strand by PI (180 degrees)
+            const theta = (i * 0.25) + rotationAngle; // 0.25 controls the tightness of the spiral
+
+            // 3D to 2D Projection
+            // x = radius * cos(theta)
+            // z = radius * sin(theta) (depth)
+            // We apply perspective scaling to make it look 3D
+            // Scale factor: 0.6 to 1.4 based on Z depth
+            
+            const scale = (z) => 1 + (z / config.helixRadius) * 0.4;
+
+            // --- Strand 1 ---
+            const z1 = Math.sin(theta);
+            const x1 = Math.cos(theta) * config.helixRadius;
+            const scale1 = scale(z1);
+            
+            const finalX1 = centerX + x1 * scale1;
+            const finalY1 = centerY + y;
+            
+            strand1Points.push({ x: finalX1, y: finalY1, z: z1, scale: scale1 });
+
+            // --- Strand 2 (Offset by PI) ---
+            const theta2 = theta + Math.PI;
+            const z2 = Math.sin(theta2);
+            const x2 = Math.cos(theta2) * config.helixRadius;
+            const scale2 = scale(z2);
+
+            const finalX2 = centerX + x2 * scale2;
+            const finalY2 = centerY + y;
+
+            strand2Points.push({ x: finalX2, y: finalY2, z: z2, scale: scale2 });
+        }
+
+        // --- Draw Rungs (Connections) ---
+        // We draw these first so they appear behind the nodes/strands if we wanted, 
+        // but for a clean look, we might want them behind the strands.
+        ctx.lineWidth = 2;
+        for (let i = 0; i < config.nodeCount; i++) {
+            const p1 = strand1Points[i];
+            const p2 = strand2Points[i];
+
+            // Opacity based on depth (further back = more transparent)
+            const avgZ = (p1.z + p2.z) / 2;
+            const alpha = 0.1 + (avgZ * 0.3); // Range roughly 0.1 to 0.4
+
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${Math.abs(alpha)})`;
+            ctx.stroke();
+        }
+
+        // --- Draw Strands ---
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Helper to draw a connected strand
+        function drawStrand(points, color) {
+            ctx.beginPath();
+            // Start at the first point
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            // Use quadratic curves for smoothness between points
+            for (let i = 1; i < points.length; i++) {
+                // Simple line to is fine for high point count, but quadratic looks smoother
+                // ctx.lineTo(points[i].x, points[i].y);
+                
+                // Midpoint smoothing
+                const prev = points[i-1];
+                const curr = points[i];
+                const midX = (prev.x + curr.x) / 2;
+                const midY = (prev.y + curr.y) / 2;
+                
+                ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+            }
+            ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+            
+            // Add a glow effect
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
+        }
+
+        drawStrand(strand1Points, config.strandColor1);
+        drawStrand(strand2Points, config.strandColor2);
+
+        // --- Draw Nodes (The spheres) ---
+        // We draw these last so they sit on top of the lines
+        for (let i = 0; i < config.nodeCount; i++) {
+            drawNode(strand1Points[i], config.strandColor1);
+            drawNode(strand2Points[i], config.strandColor2);
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawNode(point, color) {
+        const radius = 4 * point.scale; // Scale node size by depth
+
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        
+        // Add a white highlight for 3D sphere look
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = color;
+        ctx.fill();
+        
+        // Specular highlight
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.beginPath();
+        ctx.arc(point.x - radius*0.3, point.y - radius*0.3, radius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Start animation
+    draw();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotation = 0;
+
+        // Configuration
+        const numNodes = 30;       // Number of pairs
+        const helixRadius = 150;   // Radius of the helix
+        const helixHeight = 10;    // Vertical spacing between nodes
+        const rungLength = 300;    // Visual width of the rungs
+        const rotationSpeed = 0.01;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear background
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Draw the DNA structure
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate vertical position and phase
+                const y = (i * helixHeight) - (numNodes * helixHeight / 2) + (height / 2);
+                const angle = (i * 0.4) + rotation;
+
+                // Calculate 3D-like positions for the two strands
+                // Strand 1
+                const x1 = centerX + Math.sin(angle) * helixRadius;
+                const z1 = Math.cos(angle); // Used for depth effect
+
+                // Strand 2 (offset by PI to create the double helix)
+                const x2 = centerX + Math.sin(angle + Math.PI) * helixRadius;
+                const z2 = Math.cos(angle + Math.PI);
+
+                // Draw the Rung (Connecting line)
+                // We adjust opacity based on Z to create a 3D depth effect
+                const opacity = (z1 + 1) / 2; 
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.strokeStyle = `rgba(100, 100, 100, ${opacity * 0.5})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw Node 1
+                ctx.beginPath();
+                ctx.arc(x1, y, 5 * (z1 + 1.5) / 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 200, 255, ${opacity})`; // Cyan strand
+                ctx.fill();
+
+                // Draw Node 2
+                ctx.beginPath();
+                ctx.arc(x2, y, 5 * (z2 + 1.5) / 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 50, 150, ${opacity})`; // Magenta strand
+                ctx.fill();
+            }
+
+            rotation += rotationSpeed;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #050510;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Configuration
+        const NUM_NODES = 50;
+        const HELIX_RADIUS = 120;
+        const VERTICAL_SPACING = 28;
+        const ROTATION_SPEED = 0.015;
+        const NODE_RADIUS = 5;
+
+        let rotationOffset = 0;
+
+        // Colors for strand 1 (blue-cyan) and strand 2 (magenta-red)
+        function strand1Color(alpha) {
+            return `rgba(80, 200, 255, ${alpha})`;
+        }
+
+        function strand2Color(alpha) {
+            return `rgba(255, 80, 180, ${alpha})`;
+        }
+
+        function rungColor(alpha) {
+            return `rgba(200, 200, 255, ${alpha})`;
+        }
+
+        function drawGlowingNode(x, y, radius, color) {
+            // Outer glow
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 4);
+            gradient.addColorStop(0, color.replace(/[\d.]+\)$/, '0.6)'));
+            gradient.addColorStop(0.5, color.replace(/[\d.]+\)$/, '0.15)'));
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 4, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Core
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // Bright center
+            const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            coreGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+            coreGrad.addColorStop(0.5, color.replace(/[\d.]+\)$/, '0.5)'));
+            coreGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+        }
+
+        function drawRung(x1, y1, x2, y2) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            // Gradient along rung
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            grad.addColorStop(0, 'rgba(80, 200, 255, 0.7)');
+            grad.addColorStop(0.5, 'rgba(200, 200, 255, 0.5)');
+            grad.addColorStop(1, 'rgba(255, 80, 180, 0.7)');
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Subtle glow on rung
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = 'rgba(150, 180, 255, 0.15)';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+        }
+
+        function drawStrandLine(points, color) {
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let i = 1; i < points.length; i++) {
+                const prev = points[i - 1];
+                const curr = points[i];
+                const cpx = (prev.x + curr.x) / 2;
+                const cpy = (prev.y + curr.y) / 2;
+                ctx.quadraticCurveTo(prev.x, prev.y, cpx, cpy);
+            }
+
+            const last = points[points.length - 1];
+            ctx.lineTo(last.x, last.y);
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function render() {
+            // Dark background with subtle gradient
+            const bgGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(width, height) * 0.7);
+            bgGrad.addColorStop(0, '#0a0a20');
+            bgGrad.addColorStop(1, '#050510');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Calculate all node positions
+            const nodes = [];
+            for (let i = 0; i < NUM_NODES; i++) {
+                const y = centerY - ((NUM_NODES - 1) / 2) * VERTICAL_SPACING + i * VERTICAL_SPACING;
+                const angle1 = (i * 0.35) + rotationOffset;
+                const angle2 = angle1 + Math.PI;
+
+                const x1 = centerX + Math.cos(angle1) * HELIX_RADIUS;
+                const x2 = centerX + Math.cos(angle2) * HELIX_RADIUS;
+
+                nodes.push({
+                    strand1: { x: x1, y: y, angle: angle1 },
+                    strand2: { x: x2, y: y, angle: angle2 }
+                });
+            }
+
+            // Sort rungs by depth (average z) for proper layering
+            const rungs = [];
+            for (let i = 0; i < nodes.length; i++) {
+                const avgZ = (Math.sin(nodes[i].strand1.angle) + Math.sin(nodes[i].strand2.angle)) / 2;
+                rungs.push({ index: i, avgZ: avgZ });
+            }
+            rungs.sort((a, b) => a.avgZ - b.avgZ);
+
+            // Draw rungs (back to front)
+            for (const rung of rungs) {
+                const n = nodes[rung.index];
+                const depthFactor = (n.strand1.angle + n.strand2.angle) / 2;
+                const sinSum = Math.sin(n.strand1.angle) + Math.sin(n.strand2.angle);
+                const depthAlpha = 0.3 + 0.4 * ((sinSum + 2) / 4);
+
+                drawRung(
+                    n.strand1.x, n.strand1.y,
+                    n.strand2.x, n.strand2.y
+                );
+
+                // Draw small connection dots at rung ends
+                const dotAlpha = 0.3 + 0.5 * depthAlpha;
+                drawGlowingNode(n.strand1.x, n.strand1.y, 2, `rgba(80, 200, 255, ${dotAlpha})`);
+                drawGlowingNode(n.strand2.x, n.strand2.y, 2, `rgba(255, 80, 180, ${dotAlpha})`);
+            }
+
+            // Draw strand lines with depth-based opacity
+            const strand1Points = nodes.map(n => ({ x: n.strand1.x, y: n.strand1.y }));
+            const strand2Points = nodes.map(n => ({ x: n.strand2.x, y: n.strand2.y }));
+
+            drawStrandLine(strand1Points, 'rgba(80, 200, 255, 0.3)');
+            drawStrandLine(strand2Points, 'rgba(255, 80, 180, 0.3)');
+
+            // Sort nodes by depth for proper rendering order
+            const sortedNodes = nodes.map((n, i) => {
+                const avgZ = (Math.sin(n.strand1.angle) + Math.sin(n.strand2.angle)) / 2;
+                return { strand1: n.strand1, strand2: n.strand2, avgZ: avgZ, index: i };
+            });
+            sortedNodes.sort((a, b) => a.avgZ - b.avgZ);
+
+            // Draw nodes (back to front)
+            for (const node of sortedNodes) {
+                const depthFactor = (node.avgZ + 1) / 2;
+                const alpha = 0.3 + 0.7 * depthFactor;
+                const scale = 0.6 + 0.4 * depthFactor;
+                const r = NODE_RADIUS * scale;
+
+                drawGlowingNode(node.strand1.x, node.strand1.y, r, strand1Color(alpha));
+                drawGlowingNode(node.strand2.x, node.strand2.y, r, strand2Color(alpha));
+            }
+
+            // Subtle central axis glow
+            const axisGrad = ctx.createLinearGradient(0, centerY - 400, 0, centerY + 400);
+            axisGrad.addColorStop(0, 'rgba(150, 150, 255, 0)');
+            axisGrad.addColorStop(0.3, 'rgba(150, 150, 255, 0.02)');
+            axisGrad.addColorStop(0.7, 'rgba(150, 150, 255, 0.02)');
+            axisGrad.addColorStop(1, 'rgba(150, 150, 255, 0)');
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 400);
+            ctx.lineTo(centerX, centerY + 400);
+            ctx.strokeStyle = axisGrad;
+            ctx.lineWidth = 30;
+            ctx.stroke();
+        }
+
+        function animate() {
+            rotationOffset += ROTATION_SPEED;
+            render();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505; /* Very dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, centerX, centerY;
+    
+    // Configuration
+    const config = {
+        strandColor1: '#00f0ff', // Cyan
+        strandColor2: '#ff0055', // Red/Pink
+        connectionColor: 'rgba(255, 255, 255, 0.3)',
+        nodeRadius: 4,
+        connectionSpacing: 15, // Vertical distance between rungs
+        helixRadius: 120,      // Width of the helix
+        rotationSpeed: 0.02,   // Radians per frame
+        perspective: 400       // Fake 3D perspective depth
+    };
+
+    // State
+    let nodes = [];
+    let angle = 0;
+
+    // Resize handler
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        centerX = width / 2;
+        centerY = height / 2;
+        
+        // Re-initialize nodes on resize to keep spacing consistent
+        initNodes();
+    }
+
+    function initNodes() {
+        nodes = [];
+        // Calculate how many nodes fit based on height
+        const totalNodes = Math.ceil(height / config.connectionSpacing) + 2;
+        
+        for (let i = 0; i < totalNodes; i++) {
+            nodes.push({
+                y: i * config.connectionSpacing - config.connectionSpacing, // Start slightly above
+                z: (Math.random() - 0.5) * 2 // Initial Z for variety (though we use angle)
+            });
+        }
+    }
+
+    function draw() {
+        // Clear screen with a slight fade effect for trails (optional, but nice)
+        // Using clearRect for clean animation
+        ctx.clearRect(0, 0, width, height);
+
+        // 1. Draw Connections (Rungs)
+        // We must draw connections before nodes so they appear behind the strands
+        // Sort nodes by Z-depth (simulated) so connections behind the strand are drawn first.
+        // However, for a simple helix, we just need to draw connections between corresponding nodes.
+        
+        // We iterate through nodes. Node i connects to Node i.
+        // To handle the 3D effect correctly, we need to sort the pairs by their average Z.
+        
+        let pairs = [];
+        
+        nodes.forEach((node, i) => {
+            // Calculate 3D position
+            const sin = Math.sin(angle + i * 0.2);
+            const cos = Math.cos(angle + i * 0.2);
+            
+            // X is sin * radius, Y is vertical position, Z is cos * radius (depth)
+            const x = sin * config.helixRadius;
+            const z = cos * config.helixRadius;
+            
+            // Perspective projection
+            const scale = config.perspective / (config.perspective + z + 200); // +200 to push camera back
+            
+            const screenX = centerX + x * scale;
+            const screenY = centerY + node.y * scale;
+            
+            pairs.push({
+                index: i,
+                x: x,
+                y: node.y,
+                z: z,
+                scale: scale,
+                screenX: screenX,
+                screenY: screenY
+            });
+        });
+
+        // Sort pairs by Z (far to near) to handle occlusion of rungs
+        pairs.sort((a, b) => a.z - b.z);
+
+        pairs.forEach(pair => {
+            const nextPair = pairs.find(p => p.index === pair.index + 1);
+            if (nextPair) {
+                const halfX = (pair.screenX + nextPair.screenX) / 2;
+                const halfY = (pair.screenY + nextPair.screenY) / 2;
+                
+                // Draw the rung
+                ctx.beginPath();
+                ctx.moveTo(pair.screenX, pair.screenY);
+                ctx.lineTo(nextPair.screenX, nextPair.screenY);
+                ctx.strokeStyle = config.connectionColor;
+                ctx.lineWidth = 1 * pair.scale; // Lines get thinner with distance
+                ctx.stroke();
+            }
+        });
+
+        // 2. Draw Nodes (Strands)
+        // Draw in Z order as well, or just draw both strands. 
+        // To make it look like a double helix, we draw the front nodes on top.
+        
+        // We will draw all nodes sorted by Z
+        pairs.forEach(pair => {
+            const { screenX, screenY, scale, index } = pair;
+            
+            // Determine color based on strand (index parity)
+            // Even index = Strand A, Odd index = Strand B
+            const isStrand1 = index % 2 === 0;
+            const color = isStrand1 ? config.strandColor1 : config.strandColor2;
+            
+            // Draw Node
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, config.nodeRadius * scale, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            
+            // Add glow
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            
+            ctx.fill();
+            
+            // Reset shadow for performance
+            ctx.shadowBlur = 0;
+        });
+
+        // 3. Update Animation
+        angle += config.rotationSpeed;
+        
+        // Remove nodes that have gone off screen and add new ones to maintain loop
+        // This creates an infinite scrolling effect
+        if (pairs.length > 0) {
+            const bottomY = pairs[pairs.length - 1].screenY;
+            const topY = pairs[0].screenY;
+            
+            // If the top node goes too high (negative), remove it and add a new one at bottom
+            // Actually, simpler: just shift all Y values down
+            nodes = nodes.map(n => ({ y: n.y + config.connectionSpacing }));
+            
+            // Add a new node at the top to replace the one that fell off
+            nodes.unshift({ y: -config.connectionSpacing });
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    
+    // Start
+    resize();
+    requestAnimationFrame(draw);
+
+</script>
+</body>
+</html>

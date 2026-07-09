@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const numNodes = 40;        // Number of pairs along the vertical axis
+        const helixRadius = 120;    // Radius of the spiral
+        const helixHeight = 600;    // Total height of the helix
+        const nodeSpacing = helixHeight / numNodes;
+        const rungFrequency = 0.2;  // Controls the "tightness" of the twist
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2 - (helixHeight / 2);
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate vertical position
+                const y = centerY + (i * nodeSpacing);
+                
+                // Calculate rotation for this specific node
+                // We add 'angle' to make it rotate over time
+                const rotation = (i * rungFrequency) + angle;
+
+                // Calculate 3D-like X and Z coordinates (simulated)
+                // We use Math.sin and Math.cos to create the spiral
+                const x1 = Math.sin(rotation) * helixRadius;
+                const x2 = Math.sin(rotation + Math.PI) * helixRadius; // Opposite side
+
+                // Calculate Z-depth effect (scaling X to create 3D illusion)
+                const z1 = Math.cos(rotation);
+                const z2 = Math.cos(rotation + Math.PI);
+
+                // Map X to screen coordinates with depth scaling
+                const screenX1 = centerX + x1 * (0.5 + z1 * 0.5);
+                const screenX2 = centerX + x2 * (0.5 + z2 * 0.5);
+
+                // Draw the connecting rungs (the horizontal lines)
+                ctx.beginPath();
+                ctx.moveTo(screenX1, y);
+                ctx.lineTo(screenX2, y);
+                // Make rungs slightly transparent and dim
+                ctx.strokeStyle = `rgba(100, 100, 100, ${0.1 + (z1 + 1) * 0.2})`; 
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw the two nodes (the backbone)
+                // Strand 1 (Blueish)
+                ctx.beginPath();
+                ctx.arc(screenX1, y, 4 * (0.5 + z1 * 0.5), 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(200, 80%, 60%, ${0.4 + z1 * 0.6})`;
+                ctx.fill();
+
+                // Strand 2 (Pinkish/Reddish)
+                ctx.beginPath();
+                ctx.arc(screenX2, y, 4 * (0.5 + z2 * 0.5), 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(340, 80%, 60%, ${0.4 + z2 * 0.6})`;
+                ctx.fill();
+            }
+
+            // Increment rotation
+            angle += 0.01;
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

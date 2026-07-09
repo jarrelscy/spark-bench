@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="solarSystem"></canvas>
+
+    <script>
+        const canvas = document.getElementById('solarSystem');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+
+        // Configuration for planets
+        const planets = [
+            { name: "Mercury", color: "#A5A5A5", radius: 4, distance: 60, speed: 0.04 },
+            { name: "Venus", color: "#E3BB76", radius: 7, distance: 90, speed: 0.03 },
+            { name: "Earth", color: "#4F97FF", radius: 7.5, distance: 130, speed: 0.025 },
+            { name: "Mars", color: "#FF5733", radius: 5, distance: 170, speed: 0.02 },
+            { name: "Jupiter", color: "#D9A066", radius: 18, distance: 230, speed: 0.012 },
+            { name: "Saturn", color: "#F4D03F", radius: 15, distance: 310, speed: 0.009, hasRing: true }
+        ];
+
+        let stars = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawSun() {
+            // Sun Glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, 60);
+            gradient.addColorStop(0, '#FFD700');
+            gradient.addColorStop(0.4, '#FF8C00');
+            gradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sun Core
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawPlanet(planet, angle) {
+            const x = centerX + Math.cos(angle) * planet.distance;
+            const y = centerY + Math.sin(angle) * planet.distance;
+
+            // Orbit Path
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, planet.distance, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Planet
+            ctx.fillStyle = planet.color;
+            ctx.beginPath();
+            ctx.arc(x, y, planet.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Saturn's Ring
+            if (planet.hasRing) {
+                ctx.strokeStyle = 'rgba(200, 180, 100, 0.6)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(x, y, planet.radius + 8, planet.radius + 3, angle + Math.PI/4, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        let time = 0;
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            drawStars();
+            drawSun();
+
+            planets.forEach(planet => {
+                time += planet.speed;
+                drawPlanet(planet, time);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

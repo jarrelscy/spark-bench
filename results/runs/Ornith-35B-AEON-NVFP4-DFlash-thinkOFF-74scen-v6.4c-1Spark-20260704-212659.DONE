@@ -1,0 +1,1 @@
+{"run_id": "Ornith-35B-AEON-NVFP4-DFlash-thinkOFF-74scen-v6.4c-1Spark-20260704-212659", "pid": 1902986, "started": "2026-07-04T21:27:32", "last_beat": "2026-07-04T21:40:52", "scenarios_done": 74, "finished": "2026-07-04T21:40:52", "summary": "truescore=78.9 quarantine=FLAT_DOMAIN:agentic=1;FLAT_DOMAIN:structured=1;FLAT_DOMAIN:visual=1"}

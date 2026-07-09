@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Configuration
+        const numNodes = 40;
+        const radius = 120;
+        const verticalSpacing = 35;
+        const twistRate = 0.15;
+        const rotationSpeed = 0.01;
+        const nodeRadius = 5;
+        const rungAlpha = 0.6;
+        const glowAlpha = 0.3;
+
+        let angle = 0;
+
+        // Color palette for strand A (cyan-blue)
+        function strandAColor(alpha) {
+            const r = Math.floor(0 + 60 * (1 - alpha));
+            const g = Math.floor(200 * alpha + 100);
+            const b = Math.floor(255);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Color palette for strand B (magenta-red)
+        function strandBColor(alpha) {
+            const r = Math.floor(255);
+            const g = Math.floor(50 + 80 * (1 - alpha));
+            const b = Math.floor(150 * alpha + 80);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Color palette for rungs (gradient between strands)
+        function rungColor(alpha, t) {
+            const r = Math.floor(0 + 255 * t);
+            const g = Math.floor(200 * (1 - t) + 100 * t);
+            const b = Math.floor(255 * (1 - t) + 150 * t);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function drawNode(x, y, z, colorFn, alpha) {
+            const scale = 300 / (300 + z);
+            const screenX = width / 2 + x * scale;
+            const screenY = height / 2 + y * scale;
+            const r = nodeRadius * scale;
+
+            // Glow
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, r * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = colorFn(alpha * glowAlpha);
+            ctx.fill();
+
+            // Node
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, r, 0, Math.PI * 2);
+            ctx.fillStyle = colorFn(Math.min(alpha + 0.3, 1));
+            ctx.fill();
+        }
+
+        function drawLine(x1, y1, x2, y2, colorFn, alpha) {
+            const z1 = (y1); // approximate z for depth
+            const scale1 = 300 / (300 + z1);
+            const scale2 = 300 / (300 + 10); // average for second point
+            const avgScale = (scale1 + scale2) / 2;
+
+            ctx.beginPath();
+            ctx.moveTo(width / 2 + x1 * scale1, height / 2 + y1 * scale1);
+            ctx.lineTo(width / 2 + x2 * scale2, height / 2 + y2 * scale2);
+            ctx.strokeStyle = colorFn(alpha * avgScale * 0.7);
+            ctx.lineWidth = 2 * avgScale;
+            ctx.stroke();
+        }
+
+        function animate() {
+            // Dark background with slight fade for trail effect
+            ctx.fillStyle = 'rgba(10, 10, 26, 0.85)';
+            ctx.fillRect(0, 0, width, height);
+
+            angle += rotationSpeed;
+
+            const centerY = height / 2;
+            const totalHeight = numNodes * verticalSpacing;
+            const startY = centerY - totalHeight / 2;
+
+            // Calculate all node positions
+            const nodesA = [];
+            const nodesB = [];
+
+            for (let i = 0; i < numNodes; i++) {
+                const y = startY + i * verticalSpacing;
+                const phaseA = angle + i * twistRate;
+                const phaseB = phaseA + Math.PI; // offset by PI for the second strand
+
+                const xA = Math.cos(phaseA) * radius;
+                const zA = Math.sin(phaseA) * radius;
+                const xB = Math.cos(phaseB) * radius;
+                const zB = Math.sin(phaseB) * radius;
+
+                nodesA.push({ x: xA, y: y, z: zA });
+                nodesB.push({ x: xB, y: y, z: zB });
+            }
+
+            // Draw rungs (connecting lines between corresponding nodes)
+            // Sort by average z for proper depth ordering
+            const rungData = [];
+            for (let i = 0; i < numNodes; i++) {
+                const avgZ = (nodesA[i].z + nodesB[i].z) / 2;
+                rungData.push({
+                    i: i,
+                    z: avgZ,
+                    xA: nodesA[i].x,
+                    yA: nodesA[i].y,
+                    zA: nodesA[i].z,
+                    xB: nodesB[i].x,
+                    yB: nodesB[i].y,
+                    zB: nodesB[i].z
+                });
+            }
+            rungData.sort((a, b) => a.z - b.z);
+
+            for (const rung of rungData) {
+                const t = (rung.i / numNodes);
+                drawLine(rung.xA, rung.yA, rung.xB, rung.yB, (alpha) => rungColor(alpha, t), rungAlpha);
+            }
+
+            // Draw strand A nodes and connections
+            // Sort by z for proper layering
+            const layerData = [];
+            for (let i = 0; i < numNodes - 1; i++) {
+                layerData.push({
+                    type: 'connection',
+                    i: i,
+                    z: (nodesA[i].z + nodesA[i + 1].z) / 2
+                });
+            }
+            for (let i = 0; i < numNodes; i++) {
+                layerData.push({
+                    type: 'node',
+                    i: i,
+                    z: nodesA[i].z
+                });
+            }
+            layerData.sort((a, b) => a.z - b.z);
+
+            for (const layer of layerData) {
+                if (layer.type === 'connection') {
+                    const i = layer.i;
+                    drawLine(nodesA[i].x, nodesA[i].y, nodesA[i + 1].x, nodesA[i + 1].y, strandAColor, 0.8);
+                } else {
+                    const i = layer.i;
+                    drawNode(nodesA[i].x, nodesA[i].y, nodesA[i].z, strandAColor, 1);
+                }
+            }
+
+            // Draw strand B nodes and connections
+            const layerDataB = [];
+            for (let i = 0; i < numNodes - 1; i++) {
+                layerDataB.push({
+                    type: 'connection',
+                    i: i,
+                    z: (nodesB[i].z + nodesB[i + 1].z) / 2
+                });
+            }
+            for (let i = 0; i < numNodes; i++) {
+                layerDataB.push({
+                    type: 'node',
+                    i: i,
+                    z: nodesB[i].z
+                });
+            }
+            layerDataB.sort((a, b) => a.z - b.z);
+
+            for (const layer of layerDataB) {
+                if (layer.type === 'connection') {
+                    const i = layer.i;
+                    drawLine(nodesB[i].x, nodesB[i].y, nodesB[i + 1].x, nodesB[i + 1].y, strandBColor, 0.8);
+                } else {
+                    const i = layer.i;
+                    drawNode(nodesB[i].x, nodesB[i].y, nodesB[i].z, strandBColor, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

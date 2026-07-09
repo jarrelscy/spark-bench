@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        /**
+         * DNA Double Helix Animation
+         * Renders a 3D-like rotating DNA structure using HTML5 Canvas.
+         * Uses basic trigonometry to project 3D coordinates to 2D space.
+         */
+
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const config = {
+            amplitude: 150,       // Radius of the helix
+            frequency: 0.02,      // How tight the spiral is
+            speed: 0.02,          // Rotation speed
+            segmentCount: 120,    // Number of nodes/segments
+            verticalSpacing: 6,   // Distance between rungs
+            strandWidth: 4,       // Thickness of the backbone lines
+            rungWidth: 2,         // Thickness of the connecting rungs
+            perspective: 800,     // Perspective factor for depth scaling
+            colors: {
+                strand1: '#00ffff', // Cyan
+                strand2: '#ff00ff', // Magenta
+                rung: '#ffffff'     // White
+            }
+        };
+
+        let rotationAngle = 0;
+        let width, height, centerX, centerY;
+
+        // Resize handler to keep canvas sharp and centered
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Helper to calculate depth opacity (fog effect)
+        function getOpacity(z, minZ, maxZ) {
+            // Normalize Z to 0-1 range
+            const normalized = (z - minZ) / (maxZ - minZ);
+            // Clamp between 0.1 and 1.0
+            return Math.max(0.1, Math.min(1.0, normalized));
+        }
+
+        function draw() {
+            // Clear screen with slight trail effect (optional, strictly clearing here for clean lines)
+            ctx.clearRect(0, 0, width, height);
+
+            // We need to calculate all points first to handle depth sorting (Painter's Algorithm)
+            // We will store segments (rungs) and draw them from back to front.
+            
+            const segments = [];
+            
+            // Calculate vertical range to center the helix
+            const totalHeight = config.segmentCount * config.verticalSpacing;
+            const startY = centerY - (totalHeight / 2);
+
+            // Generate nodes
+            for (let i = 0; i < config.segmentCount; i++) {
+                // Calculate angle for this segment
+                const theta = i * config.frequency + rotationAngle;
+                
+                // 3D Coordinates (x, y, z)
+                // Strand 1
+                const x1 = Math.cos(theta) * config.amplitude;
+                const z1 = Math.sin(theta) * config.amplitude;
+                
+                // Strand 2 (180 degrees / PI radians offset)
+                const x2 = Math.cos(theta + Math.PI) * config.amplitude;
+                const z2 = Math.sin(theta + Math.PI) * config.amplitude;
+
+                // 2D Y position
+                const y = startY + (i * config.verticalSpacing);
+
+                segments.push({
+                    index: i,
+                    x1: x1,
+                    y1: y,
+                    z1: z1,
+                    x2: x2,
+                    y2: y,
+                    z2: z2,
+                    avgZ: (z1 + z2) / 2 // Use average Z for depth sorting the rung
+                });
+            }
+
+            // Sort segments by Z depth (furthest away first)
+            // z values range roughly from -amplitude to +amplitude. 
+            // Smaller Z is further away in our perspective setup.
+            segments.sort((a, b) => a.avgZ - b.avgZ);
+
+            // Determine Z bounds for opacity calculations
+            const minZ = -config.amplitude;
+            const maxZ = config.amplitude;
+
+            // Draw the sorted segments
+            segments.forEach((seg, i) => {
+                // 1. Project 3D to 2D with perspective scaling
+                // Scale factor based on Z depth
+                const scale1 = config.perspective / (config.perspective + seg.z1);
+                const scale2 = config.perspective / (config.perspective + seg.z2);
+
+                const screenX1 = centerX + seg.x1 * scale1;
+                const screenY1 = seg.y1; // Y is already 2D
+                
+                const screenX2 = centerX + seg.x2 * scale2;
+                const screenY2 = seg.y2;
+
+                // 2. Calculate Opacity based on depth
+                const opacity1 = getOpacity(seg.z1, minZ, maxZ);
+                const opacity2 = getOpacity(seg.z2, minZ, maxZ);
+                const rungOpacity = getOpacity(seg.avgZ, minZ, maxZ);
+
+                // 3. Draw the Rung (Connection)
+                ctx.beginPath();
+                ctx.moveTo(screenX1, screenY1);
+                ctx.lineTo(screenX2, screenY2);
+                ctx.lineWidth = config.rungWidth * scale1; // Scale width by depth
+                ctx.strokeStyle = `rgba(255, 255, 255, ${rungOpacity * 0.3})`; // Subtle rungs
+                ctx.stroke();
+
+                // 4. Draw Nodes (Backbone)
+                // We draw small circles for the nodes.
+                
+                // Node 1
+                ctx.beginPath();
+                ctx.arc(screenX1, screenY1, (config.strandWidth/2) * scale1, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 255, ${opacity1})`; // Cyan
+                ctx.fill();
+
+                // Node 2
+                ctx.beginPath();
+                ctx.arc(screenX2, screenY2, (config.strandWidth/2) * scale2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 0, 255, ${opacity2})`; // Magenta
+                ctx.fill();
+            });
+
+            // Update rotation
+            rotationAngle += config.speed;
+
+            // Request next frame
+            requestAnimationFrame(draw);
+        }
+
+        // Start the animation loop
+        draw();
+
+    </script>
+</body>
+</html>

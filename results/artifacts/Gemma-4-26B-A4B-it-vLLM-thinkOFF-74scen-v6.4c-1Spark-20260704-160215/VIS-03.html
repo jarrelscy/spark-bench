@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angleOffset = 0;
+
+        // Configuration
+        const numNodes = 40;       // Number of pairs in the helix
+        const helixRadius = 150;   // Radius of the helix
+        const helixHeight = 600;   // Total height of the helix
+        const nodeSpacing = helixHeight / numNodes;
+        const rungLength = 20;     // Visual thickness of the rungs
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear canvas with a slight fade effect for smoothness
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerY = height / 2 - (helixHeight / 2);
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate vertical position
+                const y = centerY + (i * nodeSpacing);
+                
+                // Calculate rotation angle for this specific node
+                // We add i * constant to create the spiral effect
+                const currentAngle = angleOffset + (i * 0.4);
+
+                // Strand 1 Coordinates
+                const x1 = width / 2 + Math.sin(currentAngle) * helixRadius;
+                const z1 = Math.cos(currentAngle); // Used for depth perception
+
+                // Strand 2 Coordinates (180 degrees/PI offset from Strand 1)
+                const x2 = width / 2 + Math.sin(currentAngle + Math.PI) * helixRadius;
+                const z2 = Math.cos(currentAngle + Math.PI);
+
+                // 1. Draw Rungs (Connecting lines)
+                // We use the z-value to adjust opacity to simulate 3D depth
+                const opacity = (z1 + 1) / 2; // Normalize to 0-1 range
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.strokeStyle = `rgba(100, 100, 100, ${opacity * 0.5})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 2. Draw Strand 1 Node
+                ctx.beginPath();
+                ctx.arc(x1, y, 5, 0, Math.PI * 2);
+                // Color: Cyan/Blue tint
+                ctx.fillStyle = `rgba(0, 200, 255, ${opacity})`;
+                ctx.fill();
+                // Glow effect
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(0, 150, 255, 0.5)';
+
+                // 3. Draw Strand 2 Node
+                ctx.beginPath();
+                ctx.arc(x2, y, 5, 0, Math.PI * 2);
+                // Color: Magenta/Pink tint
+                ctx.fillStyle = `rgba(255, 50, 150, ${opacity})`;
+                ctx.fill();
+                // Glow effect
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(255, 50, 150, 0.5)';
+                
+                // Reset shadow for next iteration to prevent performance lag
+                ctx.shadowBlur = 0;
+            }
+
+            angleOffset += 0.02; // Speed of rotation
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

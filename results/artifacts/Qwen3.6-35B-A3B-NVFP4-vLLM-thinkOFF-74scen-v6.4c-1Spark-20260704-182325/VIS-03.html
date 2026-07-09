@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotationOffset = 0;
+        
+        // Configuration
+        const config = {
+            radius: 100,            // Radius of the helix
+            verticalSpacing: 40,    // Vertical distance between nodes
+            nodeCount: 40,          // Number of nodes per strand
+            nodeRadius: 5,          // Size of the nodes
+            rungColor: '#ffffff',   // Color of connecting rungs
+            strand1Color: '#00ffff',// Cyan (Strand 1)
+            strand2Color: '#ff00ff',// Magenta (Strand 2)
+            glowAmount: 15          // Glow effect size
+        };
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawNode(x, y, color, radius) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            
+            // Add a glow effect
+            ctx.shadowBlur = config.glowAmount;
+            ctx.shadowColor = color;
+            
+            ctx.fill();
+            
+            // Reset shadow for performance/other elements
+            ctx.shadowBlur = 0;
+        }
+
+        function drawRung(x1, y1, x2, y2, alpha) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            
+            // Create a gradient for the rung to make it look 3D/translucent
+            const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+            gradient.addColorStop(0, config.strand1Color);
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(1, config.strand2Color);
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = alpha; // Fade based on depth
+            ctx.stroke();
+            ctx.globalAlpha = 1.0; // Reset alpha
+        }
+
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Center of the canvas
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Calculate total height of the DNA structure
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            const startY = centerY - (totalHeight / 2);
+
+            // Arrays to store node positions for rendering order (Painter's Algorithm)
+            // We need to draw back nodes before front nodes
+            let renderList = [];
+
+            // 1. Calculate positions
+            for (let i = 0; i < config.nodeCount; i++) {
+                const yPos = startY + (i * config.verticalSpacing);
+                
+                // Calculate angle for this node
+                const angle = rotationOffset + (i * 0.2); // 0.2 is the twist rate
+                
+                // Calculate X positions (Sine waves)
+                // Strand 1: Sine
+                const x1 = Math.sin(angle) * config.radius;
+                // Strand 2: Cosine (180 degrees out of phase)
+                const x2 = Math.cos(angle) * config.radius;
+
+                // Store data for rendering
+                renderList.push({
+                    type: 'node',
+                    index: i,
+                    x: x1,
+                    y: yPos,
+                    color: config.strand1Color,
+                    depth: x1 // Used for sorting (negative is back, positive is front)
+                });
+                
+                renderList.push({
+                    type: 'node',
+                    index: i,
+                    x: x2,
+                    y: yPos,
+                    color: config.strand2Color,
+                    depth: x2
+                });
+
+                renderList.push({
+                    type: 'rung',
+                    index: i,
+                    x1: x1,
+                    y1: yPos,
+                    x2: x2,
+                    y2: yPos,
+                    depth: (x1 + x2) / 2 // Average depth for the rung
+                });
+            }
+
+            // 2. Sort by depth (Painter's Algorithm)
+            // We want to draw items with smaller X (more negative, further back) first
+            // Note: Since we are in 2D canvas, we simulate 3D depth using X offset.
+            // Smaller X = further left, but in our rotation, 
+            // we actually want to sort by the visual "z-depth".
+            // In a side-view projection, left/right doesn't strictly mean depth, 
+            // but for a rotating helix viewed from the side, the "back" of the helix 
+            // corresponds to specific phases. 
+            // However, a simpler approach for this specific 2D projection is:
+            // Draw the "back" half, then the "front" half.
+            // Since we are just shifting X based on sin/cos, let's just sort by X.
+            // Actually, to make it look 3D, we need to know which side is "front".
+            // Let's assume the viewer is at Z = +infinity.
+            // The "front" nodes are those with positive X values (if we rotate correctly).
+            // Let's sort by depth value.
+            
+            renderList.sort((a, b) => a.depth - b.depth);
+
+            // 3. Draw
+            for (const item of renderList) {
+                if (item.type === 'node') {
+                    drawNode(centerX + item.x, item.y, item.color, config.nodeRadius);
+                } else if (item.type === 'rung') {
+                    // Calculate alpha based on depth to fade rungs that are "behind"
+                    // This is a bit of a heuristic for 2D canvas
+                    const avgDepth = item.depth;
+                    // Map depth -radius to radius -> 0.3 to 1.0 alpha
+                    const normalizedDepth = (avgDepth + config.radius) / (2 * config.radius);
+                    const alpha = 0.3 + (0.7 * normalizedDepth);
+                    
+                    drawRung(centerX + item.x1, item.y1, centerX + item.x2, item.y2, alpha);
+                }
+            }
+
+            // Increment rotation
+            rotationOffset += 0.05;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

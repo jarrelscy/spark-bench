@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Double Helix</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+background: #0a0a1a;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+overflow: hidden;
+}
+canvas {
+display: block;
+}
+</style>
+</head>
+<body>
+<canvas id="dnaCanvas"></canvas>
+<script>
+const canvas = document.getElementById('dnaCanvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+let rotationAngle = 0;
+const rotationSpeed = 0.015;
+
+function resize() {
+width = canvas.width = window.innerWidth;
+height = canvas.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener('resize', resize);
+
+// DNA parameters
+const helixRadius = 100;
+const helixHeight = 600;
+const nodesPerTurn = 12;
+const turns = 3;
+const totalNodes = Math.floor(nodesPerTurn * turns);
+const nodeSpacing = helixHeight / totalNodes;
+
+// Strand colors
+const strand1Base = [180, 60, 220]; // Purple
+const strand2Base = [220, 60, 100]; // Red/Pink
+
+// Rung colors (base pairs)
+const rungColors = [
+[100, 200, 255],  // Blue
+[255, 200, 80],   // Yellow
+[80, 255, 140],   // Green
+[255, 120, 200],  // Pink
+];
+
+function getNodePosition(nodeIndex, strandOffset, rotAngle) {
+const t = nodeIndex / totalNodes;
+const angle = t * Math.PI * 2 * turns + (strandOffset ? Math.PI : 0) + rotAngle;
+const y = (t - 0.5) * helixHeight;
+
+const x3d = Math.cos(angle) * helixRadius;
+const z3d = Math.sin(angle) * helixRadius;
+
+// Perspective projection
+const perspective = 500;
+const scale = perspective / (perspective + z3d);
+
+const x2d = x3d * scale;
+const y2d = y * scale;
+
+return {
+x: x2d,
+y: y2d,
+z: z3d,
+scale: scale,
+angle: angle
+};
+}
+
+function lerpColor(c1, c2, t) {
+return [
+Math.round(c1[0] + (c2[0] - c1[0]) * t),
+Math.round(c1[1] + (c2[1] - c1[1]) * t),
+Math.round(c1[2] + (c2[2] - c1[2]) * t)
+];
+}
+
+function getColorWithVariation(baseColor, variation, brightness) {
+const r = Math.min(255, Math.max(0, baseColor[0] + variation + brightness));
+const g = Math.min(255, Math.max(0, baseColor[1] + variation * 0.5 + brightness));
+const b = Math.min(255, Math.max(0, baseColor[2] + variation + brightness));
+return `rgb(${r},${g},${b})`;
+}
+
+function drawHelix() {
+ctx.clearRect(0, 0, width, height);
+
+const centerX = width / 2;
+const centerY = height / 2;
+
+// Draw subtle background glow
+const glowGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 300);
+glowGrad.addColorStop(0, 'rgba(100, 50, 150, 0.08)');
+glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+ctx.fillStyle = glowGrad;
+ctx.fillRect(0, 0, width, height);
+
+// Collect all elements with their z-depth for sorting
+const elements = [];
+
+for (let i = 0; i < totalNodes; i++) {
+const t = i / totalNodes;
+const node1 = getNodePosition(i, 0, rotationAngle);
+const node2 = getNodePosition(i, 1, rotationAngle);
+
+const avgZ = (node1.z + node2.z) / 2;
+
+// Rung
+const rungColor = rungColors[i % rungColors.length];
+elements.push({
+type: 'rung',
+z: avgZ,
+node1: node1,
+node2: node2,
+color: rungColor,
+index: i
+});
+
+// Strand 1 node
+const colorVar1 = Math.sin(t * Math.PI * 4) * 20;
+const brightness1 = (node1.scale - 0.8) * 100;
+elements.push({
+type: 'node',
+strands: 1,
+z: node1.z,
+x: node1.x,
+y: node1.y,
+scale: node1.scale,
+colorVar: colorVar1,
+brightness: brightness1
+});
+
+// Strand 2 node
+const colorVar2 = Math.sin(t * Math.PI * 4 + 1) * 20;
+const brightness2 = (node2.scale - 0.8) * 100;
+elements.push({
+type: 'node',
+strands: 2,
+z: node2.z,
+x: node2.x,
+y: node2.y,
+scale: node2.scale,
+colorVar: colorVar2,
+brightness: brightness2
+});
+}
+
+// Sort by z-depth (back to front)
+elements.sort((a, b) => a.z - b.z);
+
+// Draw elements in z-order
+for (const el of elements) {
+if (el.type === 'rung') {
+drawRung(centerX, centerY, el);
+} else if (el.type === 'node') {
+drawNode(centerX, centerY, el);
+}
+}
+
+// Draw connecting lines for strands (also z-sorted)
+drawStrandLines(centerX, centerY, 0);
+drawStrandLines(centerX, centerY, 1);
+}
+
+function drawRung(centerX, centerY, rung) {
+const x1 = centerX + rung.node1.x;
+const y1 = centerY + rung.node1.y;
+const x2 = centerX + rung.node2.x;
+const y2 = centerY + rung.node2.y;
+
+const avgScale = (rung.node1.scale + rung.node2.scale) / 2;
+const alpha = 0.3 + avgScale * 0.5;
+const lineWidth = 2 + avgScale * 2;
+
+const c = rung.color;
+const color = `rgba(${c[0]},${c[1]},${c[2]},${alpha})`;
+
+ctx.beginPath();
+ctx.moveTo(x1, y1);
+ctx.lineTo(x2, y2);
+ctx.strokeStyle = color;
+ctx.lineWidth = lineWidth;
+ctx.lineCap = 'round';
+ctx.stroke();
+
+// Small circles at rung ends
+const dotRadius = 2 + avgScale * 1.5;
+ctx.beginPath();
+ctx.arc(x1, y1, dotRadius, 0, Math.PI * 2);
+ctx.fillStyle = color;
+ctx.fill();
+
+ctx.beginPath();
+ctx.arc(x2, y2, dotRadius, 0, Math.PI * 2);
+ctx.fillStyle = color;
+ctx.fill();
+}
+
+function drawNode(centerX, centerY, node) {
+const x = centerX + node.x;
+const y = centerY + node.y;
+const baseColor = node.strands === 1 ? strand1Base : strand2Base;
+const radius = 4 + node.scale * 4;
+
+const color = getColorWithVariation(baseColor, node.colorVar, node.brightness);
+const glowColor = getColorWithVariation(baseColor, node.colorVar * 0.5, node.brightness * 0.5);
+
+// Glow effect
+const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 2.5);
+glowGrad.addColorStop(0, glowColor.replace('rgb', 'rgba').replace(')', ',0.3)'));
+glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.beginPath();
+ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+ctx.fillStyle = glowGrad;
+ctx.fill();
+
+// Node circle
+const grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius);
+grad.addColorStop(0, getColorWithVariation(baseColor, node.colorVar + 30, node.brightness + 20));
+grad.addColorStop(1, color);
+
+ctx.beginPath();
+ctx.arc(x, y, radius, 0, Math.PI * 2);
+ctx.fillStyle = grad;
+ctx.fill();
+
+// Subtle border
+ctx.strokeStyle = getColorWithVariation(baseColor, node.colorVar + 10, node.brightness + 10);
+ctx.lineWidth = 1;
+ctx.stroke();
+}
+
+function drawStrandLines(centerX, centerY, strandOffset) {
+// Collect points for this strand
+const points = [];
+for (let i = 0; i < totalNodes; i++) {
+const node = getNodePosition(i, strandOffset, rotationAngle);
+points.push({
+x: centerX + node.x,
+y: centerY + node.y,
+z: node.z,
+scale: node.scale
+});
+}
+
+// Draw as a smooth curve using quadratic bezier segments
+const baseColor = strandOffset === 0 ? strand1Base : strand2Base;
+
+ctx.beginPath();
+ctx.moveTo(points[0].x, points[0].y);
+
+for (let i = 1; i < points.length - 1; i++) {
+const xc = (points[i].x + points[i + 1].x) / 2;
+const yc = (points[i].y + points[i + 1].y) / 2;
+ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+}
+
+const last = points[points.length - 1];
+ctx.lineTo(last.x, last.y);
+
+// Gradient stroke based on z-depth
+const avgScale = points.reduce((sum, p) => sum + p.scale, 0) / points.length;
+const alpha = 0.4 + avgScale * 0.4;
+const lineWidth = 2 + avgScale * 3;
+
+const color = getColorWithVariation(baseColor, 0, avgScale * 50);
+ctx.strokeStyle = color;
+ctx.lineWidth = lineWidth;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+ctx.stroke();
+
+// Glow line
+ctx.strokeStyle = color.replace('rgb', 'rgba').replace(')', `,${alpha * 0.3})`);
+ctx.lineWidth = lineWidth + 4;
+ctx.stroke();
+}
+
+function animate() {
+rotationAngle += rotationSpeed;
+drawHelix();
+requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>

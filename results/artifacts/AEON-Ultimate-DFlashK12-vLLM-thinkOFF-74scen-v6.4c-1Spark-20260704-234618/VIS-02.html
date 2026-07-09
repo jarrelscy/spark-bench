@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const STAR_COUNT = 1500;
+        const STAR_ARRAY = [];
+
+        // Resize handling
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+            initStars();
+        }
+
+        // Star Class
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Random angle
+                this.angle = Math.random() * Math.PI * 2;
+                
+                // Distance from center (exponential distribution for clustering)
+                // Using a mix of Log-Normal to create arms and spread
+                const armIndex = Math.floor(Math.random() * 3); // 3 main arms
+                const armSpread = Math.random() * 0.5; // Width of the arm
+                
+                // Base distance
+                this.distance = Math.random() * Math.random() * (Math.min(width, height) * 0.45);
+                
+                // Add spiral twist based on distance
+                // The further out, the more twisted
+                const spiralFactor = 0.02;
+                this.angle += this.distance * spiralFactor;
+                
+                // Add arm offset
+                this.angle += (armIndex * (Math.PI * 2 / 3)) + (Math.random() - 0.5) * armSpread;
+
+                // Speed: Keplerian-ish (closer = faster)
+                this.speed = 0.001 / Math.sqrt(this.distance + 1);
+                
+                // Color variations
+                const colorRoll = Math.random();
+                if (colorRoll < 0.6) {
+                    // White/Yellowish (Main sequence)
+                    this.color = `rgba(255, 255, ${200 + Math.random() * 55},`;
+                } else if (colorRoll < 0.85) {
+                    // Blue Giants
+                    this.color = `rgba(190, 200, 255,`;
+                } else if (colorRoll < 0.95) {
+                    // Red Dwarfs/Giants
+                    this.color = `rgba(255, 180, 180,`;
+                } else {
+                    // Bright Core Stars
+                    this.color = `rgba(230, 220, 255,`;
+                }
+
+                // Size variation
+                this.size = Math.random() * 1.5 + 0.5;
+                if (this.distance < 50) this.size *= 1.5; // Bigger near core
+
+                // Twinkle properties
+                this.twinkleSpeed = Math.random() * 0.05 + 0.02;
+                this.twinklePhase = Math.random() * Math.PI * 2;
+                this.baseAlpha = Math.random() * 0.5 + 0.5;
+            }
+
+            update() {
+                // Rotate
+                this.angle += this.speed;
+                
+                // Subtle orbital drift (optional, makes it look dynamic)
+                // this.distance += Math.sin(this.angle * 2) * 0.1;
+
+                // Twinkle
+                this.currentAlpha = this.baseAlpha * (0.7 + 0.3 * Math.sin(Date.now() * this.twinkleSpeed + this.twinklePhase));
+            }
+
+            draw() {
+                // Convert polar to cartesian
+                const x = centerX + Math.cos(this.angle) * this.distance;
+                const y = centerY + Math.sin(this.angle) * this.distance;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + this.currentAlpha + ')';
+                ctx.fill();
+            }
+        }
+
+        function initStars() {
+            STAR_ARRAY.length = 0;
+            for (let i = 0; i < STAR_COUNT; i++) {
+                STAR_ARRAY.push(new Star());
+            }
+        }
+
+        function drawCore() {
+            // The bright center of the galaxy
+            const coreRadius = Math.min(width, height) * 0.04;
+            
+            // Outer glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius * 4);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.1, 'rgba(220, 200, 255, 0.5)');
+            gradient.addColorStop(0.4, 'rgba(180, 150, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreRadius * 4, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Inner bright core
+            const coreGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius);
+            coreGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            coreGradient.addColorStop(1, 'rgba(200, 180, 255, 0.1)');
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
+            ctx.fillStyle = coreGradient;
+            ctx.fill();
+        }
+
+        function animate() {
+            // Clear with slight transparency for subtle trail effect (optional, currently solid clear)
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Core
+            drawCore();
+
+            // Update and Draw Stars
+            for (let star of STAR_ARRAY) {
+                star.update();
+                star.draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>

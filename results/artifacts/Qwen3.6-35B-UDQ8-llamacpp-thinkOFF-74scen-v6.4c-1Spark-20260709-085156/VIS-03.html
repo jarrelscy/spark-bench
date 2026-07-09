@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #05050a; /* Very dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const config = {
+            strandCount: 40,        // Number of rungs/nodes
+            radius: 150,            // Width of the helix
+            verticalSpacing: 18,    // Distance between rungs
+            rotationSpeed: 0.03,    // Speed of rotation
+            fov: 600,               // Perspective factor
+            strandColor1: '#00d2ff', // Cyan/Blue
+            strandColor2: '#ff0055', // Magenta/Red
+            rungColor: '#ffffff',
+            glow: true
+        };
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawDNA() {
+            // Clear screen
+            ctx.fillStyle = '#05050a';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerY = height / 2;
+            const centerX = width / 2;
+            const totalHeight = config.strandCount * config.verticalSpacing;
+            const startY = centerY - (totalHeight / 2);
+
+            // We need to store the 3D points to sort them later for depth perception
+            const points = [];
+
+            // 1. Calculate 3D positions for all nodes
+            for (let i = 0; i < config.strandCount; i++) {
+                const y = startY + (i * config.verticalSpacing);
+                
+                // Calculate phase for this rung
+                // The helix twists as it goes down
+                const phase = (i * 0.2) + angle; 
+
+                // Strand 1 Position (Sine wave)
+                const x1 = Math.sin(phase) * config.radius;
+                const z1 = Math.cos(phase) * config.radius;
+
+                // Strand 2 Position (Cosine wave - 180 degrees offset)
+                const x2 = Math.sin(phase + Math.PI) * config.radius;
+                const z2 = Math.cos(phase + Math.PI) * config.radius;
+
+                // Project 3D to 2D (Perspective Projection)
+                // Scale factor based on Z depth (Z=0 is center plane)
+                const scale1 = config.fov / (config.fov + z1);
+                const scale2 = config.fov / (config.fov + z2);
+
+                const screenX1 = centerX + x1 * scale1;
+                const screenY1 = y;
+                
+                const screenX2 = centerX + x2 * scale2;
+                const screenY2 = y;
+
+                // Store data for rendering
+                points.push({
+                    type: 'rung',
+                    index: i,
+                    y: y,
+                    z: z1, // Use average Z for sorting rungs
+                    x1: screenX1, y1: screenY1, scale1: scale1,
+                    x2: screenX2, y2: screenY2, scale2: scale2
+                });
+
+                points.push({
+                    type: 'node',
+                    strand: 1,
+                    index: i,
+                    y: y,
+                    z: z1,
+                    x: screenX1,
+                    scale: scale1,
+                    color: config.strandColor1
+                });
+
+                points.push({
+                    type: 'node',
+                    strand: 2,
+                    index: i,
+                    y: y,
+                    z: z2,
+                    x: screenX2,
+                    scale: scale2,
+                    color: config.strandColor2
+                });
+            }
+
+            // 2. Sort points by Z-index (Painter's Algorithm)
+            // Higher Z value means further away (assuming camera looks down -Z, but our math projects +Z back)
+            // In our projection math: scale = fov / (fov + z). 
+            // Larger z -> smaller scale -> further away.
+            points.sort((a, b) => b.z - a.z);
+
+            // 3. Draw sorted elements
+            points.forEach(p => {
+                if (p.type === 'rung') {
+                    drawRung(p);
+                } else {
+                    drawNode(p);
+                }
+            });
+        }
+
+        function drawRung(p) {
+            const alpha = Math.max(0.1, Math.min(1, (p.scale1 + p.scale2) / 2));
+            
+            ctx.beginPath();
+            ctx.moveTo(p.x1, p.y1);
+            ctx.lineTo(p.x2, p.y2);
+            
+            // Gradient for the rung
+            const grad = ctx.createLinearGradient(p.x1, p.y1, p.x2, p.y2);
+            grad.addColorStop(0, config.strandColor1);
+            grad.addColorStop(1, config.strandColor2);
+            
+            ctx.strokeStyle = grad;
+            ctx.globalAlpha = alpha * 0.6; // Rungs are slightly transparent
+            ctx.lineWidth = 2 * p.scale1; // Thickness based on depth
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawNode(p) {
+            const radius = 4 * p.scale;
+            
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+            
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0.3, Math.min(1, p.scale));
+            
+            if (config.glow) {
+                ctx.shadowBlur = 10 * p.scale;
+                ctx.shadowColor = p.color;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.fill();
+            
+            // Reset shadow for next draw
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1.0;
+        }
+
+        function animate() {
+            angle += config.rotationSpeed;
+            drawDNA();
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+
+    </script>
+</body>
+</html>

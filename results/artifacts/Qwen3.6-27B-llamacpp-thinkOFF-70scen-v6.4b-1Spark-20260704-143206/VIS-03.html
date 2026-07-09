@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    let width, height;
+    const nodeCount = 40;      // Number of rungs/nodes
+    const helixHeight = 600;   // Total height of the DNA structure
+    const radius = 100;        // Width of the helix
+    const twistSpeed = 0.015;  // Rotation speed
+    const twistPerNode = 0.25; // How much it twists per node (tightness)
+    
+    let rotationAngle = 0;
+
+    // Resize canvas to fit window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        // Center X
+        const centerX = width / 2;
+        // Start Y (centered vertically)
+        const startY = (height - helixHeight) / 2;
+
+        // Arrays to store calculated points for this frame
+        // We need to separate front and back elements to handle depth sorting
+        // (Back rungs drawn first, then strands, then front rungs)
+        const segments = [];
+
+        for (let i = 0; i < nodeCount; i++) {
+            // Calculate vertical position
+            const y = startY + (i * (helixHeight / (nodeCount - 1)));
+            
+            // Calculate angle for this node based on index and current global rotation
+            const angle = (i * twistPerNode) + rotationAngle;
+            
+            // Calculate X positions based on sine wave
+            // Strand 1
+            const x1 = centerX + Math.cos(angle) * radius;
+            // Strand 2 (offset by PI so it's opposite)
+            const x2 = centerX + Math.cos(angle + Math.PI) * radius;
+
+            // Calculate Z depth (cosine determines depth)
+            // -1 is back, 1 is front
+            const z1 = Math.sin(angle);
+            const z2 = Math.sin(angle + Math.PI);
+
+            segments.push({
+                index: i,
+                y: y,
+                x1: x1,
+                x2: x2,
+                z1: z1,
+                z2: z2
+            });
+        }
+
+        // Draw Rungs (Horizontal connections)
+        // We sort them by depth so back ones are drawn first
+        segments.sort((a, b) => a.z1 - b.z1);
+
+        segments.forEach(seg => {
+            // Calculate opacity and width based on depth (pseudo-3D)
+            // z ranges from -1 to 1. 
+            // We want back items (-1) to be faint/thin, front items (1) to be bright/thick.
+            const depth = (seg.z1 + 1) / 2; // Normalize to 0..1
+            const alpha = 0.1 + (depth * 0.4); // Range 0.1 to 0.5
+            const lineWidth = 1 + (depth * 2); // Range 1px to 3px
+
+            ctx.beginPath();
+            ctx.moveTo(seg.x1, seg.y);
+            ctx.lineTo(seg.x2, seg.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.lineWidth = lineWidth;
+            ctx.stroke();
+        });
+
+        // Draw Strands
+        // We draw the strands as continuous lines connecting the nodes
+        // To handle 3D overlap correctly, we technically should split strands 
+        // when they cross behind/each other, but for a simple visual effect,
+        // drawing the rungs first and then the strands on top usually looks acceptable,
+        // OR we can draw segments individually.
+        
+        // Let's draw strand segments individually to handle depth fading on the nodes/connections
+        
+        // Strand 1 Color (Cyan/Blueish)
+        // Strand 2 Color (Magenta/Reddish)
+        
+        // We iterate through the sorted segments again to draw the connections between nodes
+        // Note: segments array is sorted by Z, so we need to find neighbors by index
+        
+        // Helper to draw a line segment between node i and i+1
+        const drawStrandSegment = (i, nextI, strandIndex) => {
+            const curr = segments.find(s => s.index === i);
+            const next = segments.find(s => s.index === nextI);
+            
+            if (!curr || !next) return;
+
+            const xStart = strandIndex === 1 ? curr.x1 : curr.x2;
+            const yStart = curr.y;
+            const xEnd = strandIndex === 1 ? next.x1 : next.x2;
+            const yEnd = next.y;
+
+            const zStart = strandIndex === 1 ? curr.z1 : curr.z2;
+            
+            // Depth effects
+            const depth = (zStart + 1) / 2; 
+            const alpha = 0.3 + (depth * 0.7);
+            const lineWidth = 2 + (depth * 4);
+
+            ctx.beginPath();
+            ctx.moveTo(xStart, yStart);
+            ctx.lineTo(xEnd, yEnd);
+            
+            // Color variation
+            if (strandIndex === 1) {
+                // Strand 1: Cyan
+                ctx.strokeStyle = `rgba(0, 255, 255, ${alpha})`;
+            } else {
+                // Strand 2: Magenta
+                ctx.strokeStyle = `rgba(255, 0, 255, ${alpha})`;
+            }
+            
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Draw Nodes (Dots)
+            ctx.beginPath();
+            ctx.arc(xStart, yStart, lineWidth / 2 + 1, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fill();
+        };
+
+        // Draw Strand 1 connections
+        for (let i = 0; i < nodeCount - 1; i++) {
+            // Find the segment with index i and i+1
+            // Since we sorted segments by Z, we look up by index property
+            const curr = segments.find(s => s.index === i);
+            const next = segments.find(s => s.index === i + 1);
+            
+            if(curr && next) {
+                 // Determine which is "behind" to draw order? 
+                 // Actually, just drawing all strand segments is fine if rungs are behind.
+                 // But to make the strand look like it goes *behind* the rungs when it's in back,
+                 // we should draw the strand segments in Z order too.
+                 
+                 // Let's just draw them. The rungs are already drawn.
+                 // To make it look really 3D, the strand should fade.
+                 
+                 const z = curr.z1; // Depth of current node
+                 const depth = (z + 1) / 2;
+                 const alpha = 0.2 + (depth * 0.8);
+                 const width = 2 + (depth * 3);
+
+                 ctx.beginPath();
+                 ctx.moveTo(curr.x1, curr.y);
+                 ctx.lineTo(next.x1, next.y);
+                 ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+                 ctx.lineWidth = width;
+                 ctx.lineCap = 'round';
+                 ctx.stroke();
+                 
+                 // Draw node
+                 ctx.beginPath();
+                 ctx.arc(curr.x1, curr.y, width/2 + 1, 0, Math.PI*2);
+                 ctx.fillStyle = `rgba(200, 255, 255, ${alpha})`;
+                 ctx.fill();
+            }
+        }
+
+        // Draw Strand 2 connections
+        for (let i = 0; i < nodeCount - 1; i++) {
+            const curr = segments.find(s => s.index === i);
+            const next = segments.find(s => s.index === i + 1);
+            
+            if(curr && next) {
+                 const z = curr.z2; // Depth of current node
+                 const depth = (z + 1) / 2;
+                 const alpha = 0.2 + (depth * 0.8);
+                 const width = 2 + (depth * 3);
+
+                 ctx.beginPath();
+                 ctx.moveTo(curr.x2, curr.y);
+                 ctx.lineTo(next.x2, next.y);
+                 ctx.strokeStyle = `rgba(255, 0, 240, ${alpha})`;
+                 ctx.lineWidth = width;
+                 ctx.lineCap = 'round';
+                 ctx.stroke();
+
+                 // Draw node
+                 ctx.beginPath();
+                 ctx.arc(curr.x2, curr.y, width/2 + 1, 0, Math.PI*2);
+                 ctx.fillStyle = `rgba(255, 200, 255, ${alpha})`;
+                 ctx.fill();
+            }
+        }
+
+        // Increment rotation
+        rotationAngle += twistSpeed;
+
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    requestAnimationFrame(draw);
+
+</script>
+</body>
+</html>

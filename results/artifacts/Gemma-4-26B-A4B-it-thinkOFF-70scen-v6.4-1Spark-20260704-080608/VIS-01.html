@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Solar System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="solarCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('solarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const planets = [];
+        const stars = [];
+
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Generate Starfield
+        for (let i = 0; i < 400; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 1.5,
+                opacity: Math.random()
+            });
+        }
+
+        // Planet Data: [Distance, Radius, Speed, Color, Name]
+        const planetData = [
+            { dist: 60,  rad: 4,  speed: 0.04, color: '#A5A5A5', name: 'Mercury' },
+            { dist: 90,  rad: 7,  speed: 0.015, color: '#E3BB76', name: 'Venus' },
+            { dist: 130, rad: 8,  speed: 0.01, color: '#2271B3', name: 'Earth' },
+            { dist: 170, rad: 6,  speed: 0.08, color: '#E27B58', name: 'Mars' },
+            { dist: 240, rad: 18, speed: 0.02, color: '#D39C7E', name: 'Jupiter' },
+            { dist: 310, rad: 14, speed: 0.012, color: '#C5AB6E', name: 'Saturn' }
+        ];
+
+        planetData.forEach(data => {
+            planets.push({
+                distance: data.dist,
+                radius: data.rad,
+                speed: data.speed,
+                color: data.color,
+                angle: Math.random() * Math.PI * 2
+            });
+        });
+
+        function draw() {
+            // Clear background
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Stars
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.opacity;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+
+            // Draw Sun
+            const sunGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 40);
+            sunGradient.addColorStop(0, '#FFF5E1');
+            sunGradient.addColorStop(0.4, '#FFD700');
+            sunGradient.addColorStop(1, 'transparent');
+            
+            ctx.fillStyle = sunGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Orbits and Planets
+            planets.forEach(p => {
+                // Draw Orbit Path
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, p.distance, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Calculate Planet Position
+                const px = centerX + Math.cos(p.angle) * p.distance;
+                const py = centerY + Math.sin(p.angle) * p.distance;
+
+                // Draw Planet
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(px, py, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset shadow for performance
+
+                // Update Angle
+                p.angle += p.speed;
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

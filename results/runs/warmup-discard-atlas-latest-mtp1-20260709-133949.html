@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>spark-bench report: Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005</title>
+<title>spark-bench report: warmup-discard-atlas-latest-mtp1-20260709-133949</title>
 <style>
 :root { color-scheme: dark; --bg:#101113; --panel:#191b1f; --panel2:#20242b; --text:#f4f1e8; --muted:#aeb4bc; --line:rgba(255,255,255,.11); --green:#35d07f; --cyan:#5dc8ff; --amber:#f5b84b; --red:#ff6b6b; }
 * { box-sizing: border-box; }
@@ -49,380 +49,380 @@ details summary { cursor:pointer; color:#8bd9ff; margin:8px 0; }
   <header>
     <section class="hero">
       <div class="muted">spark-bench HTML report</div>
-      <h1>Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005</h1>
+      <h1>warmup-discard-atlas-latest-mtp1-20260709-133949</h1>
       <div class="meta">
-        <div><strong>label:</strong> Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput</div>
+        <div><strong>label:</strong> warmup-discard-atlas-latest-mtp1</div>
         <div><strong>model:</strong> qwen36-35b-nvfp4</div>
         <div><strong>endpoint:</strong> http://10.0.0.183:8890/v1</div>
-        <div><strong>notes:</strong> Atlas MTP claim verification; batch capped 4 (KV/drafter reserve tradeoff — --speculative shrinks KV pool to 2.7GB at util 0.6); vs nospec 85.9 same image 20260709-133155, vLLM MTP3 105.3; harness 73a811f</div>
+        <div><strong>notes:</strong> warmup DISCARD</div>
       </div>
     </section>
-    <section class="cards"><div class="card"><span>Run kind</span><strong>benchmark</strong></div><div class="card"><span>Rows</span><strong>18</strong></div><div class="card"><span>Topology</span><strong>single</strong></div><div class="card"><span>Parallelism</span><strong>1</strong></div><div class="card"><span>Spec decode</span><strong>mtp1</strong></div></section>
+    <section class="cards"><div class="card"><span>Run kind</span><strong>benchmark</strong></div><div class="card"><span>Rows</span><strong>18</strong></div><div class="card"><span>Topology</span><strong>single</strong></div><div class="card"><span>Parallelism</span><strong>1</strong></div><div class="card"><span>Spec decode</span><strong>na</strong></div></section>
   </header>
   <section class="grid">
-    <section class="panel"><h2>Score Components / Key Metrics</h2><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>465</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>95.0</b><div class="bar"><i style="width:95.0%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>10.5</b><div class="bar"><i style="width:10.5%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=1017tok</span></div><b>2187</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>902</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>2977</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>71.5</b><div class="bar"><i style="width:71.5%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>14.0</b><div class="bar"><i style="width:14.0%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=8006tok</span></div><b>2689</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>925</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>90.5</b><div class="bar"><i style="width:90.5%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>94.8</b><div class="bar"><i style="width:94.8%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>462</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>462</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>94.0</b><div class="bar"><i style="width:94.0%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>24.6</b><div class="bar"><i style="width:24.6%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>1807</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>1807</b><div class="bar"><i style="width:100.0%"></i></div></div></section>
+    <section class="panel"><h2>Score Components / Key Metrics</h2><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>496</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>95.0</b><div class="bar"><i style="width:95.0%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>10.6</b><div class="bar"><i style="width:10.6%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=1017tok</span></div><b>2049</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>127</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>2970</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>75.2</b><div class="bar"><i style="width:75.2%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>13.4</b><div class="bar"><i style="width:13.4%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=8006tok</span></div><b>2695</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>133</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>75.4</b><div class="bar"><i style="width:75.4%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>99.8</b><div class="bar"><i style="width:99.8%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>462</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>462</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>77.5</b><div class="bar"><i style="width:77.5%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>25.7</b><div class="bar"><i style="width:25.7%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>1804</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>1804</b><div class="bar"><i style="width:100.0%"></i></div></div></section>
     <section class="panel"><h2>Domain Breakdown</h2><p class="muted">No eval domain rows for this run.</p></section>
   </section>
   <section class="panel"><h2>Per-Scenario Results</h2><p class="muted">No per-scenario eval rows for this run.</p></section>
-  <section class="panel"><h2>Rendered Summary</h2><h1>Tier 2 — Inference (Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005)</h1>
+  <section class="panel"><h2>Rendered Summary</h2><h1>Tier 2 — Inference (warmup-discard-atlas-latest-mtp1-20260709-133949)</h1>
 <ul>
-<li>model <code>qwen36-35b-nvfp4</code> @ <code>http://10.0.0.183:8890/v1</code>  topology <code>single</code> parallelism <code>1</code> spec_decode <code>mtp1</code></li>
+<li>model <code>qwen36-35b-nvfp4</code> @ <code>http://10.0.0.183:8890/v1</code>  topology <code>single</code> parallelism <code>1</code> spec_decode <code>na</code></li>
 </ul>
 <h2>Single-stream decode</h2>
 <table><thead><tr><th>context</th><th>TTFT (ms)</th><th>decode tok/s</th><th>TPOT (ms)</th><th>prefill tok/s</th><th>out toks</th></tr></thead><tbody>
-<tr><td>1017</td><td>465</td><td>95.0</td><td>10.5</td><td>2187</td><td>902</td></tr>
-<tr><td>8006</td><td>2977</td><td>71.5</td><td>14.0</td><td>2689</td><td>925</td></tr>
+<tr><td>1017</td><td>496</td><td>95.0</td><td>10.6</td><td>2049</td><td>127</td></tr>
+<tr><td>8006</td><td>2970</td><td>75.2</td><td>13.4</td><td>2695</td><td>133</td></tr>
 </tbody></table>
 <h2>Throughput under concurrency</h2>
 <table><thead><tr><th>batch</th><th>agg decode tok/s</th><th>per-stream tok/s</th><th>TTFT p50 (ms)</th><th>TTFT p99 (ms)</th><th>completed</th></tr></thead><tbody>
-<tr><td>1</td><td>90</td><td>94.8</td><td>462</td><td>462</td><td>1/1</td></tr>
-<tr><td>4</td><td>94</td><td>24.6</td><td>1807</td><td>1807</td><td>4/4</td></tr>
+<tr><td>1</td><td>75</td><td>99.8</td><td>461</td><td>461</td><td>1/1</td></tr>
+<tr><td>4</td><td>78</td><td>25.7</td><td>1803</td><td>1804</td><td>4/4</td></tr>
 </tbody></table></section>
-  <section class="panel"><h2>All Recorded Rows</h2><table><thead><tr><th>tier</th><th>workload</th><th>metric</th><th>value</th><th>unit</th><th>context</th><th>batch</th><th>notes</th></tr></thead><tbody><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>465.1</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>95.01</td><td>tok/s</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>10.54</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>2186.8</td><td>tok/s</td><td>1017</td><td></td><td>prompt=1017tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>902</td><td>tok</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>2977.4</td><td>ms</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>71.55</td><td>tok/s</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>13.99</td><td>ms</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>2688.9</td><td>tok/s</td><td>8006</td><td></td><td>prompt=8006tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>925</td><td>tok</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>90.5</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>94.84</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>462.0</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>462.0</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>94.0</td><td>tok/s</td><td></td><td>4</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>24.57</td><td>tok/s</td><td></td><td>4</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>1807.0</td><td>ms</td><td></td><td>4</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>1807.2</td><td>ms</td><td></td><td>4</td><td></td></tr></tbody></table></section>
+  <section class="panel"><h2>All Recorded Rows</h2><table><thead><tr><th>tier</th><th>workload</th><th>metric</th><th>value</th><th>unit</th><th>context</th><th>batch</th><th>notes</th></tr></thead><tbody><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>496.4</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>94.97</td><td>tok/s</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>10.61</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>2048.9</td><td>tok/s</td><td>1017</td><td></td><td>prompt=1017tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>127</td><td>tok</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>2970.5</td><td>ms</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>75.2</td><td>tok/s</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>13.4</td><td>ms</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>2695.2</td><td>tok/s</td><td>8006</td><td></td><td>prompt=8006tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>133</td><td>tok</td><td>8006</td><td></td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>75.4</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>99.81</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>461.5</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>461.5</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>77.5</td><td>tok/s</td><td></td><td>4</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>25.67</td><td>tok/s</td><td></td><td>4</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>1803.5</td><td>ms</td><td></td><td>4</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>1803.8</td><td>ms</td><td></td><td>4</td><td></td></tr></tbody></table></section>
   <section class="panel">
     <h2>Raw Artifacts</h2>
-    <details><summary>Raw markdown summary</summary><pre># Tier 2 — Inference (Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005)
+    <details><summary>Raw markdown summary</summary><pre># Tier 2 — Inference (warmup-discard-atlas-latest-mtp1-20260709-133949)
 
-- model `qwen36-35b-nvfp4` @ `http://10.0.0.183:8890/v1`  topology `single` parallelism `1` spec_decode `mtp1`
+- model `qwen36-35b-nvfp4` @ `http://10.0.0.183:8890/v1`  topology `single` parallelism `1` spec_decode `na`
 
 ## Single-stream decode
 
 | context | TTFT (ms) | decode tok/s | TPOT (ms) | prefill tok/s | out toks |
 |--------:|----------:|-------------:|----------:|--------------:|---------:|
-| 1017 | 465 | 95.0 | 10.5 | 2187 | 902 |
-| 8006 | 2977 | 71.5 | 14.0 | 2689 | 925 |
+| 1017 | 496 | 95.0 | 10.6 | 2049 | 127 |
+| 8006 | 2970 | 75.2 | 13.4 | 2695 | 133 |
 
 ## Throughput under concurrency
 
 | batch | agg decode tok/s | per-stream tok/s | TTFT p50 (ms) | TTFT p99 (ms) | completed |
 |------:|-----------------:|-----------------:|--------------:|--------------:|----------:|
-| 1 | 90 | 94.8 | 462 | 462 | 1/1 |
-| 4 | 94 | 24.6 | 1807 | 1807 | 4/4 |
+| 1 | 75 | 99.8 | 461 | 461 | 1/1 |
+| 4 | 78 | 25.7 | 1803 | 1804 | 4/4 |
 </pre></details>
     <details><summary>Raw JSON rows</summary><pre>{
-  &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
+  &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
   &quot;rows&quot;: [
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:15&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:51&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 1017,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;ttft_ms&quot;,
-      &quot;value&quot;: 465.1,
+      &quot;value&quot;: 496.4,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:15&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:51&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 1017,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;decode_tps&quot;,
-      &quot;value&quot;: 95.01,
+      &quot;value&quot;: 94.97,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:15&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:51&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 1017,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;tpot_ms&quot;,
-      &quot;value&quot;: 10.54,
+      &quot;value&quot;: 10.61,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:15&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:51&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 1017,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;prefill_tps&quot;,
-      &quot;value&quot;: 2186.8,
+      &quot;value&quot;: 2048.9,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;prompt=1017tok&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:15&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:51&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 1017,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;output_tokens&quot;,
-      &quot;value&quot;: 902,
+      &quot;value&quot;: 127,
       &quot;unit&quot;: &quot;tok&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:31&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:56&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 8006,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;ttft_ms&quot;,
-      &quot;value&quot;: 2977.4,
+      &quot;value&quot;: 2970.5,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:31&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:56&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 8006,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;decode_tps&quot;,
-      &quot;value&quot;: 71.55,
+      &quot;value&quot;: 75.2,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:31&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:56&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 8006,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;tpot_ms&quot;,
-      &quot;value&quot;: 13.99,
+      &quot;value&quot;: 13.4,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:31&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:56&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 8006,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;prefill_tps&quot;,
-      &quot;value&quot;: 2688.9,
+      &quot;value&quot;: 2695.2,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;prompt=8006tok&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:31&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:56&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: 8006,
       &quot;batch&quot;: &quot;&quot;,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;single_stream&quot;,
       &quot;metric&quot;: &quot;output_tokens&quot;,
-      &quot;value&quot;: 925,
+      &quot;value&quot;: 133,
       &quot;unit&quot;: &quot;tok&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:41&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:58&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 1,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;agg_decode_tps&quot;,
-      &quot;value&quot;: 90.5,
+      &quot;value&quot;: 75.4,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:41&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:58&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 1,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;per_stream_tps&quot;,
-      &quot;value&quot;: 94.84,
+      &quot;value&quot;: 99.81,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:41&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:58&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 1,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;ttft_p50_ms&quot;,
-      &quot;value&quot;: 462.0,
+      &quot;value&quot;: 461.5,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:40:41&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:39:58&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 1,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;ttft_p99_ms&quot;,
-      &quot;value&quot;: 462.0,
+      &quot;value&quot;: 461.5,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:41:22&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:40:05&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 4,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;agg_decode_tps&quot;,
-      &quot;value&quot;: 94.0,
+      &quot;value&quot;: 77.5,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:41:22&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:40:05&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 4,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;per_stream_tps&quot;,
-      &quot;value&quot;: 24.57,
+      &quot;value&quot;: 25.67,
       &quot;unit&quot;: &quot;tok/s&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:41:22&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:40:05&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 4,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;ttft_p50_ms&quot;,
-      &quot;value&quot;: 1807.0,
+      &quot;value&quot;: 1803.5,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     },
     {
-      &quot;run_id&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput-20260709-134005&quot;,
-      &quot;timestamp&quot;: &quot;2026-07-09T13:41:22&quot;,
+      &quot;run_id&quot;: &quot;warmup-discard-atlas-latest-mtp1-20260709-133949&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-09T13:40:05&quot;,
       &quot;tier&quot;: &quot;tier2&quot;,
       &quot;model&quot;: &quot;qwen36-35b-nvfp4&quot;,
-      &quot;label&quot;: &quot;Qwen3.6-35B-NVFP4-atlas-latest-mtp1-throughput&quot;,
+      &quot;label&quot;: &quot;warmup-discard-atlas-latest-mtp1&quot;,
       &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
       &quot;topology&quot;: &quot;single&quot;,
       &quot;parallelism&quot;: &quot;1&quot;,
       &quot;context&quot;: &quot;&quot;,
       &quot;batch&quot;: 4,
-      &quot;spec_decode&quot;: &quot;mtp1&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
       &quot;workload&quot;: &quot;concurrency&quot;,
       &quot;metric&quot;: &quot;ttft_p99_ms&quot;,
-      &quot;value&quot;: 1807.2,
+      &quot;value&quot;: 1803.8,
       &quot;unit&quot;: &quot;ms&quot;,
       &quot;notes&quot;: &quot;&quot;
     }

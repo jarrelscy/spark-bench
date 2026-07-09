@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let rotationAngle = 0;
+
+    // Configuration
+    const config = {
+        pointsCount: 40,      // Number of nodes in the helix
+        helixRadius: 100,     // Width of the helix
+        verticalSpacing: 15,  // Distance between rungs
+        rotationSpeed: 0.02,  // Speed of rotation
+        depthScale: 0.7,      // Perspective scaling factor (0 to 1)
+        strandColor1: 'hsla(180, 100%, 50%, ', // Cyan base
+        strandColor2: 'hsla(320, 100%, 50%, ', // Magenta base
+        rungColor: 'hsla(0, 0%, 100%, '         // White base
+    };
+
+    // Resize canvas to fit window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Helper to calculate 3D point projected to 2D
+    // x, y, z are logical coordinates. We rotate around Y axis.
+    function project(x, y, z) {
+        // Calculate rotation
+        const cosA = Math.cos(rotationAngle);
+        const sinA = Math.sin(rotationAngle);
+
+        // Rotate point around Y axis
+        // x' = x*cos - z*sin
+        // z' = x*sin + z*cos
+        const rx = x * cosA - z * sinA;
+        const rz = x * sinA + z * cosA;
+
+        // Perspective projection (simple scaling based on Z depth)
+        // We map Z range roughly [-100, 100] to scale [0.6, 1.0]
+        const scale = 1 + (rz * 0.004); 
+        
+        const screenX = width / 2 + rx;
+        const screenY = height / 2 + y;
+        
+        return { x: screenX, y: screenY, scale: scale, z: rz };
+    }
+
+    function draw() {
+        // Clear canvas
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate total height of helix to center it
+        const totalHeight = (config.pointsCount - 1) * config.verticalSpacing;
+        const startY = -totalHeight / 2;
+
+        // Arrays to store projected points for rendering order
+        const segments = [];
+
+        // Generate points
+        for (let i = 0; i < config.pointsCount; i++) {
+            // Angle for the sine wave twist
+            const theta = i * 0.3; // Twist speed
+
+            // Strand 1 coordinates
+            const x1 = Math.cos(theta) * config.helixRadius;
+            const z1 = Math.sin(theta) * config.helixRadius;
+            const y = startY + i * config.verticalSpacing;
+
+            // Strand 2 coordinates (offset by PI)
+            const x2 = Math.cos(theta + Math.PI) * config.helixRadius;
+            const z2 = Math.sin(theta + Math.PI) * config.helixRadius;
+
+            // Project to 2D
+            const p1 = project(x1, y, z1);
+            const p2 = project(x2, y, z2);
+
+            // Store rung segment
+            segments.push({
+                type: 'rung',
+                p1: p1,
+                p2: p2,
+                z: (p1.z + p2.z) / 2 // Average depth for sorting
+            });
+
+            // Store node segments (connections to previous node)
+            if (i > 0) {
+                // Previous points
+                const prevTheta = (i - 1) * 0.3;
+                const px1 = Math.cos(prevTheta) * config.helixRadius;
+                const pz1 = Math.sin(prevTheta) * config.helixRadius;
+                const py = startY + (i - 1) * config.verticalSpacing;
+                
+                const px2 = Math.cos(prevTheta + Math.PI) * config.helixRadius;
+                const pz2 = Math.sin(prevTheta + Math.PI) * config.helixRadius;
+
+                const pp1 = project(px1, py, pz1);
+                const pp2 = project(px2, py, pz2);
+
+                // Strand 1 connection
+                segments.push({
+                    type: 'strand1',
+                    from: pp1,
+                    to: p1,
+                    z: (pp1.z + p1.z) / 2
+                });
+
+                // Strand 2 connection
+                segments.push({
+                    type: 'strand2',
+                    from: pp2,
+                    to: p2,
+                    z: (pp2.z + p2.z) / 2
+                });
+            }
+            
+            // Store nodes (dots)
+            segments.push({
+                type: 'node1',
+                p: p1,
+                z: p1.z
+            });
+            segments.push({
+                type: 'node2',
+                p: p2,
+                z: p2.z
+            });
+        }
+
+        // Sort all segments by Z depth (Painter's Algorithm)
+        // Draw furthest items first
+        segments.sort((a, b) => a.z - b.z);
+
+        // Draw segments
+        segments.forEach(seg => {
+            // Calculate opacity based on depth (further = darker)
+            // Z range is roughly -radius to +radius. 
+            // Normalize to 0-1.
+            const depthFactor = (seg.z + config.helixRadius) / (2 * config.helixRadius);
+            const alpha = 0.2 + (depthFactor * 0.8); // 0.2 to 1.0
+
+            if (seg.type === 'rung') {
+                ctx.beginPath();
+                ctx.moveTo(seg.p1.x, seg.p1.y);
+                ctx.lineTo(seg.p2.x, seg.p2.y);
+                ctx.strokeStyle = config.rungColor + alpha + ')';
+                ctx.lineWidth = 2 * ((seg.p1.scale + seg.p2.scale) / 2);
+                ctx.stroke();
+            } 
+            else if (seg.type === 'strand1') {
+                ctx.beginPath();
+                ctx.moveTo(seg.from.x, seg.from.y);
+                ctx.lineTo(seg.to.x, seg.to.y);
+                ctx.strokeStyle = config.strandColor1 + alpha + ')';
+                ctx.lineWidth = 4 * ((seg.from.scale + seg.to.scale) / 2);
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            } 
+            else if (seg.type === 'strand2') {
+                ctx.beginPath();
+                ctx.moveTo(seg.from.x, seg.from.y);
+                ctx.lineTo(seg.to.x, seg.to.y);
+                ctx.strokeStyle = config.strandColor2 + alpha + ')';
+                ctx.lineWidth = 4 * ((seg.from.scale + seg.to.scale) / 2);
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+            else if (seg.type === 'node1' || seg.type === 'node2') {
+                ctx.beginPath();
+                ctx.arc(seg.p.x, seg.p.y, 3 * seg.p.scale, 0, Math.PI * 2);
+                const color = seg.type === 'node1' ? config.strandColor1 : config.strandColor2;
+                ctx.fillStyle = color + alpha + ')';
+                ctx.fill();
+            }
+        });
+
+        // Update rotation
+        rotationAngle += config.rotationSpeed;
+
+        // Request next frame
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    draw();
+
+</script>
+</body>
+</html>

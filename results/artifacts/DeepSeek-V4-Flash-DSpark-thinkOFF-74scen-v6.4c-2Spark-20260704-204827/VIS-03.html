@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+            background: #0a0a12;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            let W, H;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            // ─── DNA parameters ───
+            const RADIUS = 140;
+            const HEIGHT = 460;
+            const NUM_NODES = 40;
+            const TWISTS = 3.2;
+            const FOCAL = 700;
+
+            // Colors (subtle variation)
+            const STRAND1_RGB = [79, 195, 247]; // cyan-blue
+            const STRAND2_RGB = [121, 134, 203]; // indigo
+            const RUNG_RGB = [100, 155, 225];
+
+            let rotation = 0;
+
+            // ─── Precompute node parameters ───
+            const nodeParams = [];
+            for (let i = 0; i < NUM_NODES; i++) {
+                const t = i / NUM_NODES;
+                const theta = t * 2 * Math.PI * TWISTS;
+                const y = -HEIGHT / 2 + t * HEIGHT;
+                nodeParams.push({ theta, y });
+            }
+
+            // ─── 3D point ───
+            function makePoint(theta, y) {
+                return {
+                    x: RADIUS * Math.cos(theta),
+                    y: y,
+                    z: RADIUS * Math.sin(theta)
+                };
+            }
+
+            // ─── Rotate around Y axis ───
+            function rotateY(p, angle) {
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                return {
+                    x: p.x * c + p.z * s,
+                    y: p.y,
+                    z: -p.x * s + p.z * c
+                };
+            }
+
+            // ─── Project to 2D ───
+            function project(p) {
+                const scale = FOCAL / (FOCAL + p.z);
+                return {
+                    sx: W / 2 + p.x * scale,
+                    sy: H / 2 + p.y * scale,
+                    scale: scale,
+                    z: p.z
+                };
+            }
+
+            // ─── Draw a glowing line ───
+            function drawLine(x1, y1, x2, y2, r, g, b, alpha, width) {
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.strokeStyle = `rgb(${r},${g},${b})`;
+                ctx.lineWidth = width;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // ─── Draw a glowing dot ───
+            function drawDot(x, y, r, g, b, alpha, radius) {
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = `rgba(${r},${g},${b},0.5)`;
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+
+            // ─── Animation ───
+            function animate() {
+                rotation += 0.006;
+
+                // Clear with dark background
+                ctx.fillStyle = '#0a0a12';
+                ctx.fillRect(0, 0, W, H);
+
+                // ── Build all 3D points ──
+                const nodes1 = [];
+                const nodes2 = [];
+
+                for (let i = 0; i < NUM_NODES; i++) {
+                    const { theta, y } = nodeParams[i];
+                    const p1 = makePoint(theta, y);
+                    const p2 = makePoint(theta + Math.PI, y);
+
+                    const r1 = rotateY(p1, rotation);
+                    const r2 = rotateY(p2, rotation);
+
+                    const pr1 = project(r1);
+                    const pr2 = project(r2);
+
+                    nodes1.push({ ...pr1, idx: i });
+                    nodes2.push({ ...pr2, idx: i });
+                }
+
+                // ── Compute depth for each rung (average z of its two ends) ──
+                const rungs = [];
+                for (let i = 0; i < NUM_NODES; i++) {
+                    const avgZ = (nodes1[i].z + nodes2[i].z) / 2;
+                    rungs.push({
+                        i,
+                        ax: nodes1[i].sx,
+                        ay: nodes1[i].sy,
+                        bx: nodes2[i].sx,
+                        by: nodes2[i].sy,
+                        z: avgZ,
+                        z1: nodes1[i].z,
+                        z2: nodes2[i].z
+                    });
+                }
+
+                // ── Sort rungs back-to-front ──
+                rungs.sort((a, b) => b.z - a.z);
+
+                // ── Draw rungs ──
+                for (const rung of rungs) {
+                    const depth = (rung.z + 300) / 600;
+                    const alpha = 0.2 + 0.55 * Math.max(0, Math.min(1, depth));
+                    const width = 1.2 + 1.6 * Math.max(0, Math.min(1, depth));
+                    drawLine(
+                        rung.ax, rung.ay, rung.bx, rung.by,
+                        RUNG_RGB[0], RUNG_RGB[1], RUNG_RGB[2],
+                        alpha, width
+                    );
+                }
+
+                // ── Draw strands ──
+                // Strand 1
+                for (let i = 0; i < NUM_NODES - 1; i++) {
+                    const a = nodes1[i];
+                    const b = nodes1[i + 1];
+                    const avgZ = (a.z + b.z) / 2;
+                    const depth = (avgZ + 300) / 600;
+                    const alpha = 0.3 + 0.65 * Math.max(0, Math.min(1, depth));
+                    const width = 1.5 + 2.0 * Math.max(0, Math.min(1, depth));
+                    drawLine(
+                        a.sx, a.sy, b.sx, b.sy,
+                        STRAND1_RGB[0], STRAND1_RGB[1], STRAND1_RGB[2],
+                        alpha, width
+                    );
+                }
+
+                // Strand 2
+                for (let i = 0; i < NUM_NODES - 1; i++) {
+                    const a = nodes2[i];
+                    const b = nodes2[i + 1];
+                    const avgZ = (a.z + b.z) / 2;
+                    const depth = (avgZ + 300) / 600;
+                    const alpha = 0.3 + 0.65 * Math.max(0, Math.min(1, depth));
+                    const width = 1.5 + 2.0 * Math.max(0, Math.min(1, depth));
+                    drawLine(
+                        a.sx, a.sy, b.sx, b.sy,
+                        STRAND2_RGB[0], STRAND2_RGB[1], STRAND2_RGB[2],
+                        alpha, width
+                    );
+                }
+
+                // ── Draw nodes ──
+                // Combine both strands, sort by z back-to-front
+                const allNodes = [];
+                for (let i = 0; i < NUM_NODES; i++) {
+                    allNodes.push({ ...nodes1[i], strand: 1 });
+                    allNodes.push({ ...nodes2[i], strand: 2 });
+                }
+                allNodes.sort((a, b) => b.z - a.z);
+
+                for (const n of allNodes) {
+                    const depth = (n.z + 300) / 600;
+                    const alpha = 0.4 + 0.55 * Math.max(0, Math.min(1, depth));
+                    const radius = 2.0 + 3.5 * Math.max(0, Math.min(1, depth));
+                    const rgb = n.strand === 1 ? STRAND1_RGB : STRAND2_RGB;
+                    drawDot(n.sx, n.sy, rgb[0], rgb[1], rgb[2], alpha, radius);
+                }
+
+                // ── Subtle central axis glow ──
+                ctx.save();
+                const grad = ctx.createLinearGradient(W / 2, H / 2 - HEIGHT / 2 - 40, W / 2, H / 2 + HEIGHT / 2 + 40);
+                grad.addColorStop(0, 'rgba(79, 195, 247, 0)');
+                grad.addColorStop(0.5, 'rgba(79, 195, 247, 0.04)');
+                grad.addColorStop(1, 'rgba(79, 195, 247, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(W / 2 - 2, H / 2 - HEIGHT / 2 - 40, 4, HEIGHT + 80);
+                ctx.restore();
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        })();
+    </script>
+</body>
+</html>

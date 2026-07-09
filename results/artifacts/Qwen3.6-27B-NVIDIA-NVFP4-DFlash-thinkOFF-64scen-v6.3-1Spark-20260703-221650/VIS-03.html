@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #111; /* Dark background */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let frame = 0;
+
+    // Configuration
+    const config = {
+        amplitude: 120,      // Width of the helix
+        frequency: 0.02,     // How tight the spiral is
+        nodeSpacing: 12,     // Vertical distance between rungs
+        rotationSpeed: 0.03, // Speed of rotation
+        totalNodes: 0,       // Calculated based on height
+        strandWidth: 6,
+        rungWidth: 2
+    };
+
+    // Colors
+    const colorStrandA = { r: 255, g: 80, b: 80 };   // Coral Red
+    const colorStrandB = { r: 80, g: 160, b: 255 };  // Sky Blue
+    const colorRung = { r: 200, g: 200, b: 200 };    // White/Grey
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        // Calculate how many nodes fit on the screen with some padding
+        config.totalNodes = Math.ceil((height + config.amplitude * 2) / config.nodeSpacing);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Helper to mix colors based on "depth" (z-index simulation)
+    // factor 0 = back (dark), 1 = front (bright)
+    function drawPoint(x, y, color, factor, lineWidth) {
+        ctx.beginPath();
+        ctx.arc(x, y, lineWidth, 0, Math.PI * 2);
+        // Simple alpha blending for depth effect
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.3 + (factor * 0.7)})`;
+        ctx.fill();
+    }
+
+    function drawLine(x1, y1, x2, y2, color, factor, lineWidth) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.2 + (factor * 0.8)})`;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // We need to draw the structure from top to bottom.
+        // To handle depth correctly (rungs behind strands), we can do two passes or sort.
+        // However, a simple approximation is to draw rungs first, then strands, 
+        // but that looks wrong when strands cross.
+        // Best approach for 2.5D without a heavy engine:
+        // Draw segments. If a rung is "behind" the center, draw it before the nodes.
+        // If "in front", draw it after. 
+        // Actually, simplest visual trick: Draw rungs with low opacity, then draw strands on top.
+        // But for true depth, let's draw frame by frame.
+        
+        // Let's collect all drawing operations and sort them by Z depth
+        const drawQueue = [];
+
+        const centerX = width / 2;
+        
+        // Calculate nodes
+        for (let i = 0; i < config.totalNodes; i++) {
+            // Base Y position
+            const y = i * config.nodeSpacing - (config.amplitude); 
+            
+            // Calculate Z rotation
+            // We add 'frame' to shift the phase, creating rotation
+            const angle = (i * config.frequency) + (frame * config.rotationSpeed);
+            
+            // Sinusoidal projection
+            // x = sin(angle), z = cos(angle)
+            const z = Math.cos(angle); 
+            const x = Math.sin(angle);
+
+            // Strand A position
+            const ax = centerX + (x * config.amplitude);
+            const az = z; // -1 to 1
+
+            // Strand B position (offset by PI, 180 degrees)
+            const bx = centerX - (x * config.amplitude);
+            const bz = -z;
+
+            // Determine depth factor (0 to 1) for opacity/thickness
+            // z is -1 to 1. We want 0.5 to 1.5 range mapped to 0 to 1
+            const aFactor = (az + 1) / 2;
+            const bFactor = (bz + 1) / 2;
+            
+            // Average factor for the rung
+            const rungFactor = (aFactor + bFactor) / 2;
+
+            // Add to queue
+            // Z value determines draw order. Lower Z = behind.
+            
+            // 1. The Rung
+            drawQueue.push({
+                z: rungFactor,
+                type: 'line',
+                x1: ax, y1: y,
+                x2: bx, y2: y,
+                color: colorRung,
+                width: config.rungWidth
+            });
+
+            // 2. Node A
+            drawQueue.push({
+                z: az,
+                type: 'point',
+                x: ax, y: y,
+                color: colorStrandA,
+                width: config.strandWidth
+            });
+
+            // 3. Node B
+            drawQueue.push({
+                z: bz,
+                type: 'point',
+                x: bx, y: y,
+                color: colorStrandB,
+                width: config.strandWidth
+            });
+            
+            // 4. Connectors (Lines connecting nodes to form the backbone)
+            // We need the previous node to draw the line. 
+            // To keep it simple, we will handle connectors in a separate pass or logic.
+            // Actually, let's just draw the lines in the queue too.
+            if (i > 0) {
+                // Previous node calculations
+                const prevAngle = ((i-1) * config.frequency) + (frame * config.rotationSpeed);
+                const prevX = Math.sin(prevAngle);
+                const prevZ = Math.cos(prevAngle);
+                
+                const prevAx = centerX + (prevX * config.amplitude);
+                const prevAz = prevZ;
+                const prevAy = y - config.nodeSpacing;
+
+                const prevBx = centerX - (prevX * config.amplitude);
+                const prevBz = -prevZ;
+                const prevBy = y - config.nodeSpacing;
+
+                // Connector A
+                drawQueue.push({
+                    z: (az + prevAz) / 2,
+                    type: 'line',
+                    x1: prevAx, y1: prevAy,
+                    x2: ax, y2: y,
+                    color: colorStrandA,
+                    width: config.strandWidth
+                });
+
+                // Connector B
+                drawQueue.push({
+                    z: (bz + prevBz) / 2,
+                    type: 'line',
+                    x1: prevBx, y1: prevBy,
+                    x2: bx, y2: y,
+                    color: colorStrandB,
+                    width: config.strandWidth
+                });
+            }
+        }
+
+        // Sort queue by Z depth (back to front)
+        drawQueue.sort((a, b) => a.z - b.z);
+
+        // Execute draw queue
+        drawQueue.forEach(item => {
+            if (item.type === 'point') {
+                drawPoint(item.x, item.y, item.color, item.z, item.width);
+            } else if (item.type === 'line') {
+                drawLine(item.x1, item.y1, item.x2, item.y2, item.color, item.z, item.width);
+            }
+        });
+
+        frame++;
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+
+</script>
+</body>
+</html>

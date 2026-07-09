@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050508; /* Very dark background */
+            color: #fff;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <small>DNA Double Helix Animation</small>
+    </div>
+    <canvas id="canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    const config = {
+        numNodes: 40,        // Number of base pairs vertically
+        radius: 120,         // Width of the helix
+        verticalSpacing: 15, // Distance between rungs
+        rotationSpeed: 0.02, // Radians per frame
+        twistPerStep: 0.25,  // How much the helix twists per step
+        zoom: 1.2            // Camera zoom
+    };
+
+    let width, height, centerX, centerY;
+    let rotationOffset = 0;
+
+    // Resize handling
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        centerX = width / 2;
+        centerY = height / 2;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Helper to project 3D coordinates to 2D canvas
+    function project(x, y, z) {
+        // Simple perspective projection
+        // z is depth (negative is far), x is horizontal, y is vertical
+        // We rotate around Y axis (vertical)
+        
+        // Apply rotation
+        const cosR = Math.cos(rotationOffset);
+        const sinR = Math.sin(rotationOffset);
+        
+        const rx = x * cosR - z * sinR;
+        const rz = x * sinR + z * cosR;
+
+        // Perspective scaling (further away = smaller)
+        const perspectiveScale = 600 / (600 + rz);
+        
+        return {
+            x: centerX + rx * config.zoom * perspectiveScale,
+            y: centerY + y * config.zoom * perspectiveScale,
+            z: rz,
+            scale: perspectiveScale
+        };
+    }
+
+    function draw() {
+        // Clear screen
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate total height of the helix to center it
+        const totalHeight = config.numNodes * config.verticalSpacing;
+        const startY = -totalHeight / 2;
+
+        // Store all segments to sort them by depth (Z-index)
+        // We need to sort to draw back-to-front for correct overlapping
+        const segments = [];
+
+        // Generate points
+        for (let i = 0; i < config.numNodes; i++) {
+            const angle = i * config.twistPerStep;
+            
+            // Strand 1 (Cyan)
+            const x1 = Math.cos(angle) * config.radius;
+            const z1 = Math.sin(angle) * config.radius;
+            const y1 = startY + (i * config.verticalSpacing);
+
+            // Strand 2 (Magenta/Pink) - Offset by PI (180 degrees)
+            const x2 = Math.cos(angle + Math.PI) * config.radius;
+            const z2 = Math.sin(angle + Math.PI) * config.radius;
+            const y2 = y1; // Same height
+
+            // Project to 2D
+            const p1 = project(x1, y1, z1);
+            const p2 = project(x2, y2, z2);
+
+            // Store segments
+            
+            // 1. The Rung (Connection)
+            // We calculate the average Z of the endpoints for sorting
+            segments.push({
+                type: 'rung',
+                z: (p1.z + p2.z) / 2,
+                p1: p1,
+                p2: p2
+            });
+
+            // 2. The Nodes (Atoms)
+            segments.push({
+                type: 'node',
+                z: p1.z,
+                p: p1,
+                color: 0 // Cyan
+            });
+            segments.push({
+                type: 'node',
+                z: p2.z,
+                p: p2,
+                color: 1 // Magenta
+            });
+            
+            // 3. The Backbone Lines (Connect to next node)
+            if (i < config.numNodes - 1) {
+                const nextAngle = (i + 1) * config.twistPerStep;
+                
+                // Next points for Strand 1
+                const nx1 = Math.cos(nextAngle) * config.radius;
+                const nz1 = Math.sin(nextAngle) * config.radius;
+                const ny1 = startY + ((i + 1) * config.verticalSpacing);
+                const nextP1 = project(nx1, ny1, nz1);
+
+                // Next points for Strand 2
+                const nx2 = Math.cos(nextAngle + Math.PI) * config.radius;
+                const nz2 = Math.sin(nextAngle + Math.PI) * config.radius;
+                const nextP2 = project(nx2, ny1, nz2);
+
+                // Add line for Strand 1
+                segments.push({
+                    type: 'line',
+                    z: (p1.z + nextP1.z) / 2,
+                    start: p1,
+                    end: nextP1,
+                    color: 0
+                });
+
+                // Add line for Strand 2
+                segments.push({
+                    type: 'line',
+                    z: (p2.z + nextP2.z) / 2,
+                    start: p2,
+                    end: nextP2,
+                    color: 1
+                });
+            }
+        }
+
+        // Sort segments by Z depth (Painter's Algorithm)
+        // Draw furthest items first
+        segments.sort((a, b) => b.z - a.z);
+
+        // Draw all segments
+        segments.forEach(seg => {
+            // Dynamic opacity based on depth to give a "fog" effect
+            // Map Z range roughly -200 to 200 to opacity 0.2 to 1.0
+            const depthAlpha = (seg.z + 250) / 500;
+            const alpha = Math.max(0.1, Math.min(1, depthAlpha));
+
+            if (seg.type === 'rung') {
+                ctx.beginPath();
+                ctx.moveTo(seg.p1.x, seg.p1.y);
+                ctx.lineTo(seg.p2.x, seg.p2.y);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.3})`; // Rungs are subtle white
+                ctx.lineWidth = 2 * seg.p1.scale;
+                ctx.stroke();
+            } 
+            else if (seg.type === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(seg.start.x, seg.start.y);
+                ctx.lineTo(seg.end.x, seg.end.y);
+                
+                // Color based on strand (0 = Cyan, 1 = Magenta)
+                const baseColor = seg.color === 0 ? '0, 255, 255' : '255, 0, 128';
+                ctx.strokeStyle = `rgba(${baseColor}, ${alpha})`;
+                ctx.lineWidth = 4 * seg.start.scale;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            } 
+            else if (seg.type === 'node') {
+                ctx.beginPath();
+                ctx.arc(seg.p.x, seg.p.y, 4 * seg.p.scale, 0, Math.PI * 2);
+                
+                const baseColor = seg.color === 0 ? '100, 255, 255' : '255, 100, 200';
+                ctx.fillStyle = `rgba(${baseColor}, ${alpha})`;
+                ctx.fill();
+                
+                // Add a glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `rgba(${baseColor}, ${alpha})`;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset
+            }
+        });
+
+        // Update rotation
+        rotationOffset += config.rotationSpeed;
+
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    requestAnimationFrame(draw);
+
+</script>
+</body>
+</html>

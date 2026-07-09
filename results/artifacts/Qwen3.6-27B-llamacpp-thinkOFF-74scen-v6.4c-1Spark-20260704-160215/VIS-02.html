@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let particles = [];
+        const numParticles = 800;
+        const numArms = 3;
+        const armSpread = 0.5; // How wide the arms are
+        const rotationSpeedBase = 0.0005;
+        
+        // Resize handling
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+            initParticles();
+        }
+
+        window.addEventListener('resize', resize);
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Distance from center (0 to 1, normalized)
+                // We use a power function to cluster stars closer to the center
+                this.dist = Math.random(); 
+                
+                // Random angle for the specific star within the arm spread
+                this.angle = Math.random() * Math.PI * 2;
+                
+                // Determine which arm this particle belongs to
+                this.armIndex = Math.floor(Math.random() * numArms);
+                
+                // Base angle offset for the arm
+                this.armOffset = (this.armIndex * Math.PI * 2) / numArms;
+                
+                // Spiral logic: angle changes based on distance
+                // The further out, the more the angle shifts to create the spiral
+                const spiralFactor = 3; 
+                this.theta = this.dist * spiralFactor; 
+
+                // Add randomness to the arm width
+                this.armSpreadOffset = (Math.random() - 0.5) * armSpread;
+
+                // Size of the star
+                this.size = Math.random() * 1.5 + 0.5;
+                
+                // Color variation
+                // 0 = Blue/White, 1 = Yellow/Orange
+                const colorType = Math.random();
+                if (colorType < 0.6) {
+                    // White/Blueish
+                    this.r = 200 + Math.random() * 55;
+                    this.g = 200 + Math.random() * 55;
+                    this.b = 255;
+                } else if (colorType < 0.8) {
+                    // Yellowish
+                    this.r = 255;
+                    this.g = 200 + Math.random() * 55;
+                    this.b = 150 + Math.random() * 50;
+                } else {
+                    // Reddish/Orange (older stars further out)
+                    this.r = 255;
+                    this.g = 100 + Math.random() * 100;
+                    this.b = 100 + Math.random() * 50;
+                }
+
+                // Twinkle properties
+                this.twinkleSpeed = Math.random() * 0.05 + 0.01;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                
+                // Rotation speed: Kepler-like (inner stars move faster)
+                // But for visual aesthetics, we often want differential rotation where 
+                // inner stars move significantly faster.
+                this.rotSpeed = rotationSpeedBase * (1 / (this.dist + 0.1));
+            }
+
+            update() {
+                // Update the spiral angle slightly for a subtle "flow" effect
+                this.theta += this.rotSpeed;
+                
+                // Twinkle effect
+                const twinkle = Math.sin(Date.now() * this.twinkleSpeed + this.twinkleOffset);
+                this.alpha = 0.5 + (twinkle * 0.5); // 0.0 to 1.0
+            }
+
+            draw() {
+                // Calculate actual angle
+                const currentAngle = this.theta + this.armOffset + this.armSpreadOffset;
+                
+                // Calculate radius (map normalized distance to pixels)
+                // Max radius is half the smallest screen dimension
+                const maxRadius = Math.min(width, height) / 2 - 20;
+                const r = this.dist * maxRadius;
+
+                // Convert Polar to Cartesian
+                const x = centerX + Math.cos(currentAngle) * r;
+                const y = centerY + Math.sin(currentAngle) * r;
+
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.r}, ${this.g}, ${this.b}, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function drawCore() {
+            const maxRadius = Math.min(width, height) / 2;
+            const coreSize = maxRadius * 0.05; // Core size relative to screen
+
+            // Create a radial gradient for the glowing center
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreSize * 4);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(200, 220, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(100, 150, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize * 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add a bright central dot
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function animate() {
+            // Clear canvas with a slight trail effect for smoothness, 
+            // or full clear for crisp stars. Let's do full clear.
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+
+            // Use additive blending for that glowing star effect
+            ctx.globalCompositeOperation = 'lighter';
+
+            // Draw the bright core
+            drawCore();
+
+            // Update and draw particles
+            for (let p of particles) {
+                p.update();
+                p.draw();
+            }
+
+            // Reset composite operation for next frame (if we were drawing non-additive things)
+            ctx.globalCompositeOperation = 'source-over';
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"run_id": "Qwen3.6-27B-NVFP4-DFlash-vLLM-thinkOFF-74scen-v6.4c-1Spark-20260704-192215", "pid": 1847976, "started": "2026-07-04T19:23:16", "last_beat": "2026-07-04T20:02:32", "scenarios_done": 74, "finished": "2026-07-04T20:02:32", "summary": "truescore=84.2 quarantine=FLAT_DOMAIN:structured=1"}
