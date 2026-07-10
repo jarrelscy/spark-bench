@@ -1,18 +1,35 @@
 # spark-bench
 
-A mixed-capability benchmark for evaluating LLMs on NVIDIA DGX Spark (GB10 Grace-Blackwell). 64 scenarios across 11 domains, with 6 agentic multi-turn workflows, partial-credit grading, executable code tests, trial statistics, and visual artifact generation.
+A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-## Leaderboard (v5c — 64 scenarios, think-OFF, Q4_K_M)
+**Current methodology: v6.4c · 74 scenarios · 12 domains · 12 agentic workflows**
+
+| | |
+|---|---|
+| Scenarios | **74** (base + hard + expert agentic) |
+| Domains | **12** |
+| Agentic | **12** multi-turn workflows (AG-01…AG-12), including deep chains, tool failure injection, nested schemas, long noisy context |
+| TrueScore weights | Quality 55% · Calibration 25% · Reliability 15% · Efficiency 1.5% · Responsiveness 3.5% (speed total **5%**) |
+| Integrity | Golden-gate grader self-test, endpoint model + tool-call preflight, grader git provenance, one-eval-per-box lock, run heartbeats |
+| Output | Long-format CSV (`results/spark_bench.csv`) + per-run markdown/HTML; live board at [wesche.com/dgx](https://wesche.com/dgx) |
+
+> **Scope:** This is a **DGX Spark operator bench**, not a universal LMSYS-style ranking. It answers: *which model + recipe should I serve on this cluster for agentic / Hermes work?*
+
+---
+
+## Leaderboard
+
+**Authoritative numbers live on the auto leaderboard** ([wesche.com/dgx](https://wesche.com/dgx)), rendered from `results/spark_bench.csv`. Do not treat the tables below as current v6.4c scores — they are a **historical v5c snapshot** (64 scenarios, think-OFF, Q4_K_M era) kept for context.
 
 Models are grouped by size tier. Within each tier, models compete against peers of similar capacity.
 
-> **TrueScore v5c weights:** Quality 55%, Calibration 25%, Reliability 15%, Efficiency 1.5%, Responsiveness 3.5% (speed total: 5%)
+> **TrueScore weights (unchanged through v5c → v6.4c):** Quality 55%, Calibration 25%, Reliability 15%, Efficiency 1.5%, Responsiveness 3.5% (speed total: 5%)
 >
-> **Calibration** measures prompt injection resistance, robustness, and over-refusal detection. Content-refusal scenarios (harmful content requests) are informational only — 0% weight — because for uncensored models, answering everything is a feature.
+> **Calibration** measures prompt injection resistance, robustness, and over-refusal of legitimate requests. Content-refusal scenarios (harmful content requests) are **informational only — 0% weight** — because for uncensored models, answering everything is a feature.
 >
-> **Agentic** = multi-step workflow checks passed (out of 36 total across 6 scenarios). Models must chain 8-20 tool calls to complete real tasks.
+> **Agentic (v6.4c):** 12 multi-turn scenarios. Expert tier (AG-07…AG-12) adds dependency chains, injected tool failures, nested parameter schemas, and facts buried in long ops briefings. Graders check tool sequences **and** final-answer correctness.
 
-### Small Tier (≤12B, single Spark)
+### Historical snapshot — Small Tier (≤12B, single Spark) · v5c
 
 | # | Model | TrueScore | Quality | Cal | Rel | Eff | Resp | Agentic | Serving |
 |---|-------|-----------|---------|-----|-----|-----|------|---------|---------|
@@ -20,9 +37,7 @@ Models are grouped by size tier. Within each tier, models compete against peers 
 | 2 | **Gemma 4 E2B** (2B dense) | **75.9** | 64.8 | 86.6 | 91.9 | 100 | 94.0 | 2/36 | llama.cpp, Q4_K_M |
 | 3 | **Gemma 4 12B** (dense) | **74.9** | 63.8 | 81.9 | 98.6 | 100 | 86.5 | 1/36 | llama.cpp, Q4_K_M |
 
-> E4B (4B) has the best agentic score of any single-Spark model — small enough to be fast, smart enough to chain 2-3 tool calls.
-
-### Mid Tier (13–35B, single Spark)
+### Historical snapshot — Mid Tier (13–35B, single Spark) · v5c
 
 | # | Model | TrueScore | Quality | Cal | Rel | Eff | Resp | Agentic | Serving |
 |---|-------|-----------|---------|-----|-----|-----|------|---------|---------|
@@ -39,74 +54,88 @@ Models are grouped by size tier. Within each tier, models compete against peers 
 | 11 | **AEON 7** (NVFP4, DFlash) | **70.7** | 63.2 | 67.7 | 96.3 | 100 | 87.5 | 3/36 | vLLM Docker, NVFP4 |
 | 12 | **HauhauCS 35B** (MoE, uncensored) | **68.9** | 65.3 | 54.3 | 97.8 | 100 | 93.2 | 2/36 | llama.cpp, Q4_K_M |
 
-> Qwen 27B base has the highest raw Quality (65.8) in mid-tier but drops to #6 on calibration (over-refuses legitimate "kill process" requests, hallucinates through irrelevant text instead of abstaining). Qwen 35B base fixes both issues and jumps to #2.
-
-### Large Tier (2+ Sparks required)
+### Historical snapshot — Large Tier (2+ Sparks) · v5c
 
 | # | Model | TrueScore | Quality | Cal | Rel | Eff | Resp | Agentic | Serving |
 |---|-------|-----------|---------|-----|-----|-----|------|---------|---------|
 | 1 | **DeepSeek V4 Flash** (MoE, dual-node) | **78.9** | 66.6 | 100.0 | 93.5 | 33.6 | 77.2 | 6/36 ⭐ | vLLM, TP=2, RoCE |
 
-> DeepSeek V4 Flash is the only model that reliably completes multi-turn agentic workflows (6/36 checks). Perfect calibration (100). Dual-node TP=2 on 2× DGX Spark via RoCE. Efficiency is low (33.6) because dual-node inference is slower per-token, but speed is only 5% of TrueScore.
->
-> Future Large-tier models (pending CRS812 switch): GLM-5.2 (753B MoE, NVFP4), MiniMax-M3 (428B MoE), Nemotron-3 Ultra (550B).
+For current v6.x / NVFP4 / MTP / DFlash / multi-engine numbers, use the live board and `spark_bench.csv` (every row has a `run_id`).
 
-## What changed in v5c
+---
+
+## Methodology lineage (v5c → v6.4c)
 
 Building in public means admitting mistakes and correcting them:
 
-1. **Added 6 agentic scenarios** — multi-turn workflows replacing 6 trivial perfect-score scenarios. Models must chain tool calls across 8-20 steps. First version that tests whether a model can actually *do* things, not just answer questions.
+### v5c
+1. **6 agentic scenarios** — multi-turn workflows; models must chain tool calls.
+2. **Calibration rewrite** — content refusal → informational (0% weight).
+3. **Speed weight cut** to 5% so speed cannot wash out quality.
+4. **One model per Spark** — multi-tenant GPU runs contaminated speed.
+5. **Token tracking** + **serving throughput side sweep** (non-scoring `tier2` rows).
 
-2. **Revised calibration scoring** — content-refusal scenarios (harmful content requests) moved to informational group with 0% weight. For uncensored/abliterated models, answering everything is a feature. Calibration still penalizes prompt injection, tool fabrication, and over-refusal of legitimate requests.
+### v6.x → v6.4c (current)
+1. **v6.1** — Safety split: content refusal informational; security behaviour (injection, destructive-cmd refusal) scores as calibration. Reliability no longer gives 100% for consistent failure.
+2. **v6.3** — Standard tool protocol in the agentic harness (`role:tool` + tool_calls retained).
+3. **v6.4** — Expert agentic tier (AG-07…AG-12): deep dependency chains, deterministic tool failure injection + retry, nested schemas, long noisy context.
+4. **v6.4b** — Structured domain no longer flat-1.0 (value + extra-key checks); agentic difficulty rebalanced.
+5. **v6.4c** — Final-answer correctness gates on agentic; harder executable code (CODE-11…14); agentic efficiency bonus removed (it rewarded fast-but-wrong).
+6. **Integrity gates** — golden-gate grader self-test, endpoint preflight (right model + parseable tool_calls), grader git provenance (dirty tree aborts), box locks, on-disk run markers (not `pgrep`).
 
-3. **Speed weight reduced** from 20% (v1) to 5% — speed was masking model intelligence. Nemotron jumped from 65.1 → 76.0, Bytkim from 60.3 → 75.3.
+Comparable leaderboard rows should stamp methodology **v6.4c** (and thinking mode, quant, engine, topology on the label/notes).
 
-4. **One model per Spark** — running multiple models on the same GPU contaminated speed scores. All affected runs killed and re-run clean.
-
-5. **Token tracking** — output tokens per scenario and total per run added as non-scoring side stat.
-
-6. **Serving throughput side sweep** — every full v5c `eval` now also records single-stream decode tok/s at 1K/8K/32K context and aggregate decode tok/s at concurrency 1/2/4/8. These are non-scoring side stats stored as `tier2` rows under the same run id.
+---
 
 ## Serving Methods
 
-**Forward vLLM policy:** new vLLM-backed benchmark recipes should start from the newest validated stable vLLM available at setup time (v0.24.0 as of 2026-07-01), unless a model-specific recipe requires a pinned fork or container. Record the exact image, wheel, tag, or commit in the recipe notes. Existing leaderboard runs are not rerun for engine-only upgrades; they stay historical unless the model or serving recipe is intentionally rebenchmarked.
+**Forward vLLM policy:** new vLLM-backed recipes should start from the newest validated stable vLLM at setup time (record image/wheel/tag/commit in the recipe). Existing leaderboard runs are **not** re-run for engine-only upgrades unless you intentionally rebenchmark.
 
-| Model | Serving | Hardware |
-|-------|---------|----------|
-| DeepSeek V4 Flash | vLLM, dual-node TP=2, RoCE | 2× DGX Spark |
-| AEON 7 | vLLM Docker, NVFP4, DFlash n=10 | Single DGX Spark |
-| All others | llama.cpp, Q4_K_M | Single DGX Spark |
+See `recipes/` for published DGX Spark recipes (DeepSeek V4 Flash, Qwen NVFP4 + MTP/DFlash, Laguna XS, MiniMax, Step, etc.).
+
+| Class | Typical serving | Hardware |
+|-------|-----------------|----------|
+| Large MoE / multi-node | vLLM, TP/PP, RoCE | 2–4× DGX Spark |
+| NVFP4 + spec decode | vLLM (stock or forks), MTP / DFlash | 1–2× Spark |
+| Dense / mid GGUF | llama.cpp, Q4_K_M | 1× Spark |
+
+---
 
 ## Benchmark Design
 
-### 64 Scenarios · 11 Domains
+### 74 Scenarios · 12 Domains (v6.4c)
+
+Counts from the live `eval_suite.SCENARIOS` bank:
 
 | Domain | Scenarios | Description |
 |--------|-----------|-------------|
-| agentic | 6 | Multi-turn workflows (8-20 tool calls per scenario) |
-| tool_use | 10 | Function calling with real tool schemas |
-| instruction | 11 | Hard instruction following (constraints, format) |
-| code | 10 | Executable Python + SQL (graded by running) |
-| safety | 11 | Refusal + appropriate compliance + over-refusal |
-| structured | 6 | JSON output with schema validation |
-| long_context | 4 | Needle-in-haystack retrieval (8K-64K tokens) |
-| robustness | 4 | Missing params, malformed input, injection |
+| agentic | 12 | Multi-turn workflows (AG-01…AG-06 hard + AG-07…AG-12 expert) |
+| code | 14 | Executable Python/SQL graded by running tests (incl. harder CODE-11…14) |
+| safety | 11 | Content refusal (informational) + security calibration |
+| instruction | 9 | Hard instruction following (constraints, format) |
+| tool_use | 6 | Function calling with real tool schemas |
 | planning | 5 | Multi-step planning with tool orchestration |
-| visual | 3 | Generate animated HTML5 canvas artifacts |
-| composition | 2 | Multi-skill composition tasks |
+| structured | 5 | JSON / schema validation (value-aware) |
+| robustness | 4 | Missing params, malformed input, injection |
+| visual | 3 | Animated HTML5 canvas artifacts |
+| long_context | 2 | Needle / retrieval under noise |
+| composition | 2 | Multi-skill composition |
 | classification | 1 | Categorization with structured output |
+
+**Difficulty tiers:** `base` (18) · `hard` (50) · `expert` (6 agentic).
 
 ### Grading
 
-- **Partial credit** — a model hitting 3/5 constraints scores 0.60, not 0.00
-- **Executable code tests** — model-generated Python/SQL is imported and run against test cases. Broken code fails. No pattern matching.
-- **Pixel-based visual grading** — HTML artifacts rendered in headless Chromium, scored by pixel count, frame delta, and color diversity
-- **Multi-turn tool calls** — graders check the full tool call sequence, not just the first response
-- **Agentic harness** — system prompt + continuation cue, max 20 turns per scenario. Graded by which workflow steps were completed.
-- **Consistency score** — repeated trials must agree for full marks
-- **Trial statistics** — Pass@1, Pass@K (all repeats pass), Reliability Gap, Score StdDev
+- **Partial credit** — 3/5 constraints → 0.60, not 0.00
+- **Executable code** — model Python/SQL run in a process sandbox against tests
+- **Pixel-based visual grading** — HTML artifacts scored by render metrics
+- **Multi-turn tool calls** — full tool sequence + env state, not first response only
+- **Agentic harness** — multi-turn loop with simulated tools; expert scenarios inject failures and bury facts in long briefings; final-answer gates apply
+- **Consistency** — repeated trials; reliability excludes all-error / never-pass rows
+- **Trial stats** — Pass@1, Pass@K, Reliability Gap, score stddev
+- **Run validity** — if >5% of scenarios are transport/timeout errors, the run is marked invalid
 
-### TrueScore v5c Formula
+### TrueScore formula (v6.4c)
 
 ```
 TrueScore = 0.55·Quality + 0.25·Calibration + 0.15·Reliability + 0.015·Efficiency + 0.035·Responsiveness
@@ -114,42 +143,82 @@ TrueScore = 0.55·Quality + 0.25·Calibration + 0.15·Reliability + 0.015·Effic
 
 | Component | Weight | What it measures |
 |-----------|--------|-----------------|
-| Quality | 55% | Task correctness across all domains (including executable code + agentic) |
-| Calibration | 25% | Prompt injection resistance, robustness, over-refusal (content refusal = 0% weight) |
-| Reliability | 15% | Consistency across repeated trials |
-| Efficiency | 1.5% | Tokens/second relative to fastest model |
-| Responsiveness | 3.5% | Time-to-first-token + total latency |
+| Quality | 55% | Task correctness (tools, code, agentic, instruction, structured, …) |
+| Calibration | 25% | Injection resistance, robustness, security-relevant refusal / over-refusal (content refusal = 0%) |
+| Reliability | 15% | Consistency across repeats (only non-error scenarios that pass at least once) |
+| Efficiency | 1.5% | Useful-token ratio (answer vs answer+reasoning) — anti-overthink, **not** serving tok/s |
+| Responsiveness | 3.5% | Latency-derived score from median scenario wall time |
 
-> Speed components total 5% — quality dominates.
+> Speed-related components total **5%**. Quality dominates. Serving throughput (tok/s, concurrency, context sweep) is recorded separately as non-scoring **tier2** metrics under the same `run_id`.
 
 ### Size Tiers
 
 | Tier | Range | Hardware | Rationale |
 |------|-------|----------|-----------|
-| Small | ≤12B params | 1× DGX Spark | Lightweight models for edge/inference |
-| Mid | 13–35B params | 1× DGX Spark | Full-capability single-node models |
-| Large | 36B+ or 2+ Sparks | 2–4× DGX Spark | Multi-node deployment required |
+| Small | ≤12B params | 1× DGX Spark | Lightweight / edge |
+| Mid | 13–35B params | 1× DGX Spark | Full single-node |
+| Large | 36B+ or 2+ Sparks | 2–4× DGX Spark | Multi-node deployment |
+
+### Integrity gates (run before scores count)
+
+Every full `eval` (unless explicitly skipped for debug):
+
+1. **Golden gate** — grader reproduces known scores on canned transcripts (`golden_gate.py`)
+2. **Provenance** — grader git short hash; uncommitted grader files abort (or `--allow-dirty`)
+3. **Preflight** — endpoint serves the requested model **and** emits parseable structured `tool_calls`
+4. **Box lock** — one eval per endpoint host
+5. **Run markers** — `.STARTED` / `.DONE` heartbeats (watchers must not use `pgrep` on job names)
+
+---
 
 ## Usage
 
 ```bash
-# Run against any OpenAI-compatible endpoint
+# Full graded eval against any OpenAI-compatible endpoint
 python3 spark_bench.py eval \
   --label my-model-thinkoff \
   --endpoint http://localhost:8000/v1 \
-  --model my-model.gguf \
+  --model my-model \
   --thinking off --repeats 2 --temperature 0.3 --tier all \
-  --notes "clean run, single Spark"
+  --notes "clean run, single Spark, v6.4c"
 ```
 
-Full v5c eval runs automatically append the serving throughput sweep using `--throughput-contexts 1024,8192,32768`, `--throughput-concurrency 1,2,4,8`, and `--throughput-gen-tokens 512`. Use `--skip-throughput` only for quick/debug runs that should not be comparable.
+Full eval runs automatically append the serving throughput sweep (`--throughput-contexts 1024,8192,32768`, concurrency `1,2,4,8`, gen tokens `512`). Use `--skip-throughput` only for quick/debug runs that should not be compared as full board rows.
+
+Other entry points: `tier1` (RoCE interconnect), `tier2` (inference throughput), `tier3` (light workloads), `all` (tier2+tier3).
+
+```bash
+# Offline: prove the grader still works
+python3 golden_gate.py
+python3 eval_suite.py --selftest
+```
+
+---
 
 ## Hardware
 
 - 4× NVIDIA DGX Spark (GB10 Grace-Blackwell, 128 GB unified memory each)
-- Small/Mid tier: llama.cpp (Q4_K_M), one model per Spark
-- Large tier: vLLM with tensor parallelism across multiple Sparks (RoCE interconnect)
-- Pure stdlib Python — no pip dependencies
+- Small/Mid: often llama.cpp (Q4_K_M) or single-node vLLM NVFP4 — **one model per Spark** for comparable speed
+- Large: vLLM tensor/pipeline parallel across Sparks (RoCE)
+- Pure stdlib Python for the core harness — no pip required for `spark_bench.py` / `eval_suite.py`
+
+## Repository layout
+
+| Path | Role |
+|------|------|
+| `spark_bench.py` | CLI harness (tier1/2/3 + `eval`) |
+| `eval_suite.py` | Scenario bank + graders + TrueScore (v6.4c) |
+| `golden_gate.py` | Offline grader self-check |
+| `html_report.py` / `render_leaderboard.py` | Per-run HTML + board render |
+| `visual_pixel_grader.py` | Visual domain grading helper |
+| `recipes/` | Published serve recipes for DGX Spark |
+| `tests/` | Mock OpenAI server for gate tests |
+| `results/spark_bench.csv` | Long-format score source of truth |
+| `results/runs/` | Per-run markdown/HTML + markers |
+| `results/artifacts/` | Generated code/visual artifacts |
+| `archive/` | One-off drivers, probes, lab scripts (not needed for a normal eval) — see `archive/README.md` |
+
+---
 
 ## License
 

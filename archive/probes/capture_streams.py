@@ -83,7 +83,11 @@ def main():
     t0_holder = [0.0]
     threads = []
     for i in range(a.n):
-        t = threading.Thread(target=stream_one, args=(i, a.endpoint, a.model, PROMPTS[i % len(PROMPTS)],
+        # unique prompt per stream even when n > len(PROMPTS): cycle + per-stream angle salt
+        prompt = PROMPTS[i % len(PROMPTS)]
+        if a.n > len(PROMPTS):
+            prompt = f"(Perspective {i+1} of {a.n} — take a distinct angle.) " + prompt
+        t = threading.Thread(target=stream_one, args=(i, a.endpoint, a.model, prompt,
                                                        a.max_tokens, a.timeout, out, start_evt, t0_holder))
         t.start(); threads.append(t)
     time.sleep(0.5)

@@ -1,10 +1,24 @@
-# Logs & internal
+# Logs & bytecode
 *.log
 *.bak
 __pycache__/
 *.pyc
+.DS_Store
 
-# Internal tooling
+# Environment / secrets
+.env
+*.key
+/tmp/.or_key*
+
+# Generated / heavy local artifacts (keep structure; don't force-commit dumps)
+results/downloads/
+results/v2-agent-grade/
+results/archive/
+results/.locks/
+site/
+
+# Internal tooling lives under archive/internal (ignore secrets-ish helpers if recreated at root)
+archive/internal/
 export_hermes_run.py
 export_spark_arena_model.py
 organize_for_hermes.py
@@ -14,13 +28,3 @@ mtp_probe.py
 _simple_test.py
 _test_parse.py
 MIMO_RECOVERY.md
-
-# Internal results
-results/downloads/
-results/v2-agent-grade/
-site/
-
-# Environment
-.env
-*.key
-/tmp/.or_key*
