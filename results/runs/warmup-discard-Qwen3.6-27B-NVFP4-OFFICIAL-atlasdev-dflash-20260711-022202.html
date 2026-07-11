@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spark-bench report: warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202</title>
+<style>
+:root { color-scheme: dark; --bg:#101113; --panel:#191b1f; --panel2:#20242b; --text:#f4f1e8; --muted:#aeb4bc; --line:rgba(255,255,255,.11); --green:#35d07f; --cyan:#5dc8ff; --amber:#f5b84b; --red:#ff6b6b; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.wrap { max-width:1180px; margin:0 auto; padding:26px 20px 44px; }
+header { display:grid; grid-template-columns:1.1fr .9fr; gap:16px; align-items:stretch; margin-bottom:16px; }
+.hero,.panel,.card { background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 18px 60px rgba(0,0,0,.25); }
+.hero { padding:22px; }
+h1 { margin:6px 0 10px; font-size:clamp(26px,5vw,46px); line-height:1; letter-spacing:0; overflow-wrap:anywhere; }
+h2 { margin:0 0 14px; font-size:18px; letter-spacing:0; }
+h3 { margin:18px 0 8px; font-size:15px; }
+.muted,.meta,.card span,.barrow span { color:var(--muted); }
+.meta { display:grid; gap:5px; font-size:13px; }
+.cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.card { padding:14px; min-height:74px; }
+.card span { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.card strong { display:block; margin-top:7px; font-size:25px; line-height:1.1; overflow-wrap:anywhere; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.panel { padding:18px; margin-bottom:16px; overflow:hidden; }
+.barrow { display:grid; grid-template-columns:minmax(190px,1fr) 64px; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.barrow:last-child { border-bottom:0; }
+.barrow strong { display:block; overflow-wrap:anywhere; }
+.barrow span { display:block; font-size:12px; overflow-wrap:anywhere; }
+.barrow b { text-align:right; font-variant-numeric:tabular-nums; }
+.bar { grid-column:1 / -1; height:10px; background:rgba(255,255,255,.09); border-radius:999px; overflow:hidden; }
+.bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green)); border-radius:999px; animation:grow .9s cubic-bezier(.2,.8,.2,1) forwards; }
+.bar.warn i { background:linear-gradient(90deg,var(--red),var(--amber)); }
+@keyframes grow { from { width:0; } }
+table { width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:10px 0 18px; }
+th,td { padding:8px 9px; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; font-size:13px; vertical-align:top; }
+th { color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-size:11px; }
+tr:last-child td { border-bottom:0; }
+code { background:#262a31; padding:1px 4px; border-radius:4px; }
+pre { white-space:pre-wrap; background:#0c0d10; border:1px solid var(--line); border-radius:8px; padding:14px; overflow:auto; }
+a { color:#8bd9ff; }
+details summary { cursor:pointer; color:#8bd9ff; margin:8px 0; }
+@media (max-width:900px) { header,.grid { grid-template-columns:1fr; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:560px) { .cards { grid-template-columns:1fr; } .wrap { padding:16px 12px 32px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <section class="hero">
+      <div class="muted">spark-bench HTML report</div>
+      <h1>warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202</h1>
+      <div class="meta">
+        <div><strong>label:</strong> warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash</div>
+        <div><strong>model:</strong> atlas-model</div>
+        <div><strong>endpoint:</strong> http://10.0.0.183:8890/v1</div>
+        <div><strong>notes:</strong> warmup</div>
+      </div>
+    </section>
+    <section class="cards"><div class="card"><span>Run kind</span><strong>benchmark</strong></div><div class="card"><span>Rows</span><strong>9</strong></div><div class="card"><span>Topology</span><strong>single</strong></div><div class="card"><span>Parallelism</span><strong>1</strong></div><div class="card"><span>Spec decode</span><strong>na</strong></div></section>
+  </header>
+  <section class="grid">
+    <section class="panel"><h2>Score Components / Key Metrics</h2><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>2059</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>5.56</b><div class="bar"><i style="width:5.6%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>181</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=1017tok</span></div><b>494</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>141</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>10.9</b><div class="bar"><i style="width:10.9%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>12.8</b><div class="bar"><i style="width:12.8%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>2031</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>2031</b><div class="bar"><i style="width:100.0%"></i></div></div></section>
+    <section class="panel"><h2>Domain Breakdown</h2><p class="muted">No eval domain rows for this run.</p></section>
+  </section>
+  <section class="panel"><h2>Per-Scenario Results</h2><p class="muted">No per-scenario eval rows for this run.</p></section>
+  <section class="panel"><h2>Rendered Summary</h2><h1>Tier 2 — Inference (warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202)</h1>
+<ul>
+<li>model <code>atlas-model</code> @ <code>http://10.0.0.183:8890/v1</code>  topology <code>single</code> parallelism <code>1</code> spec_decode <code>na</code></li>
+</ul>
+<h2>Single-stream decode</h2>
+<table><thead><tr><th>context</th><th>TTFT (ms)</th><th>decode tok/s</th><th>TPOT (ms)</th><th>prefill tok/s</th><th>out toks</th></tr></thead><tbody>
+<tr><td>1017</td><td>2059</td><td>5.6</td><td>181.0</td><td>494</td><td>141</td></tr>
+</tbody></table>
+<h2>Throughput under concurrency</h2>
+<table><thead><tr><th>batch</th><th>agg decode tok/s</th><th>per-stream tok/s</th><th>TTFT p50 (ms)</th><th>TTFT p99 (ms)</th><th>completed</th></tr></thead><tbody>
+<tr><td>1</td><td>11</td><td>12.8</td><td>2031</td><td>2031</td><td>1/1</td></tr>
+</tbody></table></section>
+  <section class="panel"><h2>All Recorded Rows</h2><table><thead><tr><th>tier</th><th>workload</th><th>metric</th><th>value</th><th>unit</th><th>context</th><th>batch</th><th>notes</th></tr></thead><tbody><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>2058.7</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>5.56</td><td>tok/s</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>180.99</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>494.0</td><td>tok/s</td><td>1017</td><td></td><td>prompt=1017tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>141</td><td>tok</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>10.9</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>12.79</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>2030.9</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>2030.9</td><td>ms</td><td></td><td>1</td><td></td></tr></tbody></table></section>
+  <section class="panel">
+    <h2>Raw Artifacts</h2>
+    <details><summary>Raw markdown summary</summary><pre># Tier 2 — Inference (warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202)
+
+- model `atlas-model` @ `http://10.0.0.183:8890/v1`  topology `single` parallelism `1` spec_decode `na`
+
+## Single-stream decode
+
+| context | TTFT (ms) | decode tok/s | TPOT (ms) | prefill tok/s | out toks |
+|--------:|----------:|-------------:|----------:|--------------:|---------:|
+| 1017 | 2059 | 5.6 | 181.0 | 494 | 141 |
+
+## Throughput under concurrency
+
+| batch | agg decode tok/s | per-stream tok/s | TTFT p50 (ms) | TTFT p99 (ms) | completed |
+|------:|-----------------:|-----------------:|--------------:|--------------:|----------:|
+| 1 | 11 | 12.8 | 2031 | 2031 | 1/1 |
+</pre></details>
+    <details><summary>Raw JSON rows</summary><pre>{
+  &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+  &quot;rows&quot;: [
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:29&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;ttft_ms&quot;,
+      &quot;value&quot;: 2058.7,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:29&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;decode_tps&quot;,
+      &quot;value&quot;: 5.56,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:29&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;tpot_ms&quot;,
+      &quot;value&quot;: 180.99,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:29&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;prefill_tps&quot;,
+      &quot;value&quot;: 494.0,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;prompt=1017tok&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:29&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;output_tokens&quot;,
+      &quot;value&quot;: 141,
+      &quot;unit&quot;: &quot;tok&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:43&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;agg_decode_tps&quot;,
+      &quot;value&quot;: 10.9,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:43&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;per_stream_tps&quot;,
+      &quot;value&quot;: 12.79,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:43&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p50_ms&quot;,
+      &quot;value&quot;: 2030.9,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash-20260711-022202&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T02:22:43&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;atlas-model&quot;,
+      &quot;label&quot;: &quot;warmup-discard-Qwen3.6-27B-NVFP4-OFFICIAL-atlasdev-dflash&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8890/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;na&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p99_ms&quot;,
+      &quot;value&quot;: 2030.9,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    }
+  ]
+}</pre></details>
+  </section>
+</main>
+</body>
+</html>

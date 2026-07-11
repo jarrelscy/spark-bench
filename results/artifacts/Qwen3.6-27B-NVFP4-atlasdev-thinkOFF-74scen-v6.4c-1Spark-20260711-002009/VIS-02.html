@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const starCount = 1500; // Number of stars
+        const stars = [];
+
+        // Configuration for the galaxy look
+        const galaxyConfig = {
+            armCount: 2,
+            armSpread: 1.5, // How wide the arms are
+            rotationSpeed: 0.0005, // Base rotation speed
+            coreSize: 15,
+            colorBase: 200, // Base hue (200 is blueish)
+            colorRange: 60  // Variation in hue
+        };
+
+        // Resize canvas to fit window
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Star Class
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Random angle for the star's position in the spiral arm
+                this.angle = Math.random() * Math.PI * 2;
+                
+                // Distance from center (radius)
+                // We use a power function to cluster more stars near the center
+                this.radius = Math.random() * (Math.min(width, height) * 0.45);
+                
+                // Determine which arm this star belongs to
+                // We distribute stars evenly among the arms
+                const armIndex = Math.floor(Math.random() * galaxyConfig.armCount);
+                this.armOffset = (Math.PI * 2 / galaxyConfig.armCount) * armIndex;
+
+                // Add some randomness to the angle to create the "width" of the arm
+                // Closer stars have less deviation, outer stars have more
+                this.armSpreadOffset = (Math.random() - 0.5) * galaxyConfig.armSpread * (this.radius / (Math.min(width, height) * 0.45));
+
+                // Star properties
+                this.size = Math.random() * 1.5 + 0.5;
+                this.brightness = Math.random();
+                
+                // Color: Mix of white, blue, and slight orange/red
+                const hue = galaxyConfig.colorBase + (Math.random() - 0.5) * galaxyConfig.colorRange;
+                const sat = 50 + Math.random() * 50;
+                const light = 60 + Math.random() * 40;
+                this.color = `hsl(${hue}, ${sat}%, ${light}%)`;
+
+                // Twinkle properties
+                this.twinkleSpeed = 0.02 + Math.random() * 0.05;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                
+                // Rotation speed: Inner stars rotate faster (differential rotation)
+                // But for visual stability, we slow down the outer ones significantly
+                this.speed = galaxyConfig.rotationSpeed * (1 + (500 / (this.radius + 50)));
+            }
+
+            update(time) {
+                // Rotate the star
+                this.angle += this.speed;
+                
+                // Calculate twinkle
+                // Combine sine waves for a more natural, irregular twinkle
+                const twinkle = Math.sin(time * this.twinkleSpeed + this.twinkleOffset) * 0.3 + 0.7;
+                this.currentAlpha = this.brightness * twinkle;
+            }
+
+            draw(ctx) {
+                // Calculate position based on spiral logic
+                // The spiral shape is created by offsetting the angle based on radius
+                const spiralAngle = this.angle + this.armOffset + (this.radius * 0.005); // 0.005 controls how tightly wound the spiral is
+                
+                const x = centerX + Math.cos(spiralAngle) * this.radius;
+                const y = centerY + Math.sin(spiralAngle) * this.radius;
+
+                ctx.globalAlpha = this.currentAlpha;
+                ctx.fillStyle = this.color;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize stars
+        function initStars() {
+            stars.length = 0;
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        // Draw the bright core
+        function drawCore() {
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, galaxyConfig.coreSize * 4);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.1, 'rgba(255, 240, 200, 0.8)');
+            gradient.addColorStop(0.4, 'rgba(100, 150, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, galaxyConfig.coreSize * 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Animation Loop
+        let time = 0;
+        function animate() {
+            // Clear canvas with a slight fade effect for trails (optional, but pure clear is cleaner for this style)
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw background stars (static)
+            // We can skip this for performance or add a few faint ones if desired
+            // For this demo, the black background is sufficient.
+
+            drawCore();
+
+            // Update and draw stars
+            for (let star of stars) {
+                star.update(time);
+                star.draw(ctx);
+            }
+
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        // Start
+        initStars();
+        animate();
+
+    </script>
+</body>
+</html>

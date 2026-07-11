@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spiral Galaxy</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="galaxy"></canvas>
+<script>
+(function () {
+  const canvas = document.getElementById('galaxy');
+  const ctx = canvas.getContext('2d');
+
+  let cx, cy, maxRadius;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cx = canvas.width / 2;
+    cy = canvas.height / 2;
+    maxRadius = Math.min(cx, cy) * 0.95;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // --- Star generation -------------------------------------------------
+  const NUM_STARS = 900;
+  const ARMS = 4;
+  const ARM_TWIST = 2.4;      // how tightly the arms wind
+  const stars = [];
+
+  // Color palette: subtle variation from blue-white to warm yellow
+  const palettes = [
+    [180, 200, 255],  // blue-white
+    [220, 225, 255],  // pale blue
+    [255, 255, 255],  // white
+    [255, 244, 214],  // warm white
+    [255, 220, 180],  // yellowish
+    [255, 200, 170]   // slightly orange
+  ];
+
+  function makeStar() {
+    // Radius biased toward center (denser core)
+    const t = Math.pow(Math.random(), 2.2);
+    const radius = 0.03 + t * 0.97; // normalized 0..1
+
+    // Assign to a spiral arm with angular scatter (more scatter far out)
+    const arm = Math.floor(Math.random() * ARMS);
+    const armAngle = (arm / ARMS) * Math.PI * 2;
+    const spiral = ARM_TWIST * Math.log(radius * 8 + 1);
+    const scatter = (Math.random() - 0.5) * (0.25 + radius * 0.55);
+
+    const angle = armAngle + spiral + scatter;
+
+    // Slight vertical squash for perspective feel
+    const pal = palettes[Math.floor(Math.random() * palettes.length)];
+
+    return {
+      radius: radius,
+      angle: angle,
+      size: (Math.random() * 1.4 + 0.4) * (radius < 0.2 ? 1.3 : 1.0),
+      color: pal,
+      twinkleSpeed: 1 + Math.random() * 3,
+      twinklePhase: Math.random() * Math.PI * 2,
+      baseAlpha: 0.45 + Math.random() * 0.55
+    };
+  }
+
+  for (let i = 0; i < NUM_STARS; i++) stars.push(makeStar());
+
+  // A few faint background stars (static field)
+  const bgStars = [];
+  for (let i = 0; i < 150; i++) {
+    bgStars.push({
+      x: Math.random(),
+      y: Math.random(),
+      size: Math.random() * 1.1 + 0.2,
+      alpha: Math.random() * 0.4 + 0.1,
+      twinkleSpeed: 0.5 + Math.random() * 2,
+      twinklePhase: Math.random() * Math.PI * 2
+    });
+  }
+
+  // --- Animation --------------------------------------------------------
+  const SQUASH = 0.72; // ellipse squash to look like tilted disc
+
+  function draw(timeMs) {
+    const time = timeMs * 0.001;
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Background static stars
+    for (const s of bgStars) {
+      const tw = 0.7 + 0.3 * Math.sin(time * s.twinkleSpeed + s.twinklePhase);
+      ctx.globalAlpha = s.alpha * tw;
+      ctx.fillStyle = '#cdd6ff';
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Core glow (layered radial gradients)
+    const coreR = maxRadius * 0.28;
+    let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+    grad.addColorStop(0, 'rgba(255, 250, 235, 0.9)');
+    grad.addColorStop(0.15, 'rgba(255, 235, 200, 0.55)');
+    grad.addColorStop(0.4, 'rgba(200, 190, 255, 0.18)');
+    grad.addColorStop(1, 'rgba(120, 110, 200, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, coreR, coreR * SQUASH, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bright core center
+    grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 0.22);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreR * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Faint disc haze
+    grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxRadius);
+    grad.addColorStop(0, 'rgba(90, 90, 160, 0.10)');
+    grad.addColorStop(0.6, 'rgba(60, 60, 120, 0.05)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, maxRadius, maxRadius * SQUASH, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stars with differential rotation (inner faster)
+    for (const s of stars) {
+      const rotSpeed = 0.18 / (0.25 + s.radius); // differential rotation
+      const a = s.angle + time * rotSpeed;
+      const r = s.radius * maxRadius;
+
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r * SQUASH;
+
+      const tw = 0.65 + 0.35 * Math.sin(time * s.twinkleSpeed + s.twinklePhase);
+      const alpha = s.baseAlpha * tw;
+      const [cr, cg, cb] = s.color;
+
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+      ctx.beginPath();
+      ctx.arc(x, y, s.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Soft halo on brighter stars
+      if (s.size > 1.3) {
+        ctx.globalAlpha = alpha * 0.25;
+        ctx.beginPath();
+        ctx.arc(x, y, s.size * 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

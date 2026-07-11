@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spark-bench report: Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425</title>
+<style>
+:root { color-scheme: dark; --bg:#101113; --panel:#191b1f; --panel2:#20242b; --text:#f4f1e8; --muted:#aeb4bc; --line:rgba(255,255,255,.11); --green:#35d07f; --cyan:#5dc8ff; --amber:#f5b84b; --red:#ff6b6b; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.wrap { max-width:1180px; margin:0 auto; padding:26px 20px 44px; }
+header { display:grid; grid-template-columns:1.1fr .9fr; gap:16px; align-items:stretch; margin-bottom:16px; }
+.hero,.panel,.card { background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 18px 60px rgba(0,0,0,.25); }
+.hero { padding:22px; }
+h1 { margin:6px 0 10px; font-size:clamp(26px,5vw,46px); line-height:1; letter-spacing:0; overflow-wrap:anywhere; }
+h2 { margin:0 0 14px; font-size:18px; letter-spacing:0; }
+h3 { margin:18px 0 8px; font-size:15px; }
+.muted,.meta,.card span,.barrow span { color:var(--muted); }
+.meta { display:grid; gap:5px; font-size:13px; }
+.cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.card { padding:14px; min-height:74px; }
+.card span { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.card strong { display:block; margin-top:7px; font-size:25px; line-height:1.1; overflow-wrap:anywhere; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.panel { padding:18px; margin-bottom:16px; overflow:hidden; }
+.barrow { display:grid; grid-template-columns:minmax(190px,1fr) 64px; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.barrow:last-child { border-bottom:0; }
+.barrow strong { display:block; overflow-wrap:anywhere; }
+.barrow span { display:block; font-size:12px; overflow-wrap:anywhere; }
+.barrow b { text-align:right; font-variant-numeric:tabular-nums; }
+.bar { grid-column:1 / -1; height:10px; background:rgba(255,255,255,.09); border-radius:999px; overflow:hidden; }
+.bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green)); border-radius:999px; animation:grow .9s cubic-bezier(.2,.8,.2,1) forwards; }
+.bar.warn i { background:linear-gradient(90deg,var(--red),var(--amber)); }
+@keyframes grow { from { width:0; } }
+table { width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:10px 0 18px; }
+th,td { padding:8px 9px; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; font-size:13px; vertical-align:top; }
+th { color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-size:11px; }
+tr:last-child td { border-bottom:0; }
+code { background:#262a31; padding:1px 4px; border-radius:4px; }
+pre { white-space:pre-wrap; background:#0c0d10; border:1px solid var(--line); border-radius:8px; padding:14px; overflow:auto; }
+a { color:#8bd9ff; }
+details summary { cursor:pointer; color:#8bd9ff; margin:8px 0; }
+@media (max-width:900px) { header,.grid { grid-template-columns:1fr; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:560px) { .cards { grid-template-columns:1fr; } .wrap { padding:16px 12px 32px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <section class="hero">
+      <div class="muted">spark-bench HTML report</div>
+      <h1>Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425</h1>
+      <div class="meta">
+        <div><strong>label:</strong> Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput</div>
+        <div><strong>model:</strong> llamacpp-35b</div>
+        <div><strong>endpoint:</strong> http://10.0.0.120:8080/v1</div>
+        <div><strong>notes:</strong> llama.cpp 35B MoE DFlash k10 (UD-Q8 quant caveat); UD-Q8 has NO MTP layers (unsloth stripped head) so dense grid MTP cell = structurally impossible on this GGUF; harness 36e557d</div>
+      </div>
+    </section>
+    <section class="cards"><div class="card"><span>Run kind</span><strong>benchmark</strong></div><div class="card"><span>Rows</span><strong>22</strong></div><div class="card"><span>Topology</span><strong>single</strong></div><div class="card"><span>Parallelism</span><strong>1</strong></div><div class="card"><span>Spec decode</span><strong>dflash</strong></div></section>
+  </header>
+  <section class="grid">
+    <section class="panel"><h2>Score Components / Key Metrics</h2><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>366</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>52.9</b><div class="bar"><i style="width:52.9%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>19.0</b><div class="bar"><i style="width:19.0%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=1017tok</span></div><b>2780</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>512</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / ttft_ms</strong><span>ms </span></div><b>4297</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / decode_tps</strong><span>tok/s </span></div><b>50.6</b><div class="bar"><i style="width:50.6%"></i></div></div><div class="barrow"><div><strong>single_stream / tpot_ms</strong><span>ms </span></div><b>19.8</b><div class="bar"><i style="width:19.8%"></i></div></div><div class="barrow"><div><strong>single_stream / prefill_tps</strong><span>tok/s prompt=7832tok</span></div><b>1823</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>single_stream / output_tokens</strong><span>tok </span></div><b>512</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>49.8</b><div class="bar"><i style="width:49.8%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>52.0</b><div class="bar"><i style="width:52.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>445</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>445</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>83.3</b><div class="bar"><i style="width:83.3%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>22.9</b><div class="bar"><i style="width:22.9%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>25002</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>29038</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / agg_decode_tps</strong><span>tok/s </span></div><b>80.9</b><div class="bar"><i style="width:80.9%"></i></div></div><div class="barrow"><div><strong>concurrency / per_stream_tps</strong><span>tok/s </span></div><b>22.2</b><div class="bar"><i style="width:22.2%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p50_ms</strong><span>ms </span></div><b>47204</b><div class="bar"><i style="width:100.0%"></i></div></div><div class="barrow"><div><strong>concurrency / ttft_p99_ms</strong><span>ms </span></div><b>83709</b><div class="bar"><i style="width:100.0%"></i></div></div></section>
+    <section class="panel"><h2>Domain Breakdown</h2><p class="muted">No eval domain rows for this run.</p></section>
+  </section>
+  <section class="panel"><h2>Per-Scenario Results</h2><p class="muted">No per-scenario eval rows for this run.</p></section>
+  <section class="panel"><h2>Rendered Summary</h2><h1>Tier 2 — Inference (Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425)</h1>
+<ul>
+<li>model <code>llamacpp-35b</code> @ <code>http://10.0.0.120:8080/v1</code>  topology <code>single</code> parallelism <code>1</code> spec_decode <code>dflash</code></li>
+</ul>
+<h2>Single-stream decode</h2>
+<table><thead><tr><th>context</th><th>TTFT (ms)</th><th>decode tok/s</th><th>TPOT (ms)</th><th>prefill tok/s</th><th>out toks</th></tr></thead><tbody>
+<tr><td>1017</td><td>366</td><td>52.9</td><td>19.0</td><td>2780</td><td>512</td></tr>
+<tr><td>7832</td><td>4297</td><td>50.6</td><td>19.8</td><td>1823</td><td>512</td></tr>
+</tbody></table>
+<h2>Throughput under concurrency</h2>
+<table><thead><tr><th>batch</th><th>agg decode tok/s</th><th>per-stream tok/s</th><th>TTFT p50 (ms)</th><th>TTFT p99 (ms)</th><th>completed</th></tr></thead><tbody>
+<tr><td>1</td><td>50</td><td>52.0</td><td>445</td><td>445</td><td>1/1</td></tr>
+<tr><td>8</td><td>83</td><td>23.0</td><td>25002</td><td>29038</td><td>8/8</td></tr>
+<tr><td>16</td><td>81</td><td>22.2</td><td>47204</td><td>83709</td><td>16/16</td></tr>
+</tbody></table></section>
+  <section class="panel"><h2>All Recorded Rows</h2><table><thead><tr><th>tier</th><th>workload</th><th>metric</th><th>value</th><th>unit</th><th>context</th><th>batch</th><th>notes</th></tr></thead><tbody><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>365.8</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>52.86</td><td>tok/s</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>18.96</td><td>ms</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>2779.9</td><td>tok/s</td><td>1017</td><td></td><td>prompt=1017tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>512</td><td>tok</td><td>1017</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>ttft_ms</td><td>4296.7</td><td>ms</td><td>7832</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>decode_tps</td><td>50.6</td><td>tok/s</td><td>7832</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>tpot_ms</td><td>19.8</td><td>ms</td><td>7832</td><td></td><td></td></tr><tr><td>tier2</td><td>single_stream</td><td>prefill_tps</td><td>1822.8</td><td>tok/s</td><td>7832</td><td></td><td>prompt=7832tok</td></tr><tr><td>tier2</td><td>single_stream</td><td>output_tokens</td><td>512</td><td>tok</td><td>7832</td><td></td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>49.8</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>52.04</td><td>tok/s</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>445.2</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>445.2</td><td>ms</td><td></td><td>1</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>83.3</td><td>tok/s</td><td></td><td>8</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>22.95</td><td>tok/s</td><td></td><td>8</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>25002.2</td><td>ms</td><td></td><td>8</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>29038.4</td><td>ms</td><td></td><td>8</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>agg_decode_tps</td><td>80.9</td><td>tok/s</td><td></td><td>16</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>per_stream_tps</td><td>22.24</td><td>tok/s</td><td></td><td>16</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p50_ms</td><td>47204.2</td><td>ms</td><td></td><td>16</td><td></td></tr><tr><td>tier2</td><td>concurrency</td><td>ttft_p99_ms</td><td>83708.6</td><td>ms</td><td></td><td>16</td><td></td></tr></tbody></table></section>
+  <section class="panel">
+    <h2>Raw Artifacts</h2>
+    <details><summary>Raw markdown summary</summary><pre># Tier 2 — Inference (Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425)
+
+- model `llamacpp-35b` @ `http://10.0.0.120:8080/v1`  topology `single` parallelism `1` spec_decode `dflash`
+
+## Single-stream decode
+
+| context | TTFT (ms) | decode tok/s | TPOT (ms) | prefill tok/s | out toks |
+|--------:|----------:|-------------:|----------:|--------------:|---------:|
+| 1017 | 366 | 52.9 | 19.0 | 2780 | 512 |
+| 7832 | 4297 | 50.6 | 19.8 | 1823 | 512 |
+
+## Throughput under concurrency
+
+| batch | agg decode tok/s | per-stream tok/s | TTFT p50 (ms) | TTFT p99 (ms) | completed |
+|------:|-----------------:|-----------------:|--------------:|--------------:|----------:|
+| 1 | 50 | 52.0 | 445 | 445 | 1/1 |
+| 8 | 83 | 23.0 | 25002 | 29038 | 8/8 |
+| 16 | 81 | 22.2 | 47204 | 83709 | 16/16 |
+</pre></details>
+    <details><summary>Raw JSON rows</summary><pre>{
+  &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+  &quot;rows&quot;: [
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:35&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;ttft_ms&quot;,
+      &quot;value&quot;: 365.8,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:35&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;decode_tps&quot;,
+      &quot;value&quot;: 52.86,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:35&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;tpot_ms&quot;,
+      &quot;value&quot;: 18.96,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:35&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;prefill_tps&quot;,
+      &quot;value&quot;: 2779.9,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;prompt=1017tok&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:35&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 1017,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;output_tokens&quot;,
+      &quot;value&quot;: 512,
+      &quot;unit&quot;: &quot;tok&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 7832,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;ttft_ms&quot;,
+      &quot;value&quot;: 4296.7,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 7832,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;decode_tps&quot;,
+      &quot;value&quot;: 50.6,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 7832,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;tpot_ms&quot;,
+      &quot;value&quot;: 19.8,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 7832,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;prefill_tps&quot;,
+      &quot;value&quot;: 1822.8,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;prompt=7832tok&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:04:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: 7832,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;single_stream&quot;,
+      &quot;metric&quot;: &quot;output_tokens&quot;,
+      &quot;value&quot;: 512,
+      &quot;unit&quot;: &quot;tok&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:00&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;agg_decode_tps&quot;,
+      &quot;value&quot;: 49.8,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:00&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;per_stream_tps&quot;,
+      &quot;value&quot;: 52.04,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:00&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p50_ms&quot;,
+      &quot;value&quot;: 445.2,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:00&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 1,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p99_ms&quot;,
+      &quot;value&quot;: 445.2,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 8,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;agg_decode_tps&quot;,
+      &quot;value&quot;: 83.3,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 8,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;per_stream_tps&quot;,
+      &quot;value&quot;: 22.95,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 8,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p50_ms&quot;,
+      &quot;value&quot;: 25002.2,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:05:49&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 8,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p99_ms&quot;,
+      &quot;value&quot;: 29038.4,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:07:30&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 16,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;agg_decode_tps&quot;,
+      &quot;value&quot;: 80.9,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:07:30&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 16,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;per_stream_tps&quot;,
+      &quot;value&quot;: 22.24,
+      &quot;unit&quot;: &quot;tok/s&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:07:30&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 16,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p50_ms&quot;,
+      &quot;value&quot;: 47204.2,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput-20260711-010425&quot;,
+      &quot;timestamp&quot;: &quot;2026-07-11T01:07:30&quot;,
+      &quot;tier&quot;: &quot;tier2&quot;,
+      &quot;model&quot;: &quot;llamacpp-35b&quot;,
+      &quot;label&quot;: &quot;Qwen3.6-35B-UDQ8-llamacpp-dflash-throughput&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.120:8080/v1&quot;,
+      &quot;topology&quot;: &quot;single&quot;,
+      &quot;parallelism&quot;: &quot;1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: 16,
+      &quot;spec_decode&quot;: &quot;dflash&quot;,
+      &quot;workload&quot;: &quot;concurrency&quot;,
+      &quot;metric&quot;: &quot;ttft_p99_ms&quot;,
+      &quot;value&quot;: 83708.6,
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    }
+  ]
+}</pre></details>
+  </section>
+</main>
+</body>
+</html>

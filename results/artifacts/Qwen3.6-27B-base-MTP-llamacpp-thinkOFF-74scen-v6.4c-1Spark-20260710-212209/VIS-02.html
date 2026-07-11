@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Spiral Galaxy</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let stars = [];
+        let coreParticles = [];
+        
+        // Configuration
+        const STAR_COUNT = 1500;
+        const CORE_COUNT = 400;
+        const ARM_COUNT = 4;
+        const ARM_SPREAD = 0.8; // How wide the arms are
+        const GALAXY_SIZE = 250; // Base radius
+        
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+            initGalaxy();
+        }
+
+        // Utility: Random number in range
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Utility: Gaussian random for better distribution
+        function gaussianRandom() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        class Star {
+            constructor(isCore = false) {
+                this.isCore = isCore;
+                this.init();
+            }
+
+            init() {
+                if (this.isCore) {
+                    // Core stars are tightly packed
+                    this.angle = random(0, Math.PI * 2);
+                    this.distance = Math.abs(gaussianRandom()) * 40; 
+                    this.size = random(0.5, 2.5);
+                    // Core colors: warm white/yellow/orange
+                    const hue = random(20, 60); 
+                    const sat = random(20, 80);
+                    const light = random(60, 95);
+                    this.color = `hsl(${hue}, ${sat}%, ${light}%)`;
+                    this.speed = random(0.002, 0.005);
+                } else {
+                    // Spiral arm stars
+                    this.armIndex = Math.floor(random(0, ARM_COUNT));
+                    
+                    // Distance from center (weighted towards center)
+                    this.distance = Math.pow(Math.random(), 1.5) * GALAXY_SIZE;
+                    
+                    // Calculate base angle based on arm index and logarithmic spiral logic
+                    const armAngle = (this.armIndex / ARM_COUNT) * Math.PI * 2;
+                    
+                    // Spiral twist: stars further out are rotated more
+                    // This creates the spiral shape
+                    const spiralTwist = this.distance * 0.015;
+                    
+                    // Add some random spread around the arm
+                    const spread = gaussianRandom() * ARM_SPREAD * (this.distance / GALAXY_SIZE + 0.5);
+                    
+                    this.angle = armAngle + spiralTwist + spread;
+                    this.size = random(0.5, 2.0);
+                    
+                    // Color variation: Blue/White on edges (young), Yellow/Orange near center (old)
+                    // Interpolating based on distance
+                    const distFactor = this.distance / GALAXY_SIZE;
+                    const hue = random(200, 260) * distFactor + random(20, 40) * (1 - distFactor); // Blue to Yellow
+                    const sat = random(50, 100);
+                    const light = random(50, 100);
+                    
+                    this.color = `hsl(${hue}, ${sat}%, ${light}%)`;
+                    
+                    // Orbital speed: Inner stars move faster (Keplerian-ish)
+                    this.speed = 0.0005 / (this.distance * 0.01 + 1);
+                }
+
+                // Twinkle properties
+                this.alpha = random(0.5, 1);
+                this.alphaSpeed = random(0.01, 0.05);
+                this.alphaDir = 1;
+            }
+
+            update() {
+                // Orbit
+                this.angle += this.speed;
+
+                // Twinkle
+                this.alpha += this.alphaSpeed * this.alphaDir;
+                if (this.alpha >= 1) {
+                    this.alpha = 1;
+                    this.alphaDir = -1;
+                } else if (this.alpha <= 0.2) {
+                    this.alpha = 0.2;
+                    this.alphaDir = 1;
+                }
+            }
+
+            draw() {
+                const x = centerX + Math.cos(this.angle) * this.distance;
+                const y = centerY + Math.sin(this.angle) * this.distance;
+
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initGalaxy() {
+            stars = [];
+            coreParticles = [];
+            
+            // Create spiral stars
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star(false));
+            }
+            
+            // Create core stars
+            for (let i = 0; i < CORE_COUNT; i++) {
+                coreParticles.push(new Star(true));
+            }
+        }
+
+        function drawCoreGlow() {
+            // Create a radial gradient for the central glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 60);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.2, 'rgba(255, 200, 150, 0.4)');
+            gradient.addColorStop(0.5, 'rgba(100, 150, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 60, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function animate() {
+            // Clear background with a very slight fade for a tiny bit of motion blur (optional, currently pure clear)
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw the central glow
+            drawCoreGlow();
+
+            // Update and draw core
+            coreParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Update and draw spiral stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            // Reset alpha for next frame
+            ctx.globalAlpha = 1;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>

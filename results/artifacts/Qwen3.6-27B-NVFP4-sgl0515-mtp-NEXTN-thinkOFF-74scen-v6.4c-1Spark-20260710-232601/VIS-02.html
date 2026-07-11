@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let stars = [];
+        const numStars = 1200;
+        const numArms = 3;
+        const armSpread = 0.8; // How wide the arms are
+        const coreSize = 40;
+
+        // Configuration for the galaxy
+        const config = {
+            rotationSpeed: 0.0005,
+            tilt: 0.4, // Perspective tilt (0 = flat, 1 = top down)
+            spiralAngle: 2.5 // How much the arms curl
+        };
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Determine which arm this star belongs to
+                const armIndex = Math.floor(Math.random() * numArms);
+                const armAngle = (armIndex / numArms) * Math.PI * 2;
+                
+                // Distance from center (closer stars are more common)
+                this.distance = Math.pow(Math.random(), 1.5) * (Math.min(width, height) * 0.45);
+                
+                // Angle offset based on distance (creates the spiral shape)
+                // The further out, the more the angle shifts
+                const spiralOffset = (this.distance / (Math.min(width, height) * 0.45)) * config.spiralAngle;
+                
+                // Random spread within the arm
+                const randomSpread = (Math.random() - 0.5) * armSpread;
+                
+                this.angle = armAngle + spiralOffset + randomSpread;
+                
+                // Initial position
+                this.x = Math.cos(this.angle) * this.distance;
+                this.y = Math.sin(this.angle) * this.distance;
+                
+                // Size
+                this.size = Math.random() * 1.5 + 0.5;
+                
+                // Color variation (White, Blueish, Yellowish)
+                const colorType = Math.random();
+                if (colorType > 0.8) {
+                    // Blueish stars
+                    this.color = `rgba(200, 220, 255, ${Math.random() * 0.5 + 0.5})`;
+                } else if (colorType > 0.6) {
+                    // Yellowish/Orange stars
+                    this.color = `rgba(255, 240, 200, ${Math.random() * 0.5 + 0.5})`;
+                } else {
+                    // White stars
+                    this.color = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.5})`;
+                }
+
+                // Twinkle properties
+                this.twinkleSpeed = Math.random() * 0.05 + 0.01;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                this.baseAlpha = parseFloat(this.color.match(/[\d.]+\)$/)[0].slice(0, -1));
+            }
+
+            update(time) {
+                // Rotate the star around the center
+                this.angle += config.rotationSpeed * (200 / (this.distance + 100)); // Closer stars move faster
+                
+                // Recalculate x/y based on new angle
+                this.x = Math.cos(this.angle) * this.distance;
+                this.y = Math.sin(this.angle) * this.distance;
+
+                // Twinkle effect
+                const twinkle = Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+                this.currentAlpha = this.baseAlpha * (0.7 + 0.3 * twinkle);
+            }
+
+            draw() {
+                // Apply tilt to create 3D perspective
+                const drawX = centerX + this.x;
+                const drawY = centerY + this.y * config.tilt;
+
+                ctx.globalAlpha = this.currentAlpha;
+                ctx.fillStyle = this.color;
+                
+                // Draw star
+                ctx.beginPath();
+                ctx.arc(drawX, drawY, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+            
+            // Reset stars on resize to fit new dimensions
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function drawCore() {
+            // Create a glowing core
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreSize);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(200, 220, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(100, 150, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function animate(time) {
+            // Clear canvas with a slight trail effect for motion blur (optional, using solid clear here)
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw background stars (static)
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = 'white';
+            for(let i=0; i<50; i++) {
+                // Using pseudo-random positions based on index to keep them static without storing extra arrays
+                const x = (Math.sin(i * 132.1) * 0.5 + 0.5) * width;
+                const y = (Math.cos(i * 453.2) * 0.5 + 0.5) * height;
+                const s = Math.random() * 0.5;
+                ctx.beginPath();
+                ctx.arc(x, y, s, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            // Draw and update galaxy stars
+            // Sort by Y position to handle "depth" correctly (stars behind core drawn first)
+            // Note: Since we apply a tilt, sorting by the transformed Y is ideal, 
+            // but for performance we can just draw core, then stars.
+            
+            // 1. Draw the core glow
+            drawCore();
+
+            // 2. Update and draw stars
+            // We use a simple additive blending for a glowing effect
+            ctx.globalCompositeOperation = 'lighter';
+            
+            stars.forEach(star => {
+                star.update(time);
+                star.draw();
+            });
+
+            // Reset composite operation
+            ctx.globalCompositeOperation = 'source-over';
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(animate);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    let width, height;
+    const nodeCount = 60; // Number of rungs
+    const helixRadius = 120; // Width of the spiral
+    const helixHeight = 600; // Vertical length
+    const rotationSpeed = 0.02;
+    
+    let rotationAngle = 0;
+
+    // Colors
+    const strand1Color = '#00f2ff'; // Cyan
+    const strand2Color = '#ff0055'; // Magenta
+    const rungColor = '#ffffff';
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function drawDNA() {
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        const centerY = height / 2;
+        const centerX = width / 2;
+        
+        // Calculate vertical spacing between nodes
+        const ySpacing = helixHeight / (nodeCount - 1);
+        
+        // Arrays to store node positions for this frame
+        const nodes1 = [];
+        const nodes2 = [];
+
+        // 1. Calculate Positions
+        // We iterate through the nodes. To make it look like a 3D tube, 
+        // we draw from bottom to top (Painter's Algorithm).
+        // However, since the strands cross over each other, strictly back-to-front 
+        // is hard without complex depth sorting. 
+        // For this visual style, we will draw the back strands, then the rungs, 
+        // but we will simulate depth by changing opacity and stroke width based on the Z-position.
+        
+        for (let i = 0; i < nodeCount; i++) {
+            // Calculate Y position relative to center
+            const y = centerY - (helixHeight / 2) + (i * ySpacing);
+            
+            // Calculate X position using Sine wave + Rotation
+            // Strand 1
+            const angle1 = (i * 0.2) + rotationAngle; // 0.2 controls tightness of spiral
+            const x1 = centerX + Math.cos(angle1) * helixRadius;
+            const z1 = Math.sin(angle1); // -1 (back) to 1 (front)
+            
+            // Strand 2 (Offset by PI to be opposite)
+            const angle2 = angle1 + Math.PI;
+            const x2 = centerX + Math.cos(angle2) * helixRadius;
+            const z2 = Math.sin(angle2);
+
+            nodes1.push({ x: x1, y: y, z: z1 });
+            nodes2.push({ x: x2, y: y, z: z2 });
+        }
+
+        // 2. Draw Connecting Rungs (Base Pairs)
+        // We draw these first so they appear behind the main backbone nodes
+        ctx.lineWidth = 2;
+        for (let i = 0; i < nodeCount; i++) {
+            const n1 = nodes1[i];
+            const n2 = nodes2[i];
+            
+            // Average Z to determine depth
+            const avgZ = (n1.z + n2.z) / 2;
+            
+            // Map Z (-1 to 1) to opacity (0.1 to 0.6)
+            // Z=1 is front, Z=-1 is back
+            const opacity = 0.1 + ((avgZ + 1) / 2) * 0.5;
+            
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+            
+            ctx.beginPath();
+            ctx.moveTo(n1.x, n1.y);
+            ctx.lineTo(n2.x, n2.y);
+            ctx.stroke();
+        }
+
+        // 3. Draw Strands
+        // We draw the strands as continuous lines, but we adjust opacity per segment
+        // to give the 3D illusion.
+        
+        function drawStrand(nodes, color) {
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const curr = nodes[i];
+                const next = nodes[i+1];
+                
+                // Calculate depth for this segment
+                const avgZ = (curr.z + next.z) / 2;
+                
+                // Map Z to opacity and width
+                // Front (1.0) -> Opacity 1.0, Width 4
+                // Back (-1.0) -> Opacity 0.2, Width 1
+                const depthFactor = (avgZ + 1) / 2; // 0 to 1
+                const opacity = 0.2 + (depthFactor * 0.8);
+                const width = 1 + (depthFactor * 3);
+
+                ctx.lineWidth = width;
+                ctx.strokeStyle = hexToRgba(color, opacity);
+                
+                ctx.beginPath();
+                ctx.moveTo(curr.x, curr.y);
+                ctx.lineTo(next.x, next.y);
+                ctx.stroke();
+            }
+            
+            // Draw Nodes (circles) on top
+            for (let i = 0; i < nodes.length; i++) {
+                const n = nodes[i];
+                const depthFactor = (n.z + 1) / 2;
+                const opacity = 0.2 + (depthFactor * 0.8);
+                const radius = 2 + (depthFactor * 3);
+
+                ctx.fillStyle = hexToRgba(color, opacity);
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Draw Strand 1
+        drawStrand(nodes1, strand1Color);
+        
+        // Draw Strand 2
+        drawStrand(nodes2, strand2Color);
+
+        // Update Rotation
+        rotationAngle += rotationSpeed;
+
+        requestAnimationFrame(drawDNA);
+    }
+
+    // Helper to convert hex color to rgba string
+    function hexToRgba(hex, alpha) {
+        // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+            return r + r + g + g + b + b;
+        });
+
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? 
+            `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` : 
+            `rgba(0, 0, 0, ${alpha})`;
+    }
+
+    // Start Animation
+    drawDNA();
+
+</script>
+
+</body>
+</html>

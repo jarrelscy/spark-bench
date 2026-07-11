@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let stars = [];
+        
+        // Configuration
+        const STAR_COUNT = 1200;
+        const ARM_COUNT = 3;
+        const ARM_SPREAD = 0.8; // How wide the arms are
+        const ROTATION_SPEED = 0.0005; // Base rotation speed
+        
+        // Resize handling
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+            initStars();
+        }
+
+        window.addEventListener('resize', resize);
+
+        // Helper: Random range
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Helper: Generate a color based on distance (Blue on edge, Yellow/White in center)
+        function getStarColor(distance, maxDistance) {
+            const ratio = distance / maxDistance;
+            
+            // Core is warm (white/yellow), outer is cool (blue/purple)
+            // We use HSL for easier color manipulation
+            // Hue: 40 (yellow) to 260 (blue)
+            const hue = 40 + (ratio * 220); 
+            const lightness = 60 + random(-20, 20); // Twinkle brightness base
+            const saturation = 60 + random(0, 40);
+            
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Distance from center (0 to max radius)
+                // We bias towards the center slightly to make the core dense
+                const maxRadius = Math.min(width, height) * 0.45;
+                this.distance = random(10, maxRadius);
+                
+                // Angle in the spiral arm
+                // Spiral formula: angle increases as distance increases
+                // We add randomness to spread the arm out
+                this.angleOffset = random(0, Math.PI * 2);
+                
+                // Determine which arm this star belongs to
+                this.armIndex = Math.floor(random(0, ARM_COUNT));
+                this.armAngle = (this.armIndex * (Math.PI * 2)) / ARM_COUNT;
+                
+                // Calculate base angle for spiral shape
+                // The further out, the more the angle shifts to create the spiral curve
+                const spiralFactor = 0.005; 
+                this.baseAngle = this.armAngle + (this.distance * spiralFactor);
+                
+                // Add "cloud" spread to the arm
+                this.spread = random(-ARM_SPREAD, ARM_SPREAD);
+                
+                this.finalAngle = this.baseAngle + this.spread;
+                
+                // Rotation speed (closer stars move faster - Keplerian-ish)
+                this.speed = ROTATION_SPEED * (100 / (this.distance + 10));
+                
+                // Visual properties
+                this.size = random(0.5, 2.5);
+                // Twinkle properties
+                this.twinkleSpeed = random(0.02, 0.05);
+                this.twinkleOffset = random(0, Math.PI * 2);
+                this.alpha = 1;
+                
+                // Pre-calculate color for performance, but store hue for dynamic lighting
+                this.hue = 40 + (this.distance / maxRadius * 220);
+                this.saturation = 60 + random(0, 40);
+            }
+
+            update(time) {
+                // Rotate the star around the center
+                this.finalAngle += this.speed;
+
+                // Calculate Twinkle
+                // Sine wave for alpha oscillation
+                this.alpha = 0.5 + 0.5 * Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+                
+                // Occasional bright flash
+                if (Math.random() < 0.01) {
+                    this.alpha = 1;
+                }
+            }
+
+            draw(ctx) {
+                const x = centerX + Math.cos(this.finalAngle) * this.distance;
+                const y = centerY + Math.sin(this.finalAngle) * this.distance;
+
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                
+                // Dynamic color with alpha
+                ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, 80%, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function drawCore() {
+            // Draw the bright center of the galaxy
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 60);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 240, 200, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(200, 180, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 60, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function animate(time) {
+            // Clear canvas with a slight fade effect for trails? 
+            // No, let's do a clean clear for sharp stars
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw background (pure black)
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Core
+            drawCore();
+
+            // Update and Draw Stars
+            // Use 'lighter' composite operation for glowing effect where stars overlap
+            ctx.globalCompositeOperation = 'lighter';
+            
+            for (let star of stars) {
+                star.update(time);
+                star.draw(ctx);
+            }
+
+            // Reset composite operation
+            ctx.globalCompositeOperation = 'source-over';
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        resize();
+        requestAnimationFrame(animate);
+
+    </script>
+</body>
+</html>

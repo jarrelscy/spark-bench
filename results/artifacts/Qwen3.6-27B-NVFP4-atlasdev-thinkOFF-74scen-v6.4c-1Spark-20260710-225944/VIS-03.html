@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050508; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const config = {
+            radius: 100,        // Radius of the helix
+            amplitude: 150,     // Vertical spread
+            nodes: 40,          // Number of rungs/nodes
+            twist: 0.2,         // Twist per node (total rotation)
+            speed: 0.02,        // Rotation speed
+            strandColor1: [0, 255, 255], // Cyan
+            strandColor2: [255, 0, 255], // Magenta
+            rungColor: [255, 255, 255]   // White
+        };
+
+        // Resize canvas to fit window
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear screen with a slight fade for motion blur effect (optional, using solid clear here for crispness)
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, width, height);
+
+            // Center the helix
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Calculate points for both strands
+            const points = [];
+            
+            // We need to calculate the Z-depth (depth in 3D space) to determine opacity and drawing order
+            // We simulate 3D rotation by shifting the phase angle.
+            
+            for (let i = 0; i < config.nodes; i++) {
+                // Vertical position (linear distribution)
+                // Map i from 0..nodes to a range centered at 0
+                const yNorm = (i / (config.nodes - 1)) * 2 - 1; 
+                const y = yNorm * config.amplitude;
+
+                // Calculate the angle for this specific rung based on the global rotation and the twist
+                // The helix twists along the Y axis
+                const twistOffset = i * config.twist;
+                const currentAngle = angle + twistOffset;
+
+                // Strand 1 (Front/Back based on sin)
+                const x1 = Math.sin(currentAngle) * config.radius;
+                const z1 = Math.cos(currentAngle); // Depth: 1 is front, -1 is back
+
+                // Strand 2 (Opposite phase)
+                const x2 = Math.sin(currentAngle + Math.PI) * config.radius;
+                const z2 = Math.cos(currentAngle + Math.PI); // Depth
+
+                points.push({
+                    y: y,
+                    x1: x1,
+                    x2: x2,
+                    z1: z1,
+                    z2: z2,
+                    index: i
+                });
+            }
+
+            // To draw correctly with depth perception (lines behind should be drawn first),
+            // we usually sort by Z. However, since this is a continuous structure, 
+            // simple sorting can break connections. 
+            // A standard approach for this visual style is to draw rungs first (back to front),
+            // then the strands. Or draw everything with opacity based on Z.
+            
+            // Let's draw rungs first, then strands.
+            // We will draw from back (z = -1) to front (z = 1).
+            
+            // Sort points by average Z depth to draw back-to-front
+            const sortedPoints = [...points].sort((a, b) => ((a.z1 + a.z2) / 2) - ((b.z1 + b.z2) / 2));
+
+            // 1. Draw Rungs
+            sortedPoints.forEach(p => {
+                // Calculate opacity based on depth (z ranges from -1 to 1)
+                // Map z from [-1, 1] to [0.1, 0.9]
+                const avgZ = (p.z1 + p.z2) / 2;
+                const alpha = (avgZ + 1) / 2 * 0.8 + 0.1; 
+
+                ctx.beginPath();
+                ctx.moveTo(centerX + p.x1, centerY + p.y);
+                ctx.lineTo(centerX + p.x2, centerY + p.y);
+                
+                ctx.strokeStyle = `rgba(${config.rungColor[0]}, ${config.rungColor[1]}, ${config.rungColor[2]}, ${alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            // 2. Draw Strands
+            // We draw the strands by connecting the dots. 
+            // Since we want the "back" part of the strand to be drawn before the "front" part 
+            // to handle the crossing correctly without complex z-buffering, 
+            // we can't just loop 0 to N. 
+            // However, for a simple helix, drawing the full path with Z-based opacity per segment works well visually.
+            
+            // Helper to draw a single strand
+            const drawStrand = (offset, color, isStrand1) => {
+                ctx.beginPath();
+                for (let i = 0; i < config.nodes; i++) {
+                    const y = ((i / (config.nodes - 1)) * 2 - 1) * config.amplitude;
+                    const twistOffset = i * config.twist;
+                    const currentAngle = angle + twistOffset;
+                    
+                    // Determine x based on which strand
+                    const phase = isStrand1 ? currentAngle : currentAngle + Math.PI;
+                    const x = Math.sin(phase) * config.radius;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(centerX + x, centerY + y);
+                    } else {
+                        ctx.lineTo(centerX + x, centerY + y);
+                    }
+                }
+                
+                // For a more 3D look, we can't just stroke the whole path with one color.
+                // We need to stroke segment by segment with varying opacity.
+                // Reset path
+                ctx.beginPath();
+                
+                for (let i = 0; i < config.nodes - 1; i++) {
+                    const y1 = ((i / (config.nodes - 1)) * 2 - 1) * config.amplitude;
+                    const y2 = (( (i+1) / (config.nodes - 1)) * 2 - 1) * config.amplitude;
+                    
+                    const twist1 = i * config.twist;
+                    const twist2 = (i+1) * config.twist;
+                    
+                    const ang1 = angle + twist1;
+                    const ang2 = angle + twist2;
+                    
+                    const phase1 = isStrand1 ? ang1 : ang1 + Math.PI;
+                    const phase2 = isStrand1 ? ang2 : ang2 + Math.PI;
+                    
+                    const x1 = Math.sin(phase1) * config.radius;
+                    const x2 = Math.sin(phase2) * config.radius;
+                    
+                    // Z depth for this segment
+                    const z1 = Math.cos(phase1);
+                    const z2 = Math.cos(phase2);
+                    const avgZ = (z1 + z2) / 2;
+                    const alpha = (avgZ + 1) / 2 * 0.9 + 0.1; // Higher opacity for front
+
+                    ctx.moveTo(centerX + x1, centerY + y1);
+                    ctx.lineTo(centerX + x2, centerY + y2);
+                    
+                    ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+            };
+
+            drawStrand(0, config.strandColor1, true);
+            drawStrand(Math.PI, config.strandColor2, false);
+
+            // 3. Draw Nodes (Circles at intersections)
+            // Draw these last so they sit on top of the lines
+            sortedPoints.forEach(p => {
+                const avgZ = (p.z1 + p.z2) / 2;
+                const alpha = (avgZ + 1) / 2 * 0.9 + 0.1;
+                const size = 3 + (avgZ + 1) * 1.5; // Nodes get slightly bigger when closer
+
+                // Node 1
+                ctx.beginPath();
+                ctx.arc(centerX + p.x1, centerY + p.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${config.strandColor1[0]}, ${config.strandColor1[1]}, ${config.strandColor1[2]}, ${alpha})`;
+                ctx.fill();
+
+                // Node 2
+                ctx.beginPath();
+                ctx.arc(centerX + p.x2, centerY + p.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${config.strandColor2[0]}, ${config.strandColor2[1]}, ${config.strandColor2[2]}, ${alpha})`;
+                ctx.fill();
+            });
+
+            // Update rotation angle
+            angle += config.speed;
+
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+
+    </script>
+</body>
+</html>
