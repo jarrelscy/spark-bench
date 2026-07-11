@@ -617,13 +617,23 @@ def preflight_endpoint(ctx, args):
         print(f"  [ok ] endpoint serves requested model: {match[0]}")
     # -- (b) tool-call parse probe ------------------------------------------ #
     import eval_suite as ev
+    # probe must run under the SAME thinking mode as the eval it gates —
+    # with thinking on-by-default (e.g. Qwen3.6 on SGLang) the model can burn
+    # the whole probe budget reasoning and never emit the tool call.
+    probe_extra = None
+    if args.thinking in ("on", "off"):
+        probe_extra = {"chat_template_kwargs": {
+            "enable_thinking": args.thinking == "on",
+            "thinking_mode": "enabled" if args.thinking == "on" else "disabled",
+        }}
     calls, last = [], None
     for attempt in (1, 2):
         try:
             last = chat_stream(args.endpoint, args.model,
                                [{"role": "user", "content": TOOL_PROMPT}],
                                max_tokens=512, temperature=0.0,
-                               tools=WEATHER_TOOL, timeout=min(args.timeout, 180))
+                               tools=WEATHER_TOOL, timeout=min(args.timeout, 180),
+                               extra=probe_extra)
             calls = ev.assemble_tool_calls(last)
         except Exception as e:
             last = {"text": f"error {type(e).__name__}: {str(e)[:60]}"}
