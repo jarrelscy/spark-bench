@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let stars = [];
+        let time = 0;
+
+        // Galaxy parameters
+        const numStars = 2500;
+        const spiralArms = 3;
+        const armWidth = 0.3; // 30% of radius
+        const baseRadius = Math.min(width, height) * 0.45;
+        const rotationSpeed = 0.0005;
+        const twinkleSpeed = 0.05;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+            baseRadius = Math.min(width, height) * 0.45;
+        }
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                const angle = (i / numStars) * Math.PI * 2;
+                const radius = Math.random() * baseRadius;
+                const spread = (Math.random() - 0.5) * armWidth * radius;
+                const armOffset = (i % spiralArms) * (2 * Math.PI / spiralArms);
+                const finalAngle = angle + armOffset + spread;
+                
+                const x = centerX + Math.cos(finalAngle) * radius;
+                const y = centerY + Math.sin(finalAngle) * radius;
+                
+                const brightness = Math.random();
+                const twinkle = Math.random() * twinkleSpeed;
+                const size = Math.random() * 1.5 + 0.5;
+                
+                stars.push({ x, y, brightness, twinkle, size });
+            }
+        }
+
+        function drawGalaxy() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw core
+            const coreSize = Math.min(width, height) * 0.08;
+            const coreGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreSize);
+            coreGradient.addColorStop(0, '#ffffff');
+            coreGradient.addColorStop(0.2, '#ffcc00');
+            coreGradient.addColorStop(0.5, '#ff6600');
+            coreGradient.addColorStop(1, '#ff0000');
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw stars
+            stars.forEach(star => {
+                const twinkleFactor = (Math.sin(time * twinkleSpeed + star.twinkle) + 1) / 2;
+                const brightnessFactor = star.brightness * twinkleFactor;
+                
+                ctx.fillStyle = `rgba(255, ${200 + brightnessFactor * 55}, 50, ${brightnessFactor})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function animate() {
+            time += 0.005;
+            drawGalaxy();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        createStars();
+        animate();
+    </script>
+</body>
+</html>

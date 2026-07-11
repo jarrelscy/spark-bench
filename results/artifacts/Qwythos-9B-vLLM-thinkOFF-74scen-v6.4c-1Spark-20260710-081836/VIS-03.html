@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, cx, cy;
+    let rotation = 0;
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        cx = width / 2;
+        cy = height / 2;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    const params = {
+        strandCount: 40,
+        radius: 140,
+        height: 450,
+        spacing: 10,
+        nodeRadius: 5,
+        rungWidth: 18,
+        rungHeight: 4,
+        rotationSpeed: 0.015,
+        scale: 1
+    };
+
+    const colors = {
+        strand1: '#00ff99',
+        strand2: '#00aaff',
+        rung: '#445566'
+    };
+
+    function draw() {
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, width, height);
+
+        const numStrands = params.strandCount;
+        const strandHeight = params.height / (numStrands - 1);
+
+        for (let i = 0; i < numStrands; i++) {
+            const y = cy - (params.height / 2) + i * strandHeight;
+            const angle1 = (i * 2) / numStrands + rotation;
+            const angle2 = (i * 2 + 1) / numStrands + rotation;
+
+            const x1 = cx + Math.cos(angle1) * params.radius;
+            const x2 = cx + Math.cos(angle2) * params.radius;
+
+            ctx.beginPath();
+            ctx.arc(x1, y, params.nodeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = colors.strand1;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(x2, y, params.nodeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = colors.strand2;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y - params.rungHeight / 2);
+            ctx.lineTo(x1, y + params.rungHeight / 2);
+            ctx.moveTo(x2, y - params.rungHeight / 2);
+            ctx.lineTo(x2, y + params.rungHeight / 2);
+            ctx.strokeStyle = colors.rung;
+            ctx.lineWidth = params.rungWidth;
+            ctx.stroke();
+        }
+
+        rotation += params.rotationSpeed;
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+</script>
+</body>
+</html>

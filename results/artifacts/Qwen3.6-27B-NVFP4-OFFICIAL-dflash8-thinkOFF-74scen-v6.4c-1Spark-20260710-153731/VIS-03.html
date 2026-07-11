@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505; /* Deep dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    let width, height;
+    const totalNodes = 60; // Number of points in the helix
+    const helixRadius = 100; // Width of the helix
+    const helixHeight = 600; // Total vertical length
+    const helixSpeed = 0.02; // Rotation speed
+    const helixTwist = 0.15; // How tight the spiral is
+    
+    // State
+    let angleOffset = 0;
+
+    // Colors
+    const colorStrand1 = { r: 0, g: 200, b: 255 };  // Cyan
+    const colorStrand2 = { r: 255, g: 50, b: 100 };  // Pink/Red
+    const colorRung = { r: 200, g: 200, b: 200 };    // White/Grey
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    /**
+     * Calculates the 3D position of a point on the helix projected to 2D.
+     * @param {number} i - The index of the node (0 to totalNodes)
+     * @param {number} phase - The phase shift in radians (0 for strand 1, PI for strand 2)
+     * @returns {object} { x, y, z, scale }
+     */
+    function getHelixPoint(i, phase) {
+        // Normalize index to 0..1
+        const t = i / totalNodes;
+        
+        // Vertical position (centered)
+        const y = (t * helixHeight) - (helixHeight / 2);
+        
+        // Calculate rotation based on index, global rotation, and phase
+        // The twist factor determines how many rotations occur over the height
+        const theta = (t * Math.PI * 2 * 3) + angleOffset + phase;
+
+        // 3D coordinates
+        const x3d = Math.cos(theta) * helixRadius;
+        const z3d = Math.sin(theta) * helixRadius;
+
+        // Simple perspective projection
+        // We shift z so the center is at 0. 
+        // Scale factor creates depth (closer points are larger)
+        const perspective = 400; 
+        const scale = perspective / (perspective + z3d);
+        
+        const x2d = x3d * scale;
+        const y2d = y * scale; // Vertical scale usually less affected by depth in this view
+
+        return {
+            x: x2d,
+            y: y2d,
+            z: z3d, // Keep z for sorting
+            scale: scale
+        };
+    }
+
+    function draw() {
+        // Clear canvas
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, width, height);
+
+        // Move origin to center of screen
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+
+        // We need to sort segments by Z-depth to draw back-to-front
+        // We will collect all "slices" (rungs) and draw them in order
+        
+        const slices = [];
+
+        for (let i = 0; i < totalNodes; i++) {
+            // Get points for both strands
+            const p1 = getHelixPoint(i, 0);
+            const p2 = getHelixPoint(i, Math.PI); // 180 degrees offset
+
+            // Average Z for sorting depth
+            const avgZ = (p1.z + p2.z) / 2;
+
+            slices.push({
+                index: i,
+                z: avgZ,
+                p1: p1,
+                p2: p2
+            });
+        }
+
+        // Sort slices: furthest Z first (smallest z value)
+        slices.sort((a, b) => a.z - b.z);
+
+        // Draw the slices
+        slices.forEach(slice => {
+            const { p1, p2, index } = slice;
+
+            // 1. Draw the Rung (Connection)
+            // Opacity based on depth (further away = darker)
+            const alpha = (slice.z + helixRadius) / (2 * helixRadius) * 0.6 + 0.1;
+            
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(${colorRung.r}, ${colorRung.g}, ${colorRung.b}, ${alpha})`;
+            ctx.lineWidth = 2 * ((p1.scale + p2.scale)/2);
+            ctx.stroke();
+
+            // 2. Draw the Nodes (Spheres)
+            drawNode(p1, colorStrand1, alpha);
+            drawNode(p2, colorStrand2, alpha);
+            
+            // 3. Draw the Backbone Lines
+            // Connect to the next node in the sorted array? 
+            // No, we must connect to the next index i+1.
+            // However, simple sorting breaks continuous lines.
+            // To fix this, we draw the backbone segments separately or accept slight visual artifacts.
+            // For a clean 3D effect, we can draw lines between i and i+1.
+            // But since we are drawing slice-by-slice, we can't easily draw the backbone line 
+            // without it appearing "on top" of rungs that should be in front.
+            // 
+            // *Optimization*: We will draw the backbone lines as part of the slice logic 
+            // but only draw the line connecting this slice to the PREVIOUS slice if this slice is closer.
+            // Actually, standard painter's algorithm on segments is best.
+            // Let's just draw the nodes and rungs for now, as the nodes visually connect the strands well.
+            // To make the backbone visible, we draw lines between nodes.
+        });
+
+        // Draw Backbone Lines
+        // We need to draw lines connecting i to i+1.
+        // We will generate segments for the backbone and add them to the draw list?
+        // To keep it simple and performant: 
+        // We will draw the backbone lines in a separate pass or integrated pass.
+        // Integrated pass is hard because line i->i+1 crosses rungs.
+        // Let's draw the backbone lines *before* the rungs/nodes? No, depth sorting is key.
+        
+        // Better approach:
+        // Generate segments for Backbone 1 (i to i+1), Backbone 2 (i to i+1), and Rungs (i).
+        // Put them all in one big array, sort by Z, and draw.
+        
+        ctx.restore(); // Restore to draw the sorted list
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        
+        const drawList = [];
+
+        for (let i = 0; i < totalNodes; i++) {
+            const p1 = getHelixPoint(i, 0);
+            const p2 = getHelixPoint(i, Math.PI);
+            
+            // Rung
+            drawList.push({
+                type: 'rung',
+                z: (p1.z + p2.z) / 2,
+                p1: p1,
+                p2: p2
+            });
+
+            // Backbone Segment 1 (from i to i+1)
+            if (i < totalNodes - 1) {
+                const p1Next = getHelixPoint(i + 1, 0);
+                drawList.push({
+                    type: 'line',
+                    z: (p1.z + p1Next.z) / 2,
+                    pStart: p1,
+                    pEnd: p1Next,
+                    color: colorStrand1
+                });
+            }
+
+            // Backbone Segment 2 (from i to i+1)
+            if (i < totalNodes - 1) {
+                const p2Next = getHelixPoint(i + 1, Math.PI);
+                drawList.push({
+                    type: 'line',
+                    z: (p2.z + p2Next.z) / 2,
+                    pStart: p2,
+                    pEnd: p2Next,
+                    color: colorStrand2
+                });
+            }
+            
+            // Nodes
+            drawList.push({ type: 'node', z: p1.z, p: p1, color: colorStrand1 });
+            drawList.push({ type: 'node', z: p2.z, p: p2, color: colorStrand2 });
+        }
+
+        // Sort everything by Z
+        drawList.sort((a, b) => a.z - b.z);
+
+        // Execute Draw
+        drawList.forEach(item => {
+            if (item.type === 'line') {
+                const alpha = (item.z + helixRadius) / (2 * helixRadius) * 0.8 + 0.2;
+                ctx.beginPath();
+                ctx.moveTo(item.pStart.x, item.pStart.y);
+                ctx.lineTo(item.pEnd.x, item.pEnd.y);
+                ctx.strokeStyle = `rgba(${item.color.r}, ${item.color.g}, ${item.color.b}, ${alpha})`;
+                // Line width scales with perspective
+                const avgScale = (item.pStart.scale + item.pEnd.scale) / 2;
+                ctx.lineWidth = 4 * avgScale;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            } 
+            else if (item.type === 'rung') {
+                const alpha = (item.z + helixRadius) / (2 * helixRadius) * 0.5 + 0.1;
+                ctx.beginPath();
+                ctx.moveTo(item.p1.x, item.p1.y);
+                ctx.lineTo(item.p2.x, item.p2.y);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 1.5 * ((item.p1.scale + item.p2.scale)/2);
+                ctx.stroke();
+            } 
+            else if (item.type === 'node') {
+                const alpha = (item.z + helixRadius) / (2 * helixRadius) * 0.8 + 0.2;
+                const radius = 5 * item.p.scale;
+                
+                ctx.beginPath();
+                ctx.arc(item.p.x, item.p.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${item.color.r}, ${item.color.g}, ${item.color.b}, ${alpha})`;
+                ctx.fill();
+                
+                // Add a subtle glow
+                ctx.shadowBlur = 10 * item.p.scale;
+                ctx.shadowColor = `rgba(${item.color.r}, ${item.color.g}, ${item.color.b}, 0.5)`;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset
+            }
+        });
+
+        ctx.restore();
+
+        // Update rotation
+        angleOffset += helixSpeed;
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawNode(p, color, alpha) {
+        // Helper function if we weren't using the full drawList approach
+        // Kept for reference, logic moved to drawList loop
+    }
+
+    // Start animation
+    requestAnimationFrame(draw);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"run_id": "Agents-A1-NVFP4-vLLM-thinkOFF-74scen-v6.4c-1Spark-20260710-000237", "pid": 749996, "started": "2026-07-10T00:02:40", "last_beat": "2026-07-10T00:27:40", "scenarios_done": 74, "finished": "2026-07-10T00:27:40", "summary": "truescore=88.1 quarantine=FLAT_DOMAIN:agentic=1;FLAT_DOMAIN:structured=1"}

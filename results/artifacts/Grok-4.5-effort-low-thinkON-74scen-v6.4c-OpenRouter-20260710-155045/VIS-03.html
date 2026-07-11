@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Helix</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a12; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, angle = 0;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function project(x, y, z) {
+  const fov = 400;
+  const scale = fov / (fov + z + 80);
+  return {
+    x: W / 2 + x * scale,
+    y: H / 2 + y * scale,
+    s: scale
+  };
+}
+
+function draw() {
+  ctx.fillStyle = '#0a0a12';
+  ctx.fillRect(0, 0, W, H);
+
+  const radius = Math.min(W, H) * 0.12;
+  const height = H * 0.72;
+  const turns = 2.8;
+  const steps = 120;
+  const nodes1 = [];
+  const nodes2 = [];
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const y = (t - 0.5) * height;
+    const theta = angle + t * Math.PI * 2 * turns;
+
+    const x1 = Math.cos(theta) * radius;
+    const z1 = Math.sin(theta) * radius;
+    const x2 = Math.cos(theta + Math.PI) * radius;
+    const z2 = Math.sin(theta + Math.PI) * radius;
+
+    nodes1.push(project(x1, y, z1));
+    nodes2.push(project(x2, y, z2));
+  }
+
+  // Rungs (every few nodes)
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i <= steps; i += 3) {
+    const p1 = nodes1[i];
+    const p2 = nodes2[i];
+    const midZ = (Math.sin(angle + (i / steps) * Math.PI * 2 * turns) + Math.sin(angle + (i / steps) * Math.PI * 2 * turns + Math.PI)) * 0.5;
+    const alpha = 0.35 + 0.45 * ((midZ + 1) / 2);
+    ctx.strokeStyle = `rgba(180, 190, 220, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+  }
+
+  // Strand 1
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#4fc3f7';
+  ctx.beginPath();
+  nodes1.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+
+  // Strand 2
+  ctx.strokeStyle = '#f48fb1';
+  ctx.beginPath();
+  nodes2.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+
+  // Nodes strand 1
+  nodes1.forEach((p, i) => {
+    if (i % 2 !== 0) return;
+    const r = 2.8 * p.s;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 1.6);
+    g.addColorStop(0, '#e1f5fe');
+    g.addColorStop(0.5, '#4fc3f7');
+    g.addColorStop(1, 'rgba(79,195,247,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r * 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#81d4fa';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Nodes strand 2
+  nodes2.forEach((p, i) => {
+    if (i % 2 !== 0) return;
+    const r = 2.8 * p.s;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 1.6);
+    g.addColorStop(0, '#fce4ec');
+    g.addColorStop(0.5, '#f48fb1');
+    g.addColorStop(1, 'rgba(244,143,177,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r * 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f8bbd0';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  angle += 0.018;
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

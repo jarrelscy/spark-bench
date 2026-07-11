@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize canvas to fill window
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // DNA Configuration
+        const config = {
+            strandColor1: '#00d2ff', // Cyan
+            strandColor2: '#ff0055', // Pink/Red
+            rungColor: '#ffffff',
+            nodeSize: 4,
+            amplitude: 120,
+            frequency: 0.04,
+            verticalSpacing: 25,
+            rotationSpeed: 0.02,
+            perspective: 800,
+            glow: true
+        };
+
+        // State
+        let time = 0;
+        let nodes = [];
+
+        // Initialize nodes
+        function initNodes() {
+            nodes = [];
+            const totalHeight = canvas.height * 2;
+            const numNodes = Math.floor(totalHeight / config.verticalSpacing);
+            
+            for (let i = 0; i < numNodes; i++) {
+                nodes.push({
+                    id: i,
+                    baseY: i * config.verticalSpacing,
+                    phaseOffset: 0
+                });
+            }
+        }
+
+        // Project 3D point to 2D canvas
+        function project(x, y, z) {
+            const scale = config.perspective / (config.perspective + z);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            return {
+                x: centerX + x * scale,
+                y: centerY + y * scale,
+                scale: scale
+            };
+        }
+
+        // Draw a glowing circle
+        function drawGlowingNode(x, y, radius, color) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // Add glow effect
+            if (config.glow) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+                ctx.fillStyle = color.replace(')', ', 0.3)').replace('rgb', 'rgba');
+                ctx.fill();
+            }
+        }
+
+        // Draw a single strand
+        function drawStrand(strandNodes, color, offset) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            
+            for (let i = 0; i < strandNodes.length; i++) {
+                const node = strandNodes[i];
+                const {x, y, z} = node;
+                const projected = project(x, y, z);
+                
+                if (i === 0) {
+                    ctx.moveTo(projected.x, projected.y);
+                } else {
+                    ctx.lineTo(projected.x, projected.y);
+                }
+            }
+            ctx.stroke();
+        }
+
+        // Draw nodes for a strand
+        function drawStrandNodes(strandNodes, color) {
+            for (let i = 0; i < strandNodes.length; i++) {
+                const node = strandNodes[i];
+                const projected = project(node.x, node.y, node.z);
+                const size = config.nodeSize * projected.scale;
+                
+                // Vary opacity based on depth
+                const alpha = 0.7 + (projected.scale * 0.3);
+                const colorWithAlpha = color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+                
+                drawGlowingNode(projected.x, projected.y, size, colorWithAlpha);
+            }
+        }
+
+        // Draw rungs between strands
+        function drawRungs(rungNodes, color) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < rungNodes.length; i++) {
+                const [node1, node2] = rungNodes[i];
+                const proj1 = project(node1.x, node1.y, node1.z);
+                const proj2 = project(node2.x, node2.y, node2.z);
+                
+                ctx.moveTo(proj1.x, proj1.y);
+                ctx.lineTo(proj2.x, proj2.y);
+            }
+            ctx.stroke();
+        }
+
+        // Calculate DNA positions
+        function calculateDNAPositions() {
+            const strand1Nodes = [];
+            const strand2Nodes = [];
+            const rungNodes = [];
+            
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                const angle = node.baseY * config.frequency + time;
+                const x1 = Math.cos(angle) * config.amplitude;
+                const z1 = Math.sin(angle) * config.amplitude;
+                const y1 = node.baseY - canvas.height;
+                
+                const x2 = Math.cos(angle + Math.PI) * config.amplitude;
+                const z2 = Math.sin(angle + Math.PI) * config.amplitude;
+                const y2 = node.baseY - canvas.height;
+                
+                strand1Nodes.push({x: x1, y: y1, z: z1, baseY: y1});
+                strand2Nodes.push({x: x2, y: y2, z: z2, baseY: y2});
+                rungNodes.push([
+                    {x: x1, y: y1, z: z1},
+                    {x: x2, y: y2, z: z2}
+                ]);
+            }
+            
+            return {strand1Nodes, strand2Nodes, rungNodes};
+        }
+
+        // Main animation loop
+        function animate() {
+            // Clear canvas
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update time
+            time += config.rotationSpeed;
+            
+            // Calculate new positions
+            const {strand1Nodes, strand2Nodes, rungNodes} = calculateDNAPositions();
+            
+            // Draw rungs first (behind strands)
+            drawRungs(rungNodes, 'rgba(255, 255, 255, 0.3)');
+            
+            // Draw strands
+            drawStrand(strand1Nodes, config.strandColor1);
+            drawStrand(strand2Nodes, config.strandColor2);
+            
+            // Draw nodes
+            drawStrandNodes(strand1Nodes, config.strandColor1);
+            drawStrandNodes(strand2Nodes, config.strandColor2);
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        initNodes();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050510; /* Deep dark blue/black */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const config = {
+            nodeCount: 60,          // Number of nodes along the helix
+            amplitude: 120,         // Width of the helix
+            frequency: 0.08,        // How tight the spiral is
+            verticalSpacing: 12,    // Distance between nodes vertically
+            rotationSpeed: 0.02,    // Speed of rotation
+            perspective: 600,       // Perspective distance for depth effect
+            strand1Color: { r: 0, g: 150, b: 255 },   // Cyan/Blue
+            strand2Color: { r: 255, g: 50, b: 150 },  // Pink/Magenta
+            rungColor: { r: 255, g: 255, b: 255 }      // White
+        };
+
+        let rotation = 0;
+        let width, height;
+
+        // Resize canvas to fill window
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Center Y position
+            const centerY = height / 2;
+            // Total height of the DNA structure
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            // Start Y to center the structure vertically
+            const startY = centerY - (totalHeight / 2);
+
+            // Store node positions to draw rungs later
+            const nodes = [];
+
+            // Calculate positions for all nodes
+            for (let i = 0; i < config.nodeCount; i++) {
+                const y = startY + i * config.verticalSpacing;
+                const angle = i * config.frequency + rotation;
+                
+                // Calculate X position using sine wave
+                const x = Math.sin(angle) * config.amplitude;
+                
+                // Calculate depth (Z-axis) for perspective effect
+                // cos(angle) gives us depth: -1 (back) to 1 (front)
+                const z = Math.cos(angle);
+                
+                // Strand 1
+                const node1 = { x: x, y: y, z: z };
+                // Strand 2 (opposite phase, shifted by PI)
+                const node2 = { x: -x, y: y, z: -z };
+                
+                nodes.push({ node1, node2 });
+            }
+
+            // Draw rungs (connections between strands)
+            // We draw rungs first so they appear behind the strands
+            for (let i = 0; i < nodes.length; i++) {
+                const { node1, node2 } = nodes[i];
+                
+                // Calculate depth factor for opacity and size
+                // Average Z of both nodes to determine overall depth of the rung
+                const avgZ = (node1.z + node2.z) / 2;
+                const depthFactor = (avgZ + 1) / 2; // Normalize to 0-1
+                
+                // Rung opacity based on depth
+                const opacity = 0.1 + (depthFactor * 0.4);
+                
+                ctx.beginPath();
+                ctx.moveTo(node1.x, node1.y);
+                ctx.lineTo(node2.x, node2.y);
+                ctx.strokeStyle = `rgba(${config.rungColor.r}, ${config.rungColor.g}, ${config.rungColor.b}, ${opacity})`;
+                ctx.lineWidth = 2 + (depthFactor * 1);
+                ctx.stroke();
+            }
+
+            // Draw strands
+            for (let strand = 0; strand < 2; strand++) {
+                const color = strand === 0 ? config.strand1Color : config.strand2Color;
+                
+                // Draw connecting lines between nodes
+                ctx.beginPath();
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = strand === 0 ? nodes[i].node1 : nodes[i].node2;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(node.x, node.y);
+                    } else {
+                        ctx.lineTo(node.x, node.y);
+                    }
+                }
+                ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw nodes (circles)
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = strand === 0 ? nodes[i].node1 : nodes[i].node2;
+                    
+                    // Calculate depth factor for size and opacity
+                    const depthFactor = (node.z + 1) / 2;
+                    
+                    // Node size based on depth
+                    const radius = 3 + (depthFactor * 3);
+                    
+                    // Node opacity based on depth
+                    const opacity = 0.3 + (depthFactor * 0.7);
+                    
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
+                    ctx.fill();
+                    
+                    // Add glow effect for nodes in front
+                    if (depthFactor > 0.7) {
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, radius * 2, 0, Math.PI * 2);
+                        const gradient = ctx.createRadialGradient(
+                            node.x, node.y, radius,
+                            node.x, node.y, radius * 2
+                        );
+                        gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity * 0.5})`);
+                        gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`);
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Update rotation
+            rotation += config.rotationSpeed;
+
+            // Request next frame
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+    </script>
+</body>
+</html>

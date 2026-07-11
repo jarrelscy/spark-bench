@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Double Helix</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#05050a}
+canvas{display:block;width:100%;height:100%}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H,CX,CY;
+function resize(){
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+  CX=W/2;CY=H/2;
+}
+window.addEventListener('resize',resize);
+resize();
+
+const N=60;
+const RADIUS=90;
+const LEN=H*0.75;
+const TURNS=3.5;
+const COLORS=['#3de7c9','#e74c8a'];
+let rot=0;
+
+function project(x,y,z){
+  const f=280/(280+z);
+  return{x:CX+x*f,y:CY+y*f,s:f};
+}
+
+function frame(){
+  ctx.fillStyle='#05050a';
+  ctx.fillRect(0,0,W,H);
+  rot+=0.018;
+
+  const p1=[],p2=[];
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const y=-LEN/2+t*LEN;
+    const a=t*TURNS*Math.PI*2+rot;
+    const x1=Math.cos(a)*RADIUS;
+    const z1=Math.sin(a)*RADIUS;
+    const x2=Math.cos(a+Math.PI)*RADIUS;
+    const z2=Math.sin(a+Math.PI)*RADIUS;
+    p1.push(project(x1,y,z1));
+    p2.push(project(x2,y,z2));
+  }
+
+  // rungs
+  ctx.lineWidth=1.5;
+  for(let i=0;i<=N;i+=2){
+    const a=p1[i],b=p2[i];
+    const alpha=0.25+0.35*((a.s+b.s)/2);
+    ctx.strokeStyle=`rgba(180,200,255,${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(a.x,a.y);
+    ctx.lineTo(b.x,b.y);
+    ctx.stroke();
+  }
+
+  // strands + nodes
+  [[p1,COLORS[0]],[p2,COLORS[1]]].forEach(([pts,col])=>{
+    ctx.strokeStyle=col;
+    ctx.lineWidth=2.5;
+    ctx.lineJoin='round';
+    ctx.lineCap='round';
+    ctx.beginPath();
+    pts.forEach((p,i)=>{i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});
+    ctx.stroke();
+
+    pts.forEach(p=>{
+      const r=2.2+p.s*1.8;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,r,0,Math.PI*2);
+      ctx.fillStyle=col;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,r*0.45,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.55)';
+      ctx.fill();
+    });
+  });
+
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

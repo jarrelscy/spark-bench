@@ -1,0 +1,47 @@
+{
+  "label": "mtp3-workload",
+  "endpoint": "http://10.0.0.183:8891/v1",
+  "model": "qwen36-35b-nvfp4",
+  "rows": [
+    {
+      "category": "math",
+      "decode_tps_med": 127.4,
+      "decode_tps_all": [
+        125.8,
+        128.1,
+        127.4
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "code",
+      "decode_tps_med": 104.9,
+      "decode_tps_all": [
+        105.3,
+        104.9,
+        98.8
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "prose",
+      "decode_tps_med": 97.6,
+      "decode_tps_all": [
+        100.7,
+        97.6,
+        97.3
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "extraction",
+      "decode_tps_med": 125.6,
+      "decode_tps_all": [
+        125.6,
+        130.7,
+        123.3
+      ],
+      "out_tokens_med": 512
+    }
+  ]
+}

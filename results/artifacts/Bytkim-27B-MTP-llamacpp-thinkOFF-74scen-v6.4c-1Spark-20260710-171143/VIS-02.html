@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        let stars = [];
+        const STAR_COUNT = 1500;
+        
+        // Galaxy parameters
+        const ARM_COUNT = 2;
+        const ARM_SPREAD = 0.5;
+        const MAX_RADIUS_RATIO = 0.8;
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function createStar() {
+            // Generate a radius with a logarithmic distribution to cluster stars near the center
+            // This creates the "bulge" effect naturally
+            const r = Math.pow(Math.random(), 1.5) * MAX_RADIUS_RATIO;
+            
+            // Base angle for the spiral arm
+            const baseAngle = r * 4; 
+            
+            // Add random spread to create the arm width
+            const angle = baseAngle + random(-ARM_SPREAD, ARM_SPREAD) + (Math.random() * Math.PI * 2);
+
+            // Star properties
+            const star = {
+                r: r,
+                angle: angle,
+                // Distance from center for rendering
+                x: 0,
+                y: 0,
+                // Rotation speed: closer stars rotate faster (Keplerian-ish)
+                speed: 0.001 + (0.004 / (r + 0.1)),
+                // Visual size: smaller as they get further out
+                size: random(0.5, 2.5) * (1 - r * 0.5),
+                // Color variation
+                color: Math.random() > 0.8 ? 'cyan' : (Math.random() > 0.7 ? 'magenta' : 'white'),
+                // Twinkle properties
+                twinkleSpeed: random(0.02, 0.08),
+                twinkleOffset: random(0, Math.PI * 2)
+            };
+            return star;
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(createStar());
+            }
+        }
+
+        function drawCore(time) {
+            const maxRadius = Math.min(width, height) * MAX_RADIUS_RATIO;
+            const coreRadius = maxRadius * 0.15;
+            
+            // Outer glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius * 3);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.4)');
+            gradient.addColorStop(0.5, 'rgba(100, 150, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreRadius * 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bright center
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function updateAndDrawStars(time) {
+            const maxRadius = Math.min(width, height) * MAX_RADIUS_RATIO;
+
+            // Use additive blending for the glowy star effect
+            ctx.globalCompositeOperation = 'lighter';
+
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
+
+                // Update angle
+                star.angle += star.speed;
+
+                // Calculate position
+                star.x = centerX + Math.cos(star.angle) * star.r * maxRadius;
+                star.y = centerY + Math.sin(star.angle) * star.r * maxRadius;
+
+                // Calculate opacity based on twinkle and distance
+                // Stars fade out slightly at the edges
+                const distFade = 1 - (star.r * 0.8);
+                const twinkle = 0.5 + 0.5 * Math.sin(time * star.twinkleSpeed + star.twinkleOffset);
+                const opacity = distFade * twinkle;
+
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = star.color;
+
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Reset blending mode for the core
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
+        }
+
+        function animate(time) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+
+            drawCore(time);
+            updateAndDrawStars(time);
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            // We don't need to re-init stars, just update coordinates on next frame
+        });
+
+        resize();
+        initStars();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

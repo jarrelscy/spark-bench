@@ -1,0 +1,5 @@
+# raw bench qwen36-35b-heretic @ http://10.0.0.120:8891/v1 (warmed)
+c1: agg=67.9 tok/s  per-user=67.9  (400 tok / 5.9s)
+c8: agg=208.0 tok/s  per-user=26.0  (3200 tok / 15.4s)
+c16: agg=276.9 tok/s  per-user=17.3  (6400 tok / 23.1s)
+c32: agg=348.5 tok/s  per-user=10.9  (12800 tok / 36.7s)

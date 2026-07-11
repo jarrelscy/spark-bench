@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #08080e;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+        canvas {
+            display: block;
+            background: radial-gradient(ellipse at center, #0f0f1a 0%, #06060a 100%);
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementById('dnaCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let W, H, cx, cy;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+                cx = W / 2;
+                cy = H / 2;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            // ─── Configuration ───────────────────────────────────────────────
+            const CONFIG = {
+                radius: Math.min(W, H) * 0.09,
+                height: Math.min(W, H) * 0.62,
+                turns: 4.2,
+                nodesPerStrand: 90,
+                focalLength: 700,
+                rotationSpeed: 0.0065,
+                nodeBaseRadius: 3.2,
+                lineWidthBase: 2.2,
+                rungWidth: 1.4,
+            };
+
+            // Adapt to screen size
+            function adaptConfig() {
+                const s = Math.min(W, H) / 700;
+                CONFIG.radius = Math.min(W, H) * 0.09 * Math.min(1, 700 / Math.min(W, H));
+                CONFIG.height = Math.min(W, H) * 0.62;
+                CONFIG.focalLength = 500 + Math.min(W, H) * 0.3;
+                CONFIG.nodeBaseRadius = 2.8 + s * 0.8;
+                CONFIG.lineWidthBase = 1.8 + s * 0.6;
+            }
+            adaptConfig();
+            window.addEventListener('resize', () => {
+                resize();
+                adaptConfig();
+            });
+
+            // ─── Colors ──────────────────────────────────────────────────────
+            const COLORS = {
+                strand1: { r: 0, g: 212, b: 255 }, // cyan
+                strand2: { r: 255, g: 60, b: 130 }, // vibrant pink
+                rung: { r: 180, g: 200, b: 255 }, // soft blue-white
+                glow1: { r: 0, g: 180, b: 255 },
+                glow2: { r: 255, g: 50, b: 120 },
+            };
+
+            function colorStr(r, g, b, a) {
+                return `rgba(${r|0},${g|0},${b|0},${a})`;
+            }
+
+            function lerpColor(c1, c2, t) {
+                return {
+                    r: c1.r + (c2.r - c1.r) * t,
+                    g: c1.g + (c2.g - c1.g) * t,
+                    b: c1.b + (c2.b - c1.b) * t,
+                };
+            }
+
+            // ─── 3D Math ─────────────────────────────────────────────────────
+            function rotateY(point, angle) {
+                const { x, y, z } = point;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                return {
+                    x: x * cos + z * sin,
+                    y: y,
+                    z: -x * sin + z * cos,
+                };
+            }
+
+            function project(point) {
+                const scale = CONFIG.focalLength / (CONFIG.focalLength + point.z);
+                return {
+                    sx: cx + point.x * scale,
+                    sy: cy + point.y * scale,
+                    scale: scale,
+                    z: point.z,
+                };
+            }
+
+            // ─── Generate Helix ──────────────────────────────────────────────
+            function generateHelix(rotation) {
+                const { radius, height, turns, nodesPerStrand } = CONFIG;
+                const strand1 = [];
+                const strand2 = [];
+                const rungs = [];
+
+                for (let i = 0; i < nodesPerStrand; i++) {
+                    const t = i / (nodesPerStrand - 1);
+                    const y = -height / 2 + t * height;
+                    const angle = t * 2 * Math.PI * turns;
+
+                    // Strand 1
+                    const x1 = radius * Math.cos(angle);
+                    const z1 = radius * Math.sin(angle);
+                    const p1 = { x: x1, y: y, z: z1 };
+
+                    // Strand 2 (offset by PI)
+                    const x2 = radius * Math.cos(angle + Math.PI);
+                    const z2 = radius * Math.sin(angle + Math.PI);
+                    const p2 = { x: x2, y: y, z: z2 };
+
+                    // Rotate
+                    const r1 = rotateY(p1, rotation);
+                    const r2 = rotateY(p2, rotation);
+
+                    const pr1 = project(r1);
+                    const pr2 = project(r2);
+
+                    strand1.push(pr1);
+                    strand2.push(pr2);
+
+                    rungs.push({
+                        p1: pr1,
+                        p2: pr2,
+                        zAvg: (pr1.z + pr2.z) / 2,
+                        t: t,
+                    });
+                }
+
+                // Sort rungs back-to-front
+                rungs.sort((a, b) => a.zAvg - b.zAvg);
+
+                return { strand1, strand2, rungs };
+            }
+
+            // ─── Drawing ─────────────────────────────────────────────────────
+            function drawStrand(strand, color, glowColor, isStrand1) {
+                const n = strand.length;
+                if (n < 2) return;
+
+                // Draw segments with depth-based opacity
+                for (let i = 0; i < n - 1; i++) {
+                    const a = strand[i];
+                    const b = strand[i + 1];
+                    const zAvg = (a.z + b.z) / 2;
+
+                    // Depth factor: 0 (far) → 1 (near)
+                    const depthFactor = Math.max(0, Math.min(1, (zAvg + CONFIG.radius * 2) / (CONFIG.radius * 4)));
+                    const opacity = 0.25 + 0.75 * depthFactor;
+                    const lineWidth = CONFIG.lineWidthBase * (0.5 + 0.5 * depthFactor);
+
+                    const r = color.r * (0.7 + 0.3 * depthFactor);
+                    const g = color.g * (0.7 + 0.3 * depthFactor);
+                    const b = color.b * (0.7 + 0.3 * depthFactor);
+
+                    ctx.beginPath();
+                    ctx.moveTo(a.sx, a.sy);
+                    ctx.lineTo(b.sx, b.sy);
+                    ctx.strokeStyle = colorStr(r, g, b, opacity);
+                    ctx.lineWidth = lineWidth;
+                    ctx.stroke();
+                }
+
+                // Draw nodes
+                for (let i = 0; i < n; i++) {
+                    const p = strand[i];
+                    const depthFactor = Math.max(0, Math.min(1, (p.z + CONFIG.radius * 2) / (CONFIG.radius * 4)));
+                    const opacity = 0.3 + 0.7 * depthFactor;
+                    const radius = CONFIG.nodeBaseRadius * (0.4 + 0.6 * depthFactor);
+                    const glowSize = radius * 4;
+
+                    const r = color.r * (0.8 + 0.2 * depthFactor);
+                    const g = color.g * (0.8 + 0.2 * depthFactor);
+                    const b = color.b * (0.8 + 0.2 * depthFactor);
+
+                    // Glow
+                    const grad = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, glowSize);
+                    const gc = glowColor || color;
+                    grad.addColorStop(0, colorStr(gc.r, gc.g, gc.b, 0.5 * opacity));
+                    grad.addColorStop(0.3, colorStr(gc.r, gc.g, gc.b, 0.15 * opacity));
+                    grad.addColorStop(1, colorStr(gc.r, gc.g, gc.b, 0));
+                    ctx.beginPath();
+                    ctx.arc(p.sx, p.sy, glowSize, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Node circle
+                    ctx.beginPath();
+                    ctx.arc(p.sx, p.sy, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = colorStr(r, g, b, opacity);
+                    ctx.shadowColor = colorStr(gc.r, gc.g, gc.b, 0.6 * opacity);
+                    ctx.shadowBlur = radius * 3;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Bright center dot
+                    ctx.beginPath();
+                    ctx.arc(p.sx, p.sy, radius * 0.45, 0, Math.PI * 2);
+                    ctx.fillStyle = colorStr(
+                        Math.min(255, r + 80),
+                        Math.min(255, g + 80),
+                        Math.min(255, b + 80),
+                        opacity * 0.8
+                    );
+                    ctx.fill();
+                }
+            }
+
+            function drawRungs(rungs) {
+                for (const rung of rungs) {
+                    const { p1, p2, zAvg, t } = rung;
+                    const depthFactor = Math.max(0, Math.min(1, (zAvg + CONFIG.radius * 2) / (CONFIG.radius * 4)));
+                    const opacity = 0.15 + 0.7 * depthFactor;
+
+                    // Gradient color from strand1 to strand2
+                    const c = lerpColor(COLORS.strand1, COLORS.strand2, t);
+                    const brightness = 0.6 + 0.4 * depthFactor;
+
+                    const r = c.r * brightness;
+                    const g = c.g * brightness;
+                    const b = c.b * brightness;
+
+                    const lineWidth = CONFIG.rungWidth * (0.4 + 0.6 * depthFactor);
+
+                    // Subtle glow on rung
+                    ctx.shadowColor = colorStr(
+                        (COLORS.strand1.r + COLORS.strand2.r) / 2,
+                        (COLORS.strand1.g + COLORS.strand2.g) / 2,
+                        (COLORS.strand1.b + COLORS.strand2.b) / 2,
+                        0.15 * opacity
+                    );
+                    ctx.shadowBlur = 6 * depthFactor;
+
+                    ctx.beginPath();
+                    ctx.moveTo(p1.sx, p1.sy);
+                    ctx.lineTo(p2.sx, p2.sy);
+                    ctx.strokeStyle = colorStr(r, g, b, opacity);
+                    ctx.lineWidth = lineWidth;
+                    ctx.stroke();
+
+                    ctx.shadowBlur = 0;
+
+                    // Small bright dots at rung endpoints
+                    for (const p of [p1, p2]) {
+                        const dp = Math.max(0, Math.min(1, (p.z + CONFIG.radius * 2) / (CONFIG.radius * 4)));
+                        const r2 = CONFIG.nodeBaseRadius * 0.3 * (0.4 + 0.6 * dp);
+                        ctx.beginPath();
+                        ctx.arc(p.sx, p.sy, r2, 0, Math.PI * 2);
+                        ctx.fillStyle = colorStr(
+                            Math.min(255, r + 100),
+                            Math.min(255, g + 100),
+                            Math.min(255, b + 100),
+                            opacity * 0.5
+                        );
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // ─── Subtle background particles ─────────────────────────────────
+            let stars = [];
+
+            function initStars() {
+                stars = [];
+                for (let i = 0; i < 120; i++) {
+                    stars.push({
+                        x: Math.random() * W,
+                        y: Math.random() * H,
+                        r: Math.random() * 1.2 + 0.3,
+                        a: Math.random() * 0.4 + 0.05,
+                        speed: Math.random() * 0.0003 + 0.0001,
+                    });
+                }
+            }
+            initStars();
+            window.addEventListener('resize', () => {
+                initStars();
+            });
+
+            function drawStars(time) {
+                for (const s of stars) {
+                    const flicker = 0.6 + 0.4 * Math.sin(time * s.speed * 60 + s.x);
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(180, 200, 255, ${s.a * flicker})`;
+                    ctx.fill();
+                }
+            }
+
+            // ─── Central axis glow ───────────────────────────────────────────
+            function drawAxisGlow() {
+                const grad = ctx.createLinearGradient(cx, cy - CONFIG.height / 2 - 20, cx, cy + CONFIG.height / 2 + 20);
+                grad.addColorStop(0, 'rgba(100, 150, 255, 0)');
+                grad.addColorStop(0.3, 'rgba(100, 150, 255, 0.03)');
+                grad.addColorStop(0.5, 'rgba(100, 150, 255, 0.06)');
+                grad.addColorStop(0.7, 'rgba(100, 150, 255, 0.03)');
+                grad.addColorStop(1, 'rgba(100, 150, 255, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(cx - 60, cy - CONFIG.height / 2 - 20, 120, CONFIG.height + 40);
+            }
+
+            // ─── Main Render ─────────────────────────────────────────────────
+            let rotation = 0;
+
+            function render(timestamp) {
+                const time = timestamp / 1000;
+
+                // Clear
+                ctx.clearRect(0, 0, W, H);
+
+                // Background (already set via CSS, but we reinforce with gradient)
+                const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.7);
+                bgGrad.addColorStop(0, '#111122');
+                bgGrad.addColorStop(1, '#06060a');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, W, H);
+
+                // Stars
+                drawStars(time);
+
+                // Axis glow
+                drawAxisGlow();
+
+                // Update rotation
+                rotation += CONFIG.rotationSpeed;
+
+                // Generate helix
+                const { strand1, strand2, rungs } = generateHelix(rotation);
+
+                // Draw back rungs first (already sorted back-to-front)
+                // But we draw all rungs here since they're sorted
+                drawRungs(rungs);
+
+                // Draw strands on top of rungs for clarity
+                // Strand 1 (cyan) - draw slightly behind strand 2 when overlapping
+                drawStrand(strand1, COLORS.strand1, COLORS.glow1, true);
+
+                // Strand 2 (pink) - drawn on top
+                drawStrand(strand2, COLORS.strand2, COLORS.glow2, false);
+
+                // ─── Subtle vignette ─────────────────────────────────────────
+                const vignette = ctx.createRadialGradient(cx, cy, Math.min(W, H) * 0.25, cx, cy, Math.max(W, H) * 0.75);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, 'rgba(0,0,0,0.35)');
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, W, H);
+
+                // ─── Very subtle border glow ─────────────────────────────────
+                const borderGrad = ctx.createRadialGradient(cx, cy, CONFIG.height * 0.35, cx, cy, CONFIG.height * 0.55);
+                borderGrad.addColorStop(0, 'rgba(80, 140, 255, 0)');
+                borderGrad.addColorStop(0.7, 'rgba(80, 140, 255, 0)');
+                borderGrad.addColorStop(0.85, 'rgba(80, 140, 255, 0.02)');
+                borderGrad.addColorStop(1, 'rgba(80, 140, 255, 0)');
+                ctx.fillStyle = borderGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, CONFIG.height * 0.55, 0, Math.PI * 2);
+                ctx.fill();
+
+                requestAnimationFrame(render);
+            }
+
+            // ─── Handle resize for dynamic parameters ────────────────────────
+            window.addEventListener('resize', () => {
+                adaptConfig();
+                initStars();
+            });
+
+            // ─── Start ───────────────────────────────────────────────────────
+            requestAnimationFrame(render);
+        })();
+    </script>
+</body>
+</html>

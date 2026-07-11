@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const stars = [];
+        const starCount = 800;
+        
+        // Configuration
+        const spiralArms = 3;
+        const tightness = 0.5; // How much the arms curl
+        const baseSpeed = 0.002;
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height / 2;
+            
+            stars.length = 0;
+            for (let i = 0; i < starCount; i++) {
+                stars.push(createStar());
+            }
+        }
+
+        function createStar() {
+            // Distance from center (using square root for more density in center)
+            const radius = Math.pow(Math.random(), 0.5) * (Math.min(width, height) * 0.45);
+            
+            // Determine which arm it belongs to
+            const armOffset = (Math.floor(Math.random() * spiralArms) * (Math.PI * 2 / spiralArms));
+            
+            // Spiral math: angle = distance * tightness + arm offset
+            // We add a bit of random spread so they aren't perfect lines
+            const angle = (radius * tightness) + armOffset + (Math.random() * 0.5 - 0.25);
+            
+            // Random spread around the arm path
+            const spread = (Math.random() - 0.5) * (radius * 0.2); 
+
+            // Color variation: Blues, Purples, and Whites
+            const colors = [
+                'rgba(173, 216, 230, ', // Light Blue
+                'rgba(230, 230, 250, ', // Lavender
+                'rgba(255, 255, 255, ', // White
+                'rgba(147, 112, 219, ', // Medium Purple
+                'rgba(135, 206, 250, '  // Sky Blue
+            ];
+            const colorBase = colors[Math.floor(Math.random() * colors.length)];
+
+            return {
+                radius: radius,
+                angle: angle,
+                baseAngle: angle, // to track rotation
+                spread: spread,
+                size: Math.random() * 1.5 + 0.5,
+                colorBase: colorBase,
+                opacity: Math.random(),
+                twinkleSpeed: 0.02 + Math.random() * 0.05,
+                rotationSpeed: baseSpeed + (Math.random() * 0.001)
+            };
+        }
+
+        function draw() {
+            // Clear with a slight trail effect (optional, but here we use pure black for crispness)
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Core Glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.min(width, height) * 0.2);
+            gradient.addColorStop(0, 'rgba(255, 255, 230, 0.2)');
+            gradient.addColorStop(0.5, 'rgba(100, 50, 150, 0.05)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            stars.forEach(star => {
+                // Update rotation
+                star.baseAngle += star.rotationSpeed;
+                
+                // Update twinkle
+                star.opacity += star.twinkleSpeed;
+                if (star.opacity > 1 || star.opacity < 0.3) {
+                    star.twinkleSpeed *= -1;
+                }
+
+                // Calculate position
+                // We use the baseAngle (which evolves) + the initial spiral offset
+                const currentAngle = star.baseAngle + (star.radius * tightness / 100); 
+                // Note: The spiral shape is baked into the starting angle, 
+                // we just rotate the whole set.
+                
+                // Simpler approach: rotation is applied to the whole star
+                const x = centerX + Math.cos(star.baseAngle) * star.radius + (Math.cos(star.baseAngle + Math.PI/2) * star.spread);
+                const y = centerY + Math.sin(star.baseAngle) * star.radius + (Math.sin(star.baseAngle + Math.PI/2) * star.spread);
+
+                // Draw star
+                ctx.beginPath();
+                ctx.arc(x, y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = star.colorBase + star.opacity + ')';
+                ctx.fill();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', init);
+
+        init();
+        draw();
+    </script>
+</body>
+</html>

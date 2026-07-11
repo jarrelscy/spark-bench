@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0a0a12;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const config = {
+            radius: 150,           // Helix radius
+            amplitude: 40,         // Depth modulation (perspective)
+            strandOffset: Math.PI, // Phase offset between strands
+            numNodes: 40,          // Number of nodes per strand
+            nodeSpacing: 25,       // Vertical spacing between nodes
+            nodeSize: 6,           // Size of the nodes
+            connectionColor: 'rgba(255, 255, 255, 0.15)', // Color of the rungs
+            colorA: { r: 0, g: 255, b: 200 },   // Cyan-ish for strand A
+            colorB: { r: 255, g: 100, b: 150 },  // Magenta-ish for strand B
+            speed: 0.015           // Rotation speed
+        };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function getZ(index) {
+            // Calculate depth (Z) based on position along the helix
+            return Math.sin(index * 0.3 + angle) * config.amplitude;
+        }
+
+        function draw() {
+            // Clear canvas with dark background
+            ctx.fillStyle = '#0a0a12';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Calculate total height of the helix
+            const totalHeight = config.numNodes * config.nodeSpacing;
+            const startY = centerY - totalHeight / 2;
+
+            // Create arrays of nodes for both strands
+            const nodesA = [];
+            const nodesB = [];
+
+            for (let i = 0; i < config.numNodes; i++) {
+                const y = startY + i * config.nodeSpacing;
+                const z = getZ(i);
+                
+                // Node A position (offset by strandOffset)
+                const xA = centerX + Math.sin(i * 0.3 + angle) * config.radius;
+                nodesA.push({ x: xA, y: y, z: z });
+                
+                // Node B position (opposite side)
+                const xB = centerX + Math.sin(i * 0.3 + angle + config.strandOffset) * config.radius;
+                nodesB.push({ x: xB, y: y, z: z });
+            }
+
+            // Combine all nodes and sort by Z for proper depth ordering
+            const allNodes = [];
+            for (let i = 0; i < config.numNodes; i++) {
+                allNodes.push({ ...nodesA[i], strand: 'A' });
+                allNodes.push({ ...nodesB[i], strand: 'B' });
+            }
+            allNodes.sort((a, b) => a.z - b.z);
+
+            // Draw rungs (connections) first so they appear behind nodes
+            for (let i = 0; i < config.numNodes; i++) {
+                const nodeA = nodesA[i];
+                const nodeB = nodesB[i];
+                
+                ctx.beginPath();
+                ctx.moveTo(nodeA.x, nodeA.y);
+                ctx.lineTo(nodeB.x, nodeB.y);
+                ctx.strokeStyle = config.connectionColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Draw nodes in Z-order
+            for (const node of allNodes) {
+                const color = node.strand === 'A' ? config.colorA : config.colorB;
+                
+                // Adjust color brightness based on depth
+                const brightness = 0.5 + (node.z + config.amplitude) / (2 * config.amplitude);
+                const r = Math.round(color.r * brightness);
+                const g = Math.round(color.g * brightness);
+                const b = Math.round(color.b * brightness);
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, config.nodeSize, 0, Math.PI * 2);
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fill();
+                
+                // Add a subtle glow effect
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, config.nodeSize * 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${r},${g},${b}, 0.1)`;
+                ctx.fill();
+            }
+
+            // Draw connecting lines between consecutive nodes in each strand
+            for (let i = 0; i < config.numNodes - 1; i++) {
+                // Strand A
+                ctx.beginPath();
+                ctx.moveTo(nodesA[i].x, nodesA[i].y);
+                ctx.lineTo(nodesA[i + 1].x, nodesA[i + 1].y);
+                ctx.strokeStyle = `rgba(${config.colorA.r},${config.colorA.g},${config.colorA.b}, 0.3)`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Strand B
+                ctx.beginPath();
+                ctx.moveTo(nodesB[i].x, nodesB[i].y);
+                ctx.lineTo(nodesB[i + 1].x, nodesB[i + 1].y);
+                ctx.strokeStyle = `rgba(${config.colorB.r},${config.colorB.g},${config.colorB.b}, 0.3)`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            angle += config.speed;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

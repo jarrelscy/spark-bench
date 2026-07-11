@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spiral Galaxy</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxy"></canvas>
+    <script>
+        const canvas = document.getElementById('galaxy');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height, centerX, centerY;
+        
+        // Galaxy parameters
+        const STAR_COUNT = 1500;
+        const ARM_COUNT = 2;
+        const ARM_SPREAD = 0.6; // radians
+        const CORE_RADIUS = 40;
+        const MAX_RADIUS = 500;
+        const ROTATION_SPEED = 0.0005;
+        
+        // Colors for stars
+        const COLORS = [
+            [255, 255, 255],   // white
+            [200, 220, 255],   // blue-white
+            [255, 220, 180],   // yellow
+            [255, 200, 150],   // orange
+            [180, 200, 255],   // blue
+            [255, 180, 180],   // red
+        ];
+        
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                // Random position in spiral
+                const r = Math.random() * MAX_RADIUS;
+                const armIndex = Math.floor(Math.random() * ARM_COUNT);
+                const armAngle = (armIndex / ARM_COUNT) * Math.PI * 2;
+                const spiralAngle = (r / MAX_RADIUS) * Math.PI * 4;
+                const spread = (Math.random() - 0.5) * ARM_SPREAD;
+                
+                this.angle = armAngle + spiralAngle + spread;
+                this.radius = r;
+                this.size = 0.5 + Math.random() * 2.5;
+                this.baseAlpha = 0.3 + Math.random() * 0.7;
+                this.twinkleSpeed = 0.02 + Math.random() * 0.05;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                
+                // Pick a color
+                const colorIdx = Math.floor(Math.random() * COLORS.length);
+                this.color = COLORS[colorIdx];
+            }
+            
+            update(time) {
+                this.angle += ROTATION_SPEED * (1 + (MAX_RADIUS - this.radius) / MAX_RADIUS * 0.5);
+                this.alpha = this.baseAlpha * (0.7 + 0.3 * Math.sin(time * this.twinkleSpeed + this.twinkleOffset));
+            }
+            
+            draw(ctx, time) {
+                const x = centerX + Math.cos(this.angle) * this.radius;
+                const y = centerY + Math.sin(this.angle) * this.radius;
+                
+                const [r, g, b] = this.color;
+                const alpha = this.alpha;
+                
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add glow for brighter stars
+                if (this.size > 1.5) {
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, this.size * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Create stars
+        const stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push(new Star());
+        }
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+        
+        function drawCore() {
+            // Core glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, CORE_RADIUS);
+            gradient.addColorStop(0, 'rgba(255, 240, 220, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 220, 180, 0.4)');
+            gradient.addColorStop(1, 'rgba(255, 200, 150, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, CORE_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function animate(time) {
+            // Clear canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw core
+            drawCore();
+            
+            // Update and draw stars
+            for (const star of stars) {
+                star.update(time);
+                star.draw(ctx, time);
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Initialize
+        resize();
+        window.addEventListener('resize', resize);
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

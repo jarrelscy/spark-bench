@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a12; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let time = 0;
+
+    // Configuration
+    const config = {
+        strandWidth: 4,
+        rungWidth: 2,
+        nodeCount: 40, // Number of nodes along the vertical axis
+        helixRadius: 60, // How wide the spiral is
+        verticalSpacing: 25, // Distance between nodes vertically
+        rotationSpeed: 0.02,
+        colorStrand1: 'rgba(100, 200, 255, 0.8)', // Cyan-ish
+        colorStrand2: 'rgba(255, 100, 200, 0.8)', // Magenta-ish
+        colorRung: 'rgba(255, 255, 255, 0.3)'
+    };
+
+    // Resize canvas to fill screen
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function drawDNA() {
+        // Clear screen
+        ctx.clearRect(0, 0, width, height);
+
+        // Center the helix horizontally and vertically
+        const centerX = width / 2;
+        const centerY = height / 2;
+        
+        // Calculate total height of the helix to center it
+        const totalHeight = (config.nodeCount - 1) * config.verticalSpacing;
+        const startY = centerY - totalHeight / 2;
+
+        // Store points to draw rungs first (so they appear behind strands)
+        const points1 = [];
+        const points2 = [];
+
+        // Calculate positions for both strands
+        for (let i = 0; i < config.nodeCount; i++) {
+            const y = startY + i * config.verticalSpacing;
+            
+            // Calculate sine wave offsets
+            // Strand 1
+            const x1 = Math.sin(i * 0.3 + time) * config.helixRadius;
+            // Strand 2 (Offset by PI to be on the opposite side)
+            const x2 = Math.sin(i * 0.3 + time + Math.PI) * config.helixRadius;
+
+            // We use the sine value as a "depth" indicator (Z-axis)
+            // 1 is front, -1 is back
+            const z1 = Math.sin(i * 0.3 + time);
+            const z2 = Math.sin(i * 0.3 + time + Math.PI);
+
+            points1.push({ x: centerX + x1, y: y, z: z1 });
+            points2.push({ x: centerX + x2, y: y, z: z2 });
+        }
+
+        // 1. Draw Rungs (Horizontal Connectors)
+        // We draw rungs first so they sit behind the nodes
+        ctx.lineWidth = config.rungWidth;
+        for (let i = 0; i < config.nodeCount; i++) {
+            const p1 = points1[i];
+            const p2 = points2[i];
+
+            // Calculate average depth to determine opacity/width
+            // If average Z is negative, the rung is "behind" the axis
+            const avgZ = (p1.z + p2.z) / 2;
+
+            // Dynamic opacity based on depth
+            // Map Z (-1 to 1) to Alpha (0.1 to 0.5)
+            const alpha = (avgZ + 1) * 0.25 + 0.1;
+            
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        }
+
+        // 2. Draw Strands (The curved lines)
+        // We iterate through points to draw lines between them
+        ctx.lineWidth = config.strandWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Helper to draw a single strand
+        function drawStrand(points, color) {
+            ctx.beginPath();
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+                if (i === 0) {
+                    ctx.moveTo(p.x, p.y);
+                } else {
+                    ctx.lineTo(p.x, p.y);
+                }
+            }
+            ctx.strokeStyle = color;
+            ctx.stroke();
+        }
+
+        // Draw the strands
+        // Note: For true 3D depth sorting (where the back strand is hidden by the front strand),
+        // we would need to break lines at Z=0 crossings, but for a simple helix, 
+        // drawing both full lines with slight transparency works well visually.
+        drawStrand(points1, config.colorStrand1);
+        drawStrand(points2, config.colorStrand2);
+
+        // 3. Draw Nodes (The dots)
+        // We draw these last so they sit on top of the lines
+        for (let i = 0; i < config.nodeCount; i++) {
+            drawNode(points1[i], config.colorStrand1);
+            drawNode(points2[i], config.colorStrand2);
+        }
+
+        // Increment time for animation
+        time += config.rotationSpeed;
+
+        requestAnimationFrame(drawDNA);
+    }
+
+    function drawNode(point, color) {
+        const x = point.x;
+        const y = point.y;
+        
+        // Scale size and opacity based on depth (Z)
+        // Z ranges from -1 (back) to 1 (front)
+        // Scale: 0.5x to 1.5x
+        const scale = (point.z + 1) * 0.5 + 0.5; 
+        const radius = (config.strandWidth * 1.5) * scale;
+        
+        // Opacity: 0.4 to 0.9
+        const alpha = (point.z + 1) * 0.25 + 0.4;
+
+        ctx.fillStyle = color.replace('0.8', alpha.toFixed(2));
+        
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Start animation
+    drawDNA();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,331 @@
+{
+  "timestamp": "2026-07-10T20:35:42.194612+00:00",
+  "model": "x-ai/grok-4.5",
+  "pricing_assumed_usd_per_mtok": {
+    "input": 2.0,
+    "output": 6.0
+  },
+  "notes": "OpenRouter x-ai/grok-4.5; reasoning.effort low vs high; cost uses $2/$6 per 1M from xAI list; reasoning_tokens from usage if present",
+  "results": [
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 1.592,
+      "prompt_tokens": 241,
+      "completion_tokens": 98,
+      "reasoning_tokens": 86,
+      "total_tokens": 339,
+      "finish_reason": "stop",
+      "content_chars": 36,
+      "content_preview": "408 That's the product of 17 and 24.",
+      "reasoning_chars": 101,
+      "usage_raw": {
+        "prompt_tokens": 241,
+        "completion_tokens": 98,
+        "total_tokens": 339,
+        "cost": 0.00107,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00107,
+          "upstream_inference_prompt_cost": 0.000482,
+          "upstream_inference_completions_cost": 0.000588
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 86,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "low",
+      "prompt_id": "easy_math",
+      "cost_usd_est": 0.00107
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 111.443,
+      "prompt_tokens": 316,
+      "completion_tokens": 423,
+      "reasoning_tokens": 355,
+      "total_tokens": 739,
+      "finish_reason": "stop",
+      "content_chars": 155,
+      "content_preview": "```python def median(xs):     ys = sorted(xs)     n = len(ys)     if n % 2 == 1:         return ys[n // 2]     return (ys[n // 2 - 1] + ys[n // 2]) / 2 ```",
+      "reasoning_chars": 142,
+      "usage_raw": {
+        "prompt_tokens": 316,
+        "completion_tokens": 423,
+        "total_tokens": 739,
+        "cost": 0.002978,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002978,
+          "upstream_inference_prompt_cost": 0.00044,
+          "upstream_inference_completions_cost": 0.002538
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 355,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "low",
+      "prompt_id": "code_bug",
+      "cost_usd_est": 0.00317
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 8.195,
+      "prompt_tokens": 246,
+      "completion_tokens": 1274,
+      "reasoning_tokens": 808,
+      "total_tokens": 1520,
+      "finish_reason": "stop",
+      "content_chars": 1555,
+      "content_preview": "### Setup and notation. Let \\( p \\) be a prime number such that \\( q := p^2 + 2 \\) is likewise prime. (As usual we work throughout in the positive integers, with primes understood to be integers \\( >1 \\) having no positive divisors other than \\( 1 \\) and themselves.) We analyse the possible cases for \\( p \\), according to its residue modulo \\( 3 \\).  ### The case \\( p=2 \\). Here we have \\( q = 4 +",
+      "reasoning_chars": 190,
+      "usage_raw": {
+        "prompt_tokens": 246,
+        "completion_tokens": 1274,
+        "total_tokens": 1520,
+        "cost": 0.007944,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.007944,
+          "upstream_inference_prompt_cost": 0.0003,
+          "upstream_inference_completions_cost": 0.007644
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 808,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "low",
+      "prompt_id": "hard_math",
+      "cost_usd_est": 0.008136
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 23.051,
+      "prompt_tokens": 303,
+      "completion_tokens": 1751,
+      "reasoning_tokens": 163,
+      "total_tokens": 2054,
+      "finish_reason": "stop",
+      "content_chars": 6095,
+      "content_preview": "# 4-Node DGX Spark Plan: Qwen3.6-35B NVFP4 + Continuous Batching  ## (1) When to use MTP vs DFlash  - **Default to DFlash** for steady-state continuous batching on long-context / mixed-length traffic: lower decode-step variance, better KV-cache locality with paged attention, and more predictable TTFT/TPOT under preemption and chunked prefill. - **Enable MTP** only when:   - Speculative acceptance ",
+      "reasoning_chars": 203,
+      "usage_raw": {
+        "prompt_tokens": 303,
+        "completion_tokens": 1751,
+        "total_tokens": 2054,
+        "cost": 0.01092,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01092,
+          "upstream_inference_prompt_cost": 0.000414,
+          "upstream_inference_completions_cost": 0.010506
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 163,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "low",
+      "prompt_id": "agent_plan",
+      "cost_usd_est": 0.011112
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 1.353,
+      "prompt_tokens": 241,
+      "completion_tokens": 114,
+      "reasoning_tokens": 101,
+      "total_tokens": 355,
+      "finish_reason": "stop",
+      "content_chars": 44,
+      "content_preview": "408 That's the correct product of 17 and 24.",
+      "reasoning_chars": 102,
+      "usage_raw": {
+        "prompt_tokens": 241,
+        "completion_tokens": 114,
+        "total_tokens": 355,
+        "cost": 0.000974,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000974,
+          "upstream_inference_prompt_cost": 0.00029,
+          "upstream_inference_completions_cost": 0.000684
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 101,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "high",
+      "prompt_id": "easy_math",
+      "cost_usd_est": 0.001166
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 4.474,
+      "prompt_tokens": 316,
+      "completion_tokens": 584,
+      "reasoning_tokens": 516,
+      "total_tokens": 900,
+      "finish_reason": "stop",
+      "content_chars": 155,
+      "content_preview": "```python def median(xs):     ys = sorted(xs)     n = len(ys)     if n % 2 == 1:         return ys[n // 2]     return (ys[n // 2 - 1] + ys[n // 2]) / 2 ```",
+      "reasoning_chars": 144,
+      "usage_raw": {
+        "prompt_tokens": 316,
+        "completion_tokens": 584,
+        "total_tokens": 900,
+        "cost": 0.003944,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.003944,
+          "upstream_inference_prompt_cost": 0.00044,
+          "upstream_inference_completions_cost": 0.003504
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 516,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "high",
+      "prompt_id": "code_bug",
+      "cost_usd_est": 0.004136
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 9.613,
+      "prompt_tokens": 246,
+      "completion_tokens": 1464,
+      "reasoning_tokens": 990,
+      "total_tokens": 1710,
+      "finish_reason": "stop",
+      "content_chars": 1364,
+      "content_preview": "### Setup and statement. Let \\( p \\) be a prime number such that \\( q := p^2 + 2 \\) is likewise prime. We claim that the only such prime is \\( p = 3 \\).  ### Direct checks for the primes \\( 2 \\) and \\( 3 \\). - If \\( p = 2 \\), then \\( q = 2^2 + 2 = 6 \\), which is composite. - If \\( p = 3 \\), then \\( q = 3^2 + 2 = 11 \\), which is prime.  ### The case of primes \\( p > 3 \\). Now let \\( p \\) be any pri",
+      "reasoning_chars": 190,
+      "usage_raw": {
+        "prompt_tokens": 246,
+        "completion_tokens": 1464,
+        "total_tokens": 1710,
+        "cost": 0.009084,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.009084,
+          "upstream_inference_prompt_cost": 0.0003,
+          "upstream_inference_completions_cost": 0.008784
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 990,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "high",
+      "prompt_id": "hard_math",
+      "cost_usd_est": 0.009276
+    },
+    {
+      "ok": true,
+      "status": 200,
+      "latency_s": 35.799,
+      "prompt_tokens": 303,
+      "completion_tokens": 3375,
+      "reasoning_tokens": 1236,
+      "total_tokens": 3678,
+      "finish_reason": "stop",
+      "content_chars": 7758,
+      "content_preview": "# 4-Node DGX Spark Plan: Qwen3.6-35B NVFP4 + Continuous Batching  Assumptions: 4\u00d7 DGX Spark (GB10-class / high-BW Grace-Blackwell nodes), TensorRT-LLM or vLLM-TRT backend, NVFP4 weights, GQA KV, continuous batching (paged KV), tensor-parallel within node + replica or pipeline across nodes as needed. Model footprint ~17\u201320 GB weights in NVFP4; KV dominates capacity.  ---  ## (1) When to use MTP vs ",
+      "reasoning_chars": 826,
+      "usage_raw": {
+        "prompt_tokens": 303,
+        "completion_tokens": 3375,
+        "total_tokens": 3678,
+        "cost": 0.020664,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.020664,
+          "upstream_inference_prompt_cost": 0.000414,
+          "upstream_inference_completions_cost": 0.02025
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1236,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "x-ai/grok-4.5-20260708",
+      "effort": "high",
+      "prompt_id": "agent_plan",
+      "cost_usd_est": 0.020856
+    }
+  ]
+}

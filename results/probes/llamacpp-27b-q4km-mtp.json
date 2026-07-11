@@ -1,0 +1,47 @@
+{
+  "label": "llamacpp-27b-q4km-mtp",
+  "endpoint": "http://10.0.0.120:8080/v1",
+  "model": "gpt-3.5-turbo",
+  "rows": [
+    {
+      "category": "math",
+      "decode_tps_med": 29.1,
+      "decode_tps_all": [
+        29.2,
+        29.1,
+        29.0
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "code",
+      "decode_tps_med": 23.8,
+      "decode_tps_all": [
+        23.8,
+        23.8,
+        23.8
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "prose",
+      "decode_tps_med": 23.0,
+      "decode_tps_all": [
+        23.1,
+        23.0,
+        23.0
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "extraction",
+      "decode_tps_med": 30.0,
+      "decode_tps_all": [
+        30.0,
+        30.0,
+        30.0
+      ],
+      "out_tokens_med": 512
+    }
+  ]
+}

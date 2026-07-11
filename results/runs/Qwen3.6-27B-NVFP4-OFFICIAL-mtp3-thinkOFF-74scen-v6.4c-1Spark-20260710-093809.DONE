@@ -1,0 +1,1 @@
+{"run_id": "Qwen3.6-27B-NVFP4-OFFICIAL-mtp3-thinkOFF-74scen-v6.4c-1Spark-20260710-093809", "pid": 865906, "started": "2026-07-10T09:38:23", "last_beat": "2026-07-10T10:18:16", "scenarios_done": 74, "finished": "2026-07-10T10:18:16", "summary": "truescore=84.1 quarantine=FLAT_DOMAIN:agentic=1;FLAT_DOMAIN:structured=1"}

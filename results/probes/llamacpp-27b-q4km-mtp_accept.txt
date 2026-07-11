@@ -1,0 +1,12 @@
+31.32.903.896 I slot print_timing: id  2 | task 581 | draft acceptance = 0.64368 (  336 accepted /   522 generated), mean len =  2.92
+31.54.661.085 I slot print_timing: id  2 | task 759 | draft acceptance = 0.64933 (  337 accepted /   519 generated), mean len =  2.94
+32.16.272.830 I slot print_timing: id  2 | task 935 | draft acceptance = 0.64933 (  337 accepted /   519 generated), mean len =  2.94
+32.37.892.306 I slot print_timing: id  2 | task 1111 | draft acceptance = 0.64933 (  337 accepted /   519 generated), mean len =  2.94
+33.00.409.236 I slot print_timing: id  1 | task 1287 | draft acceptance = 0.61410 (  331 accepted /   539 generated), mean len =  2.84
+33.22.820.094 I slot print_timing: id  1 | task 1470 | draft acceptance = 0.61410 (  331 accepted /   539 generated), mean len =  2.84
+33.45.179.958 I slot print_timing: id  1 | task 1652 | draft acceptance = 0.61410 (  331 accepted /   539 generated), mean len =  2.84
+34.07.547.446 I slot print_timing: id  1 | task 1834 | draft acceptance = 0.61410 (  331 accepted /   539 generated), mean len =  2.84
+34.25.006.746 I slot print_timing: id  0 | task 2016 | draft acceptance = 0.90315 (  373 accepted /   413 generated), mean len =  3.70
+34.42.307.836 I slot print_timing: id  0 | task 2157 | draft acceptance = 0.90315 (  373 accepted /   413 generated), mean len =  3.70
+34.59.506.651 I slot print_timing: id  0 | task 2297 | draft acceptance = 0.90315 (  373 accepted /   413 generated), mean len =  3.70
+35.16.702.798 I slot print_timing: id  0 | task 2437 | draft acceptance = 0.90315 (  373 accepted /   413 generated), mean len =  3.70

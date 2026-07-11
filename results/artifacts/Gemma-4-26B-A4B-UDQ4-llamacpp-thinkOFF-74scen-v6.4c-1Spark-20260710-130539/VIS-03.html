@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050505;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let angle = 0;
+
+        // Configuration
+        const numNodes = 40;        // Number of rungs
+        const helixRadius = 120;    // Radius of the strands
+        const verticalSpacing = 15; // Distance between rungs
+        const rotationSpeed = 0.015; // Speed of rotation
+        const twistFactor = 0.4;    // How much the helix twists
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function draw() {
+            // Clear background with a slight trail effect (optional, here we use solid)
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const startY = centerY - (numNodes * verticalSpacing) / 2;
+
+            angle += rotationSpeed;
+
+            for (let i = 0; i < numNodes; i++) {
+                // Calculate the vertical position of this rung
+                const y = startY + i * verticalSpacing;
+
+                // Calculate the rotation angle for this specific rung
+                // We add (i * twistFactor) to create the spiral effect
+                const currentAngle = angle + (i * twistFactor);
+
+                // Calculate X and Z (depth) for Strand 1
+                const x1 = Math.cos(currentAngle) * helixRadius;
+                const z1 = Math.sin(currentAngle);
+
+                // Calculate X and Z (depth) for Strand 2 (offset by PI for the opposite side)
+                const x2 = Math.cos(currentAngle + Math.PI) * helixRadius;
+                const z2 = Math.sin(currentAngle + Math.PI);
+
+                // Perspective projection: scale X and opacity based on Z (depth)
+                const perspective1 = (z1 + 2) / 3; 
+                const perspective2 = (z2 + 2) / 3;
+
+                const drawX1 = centerX + x1 * perspective1;
+                const drawX2 = centerX + x2 * perspective2;
+
+                // Draw the connecting rung (the base pair)
+                ctx.beginPath();
+                ctx.moveTo(drawX1, y);
+                ctx.lineTo(drawX2, y);
+                // Rung color fades based on depth
+                const rungAlpha = Math.min(0.1 + (z1 + z2 + 2) / 4, 0.5);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${rungAlpha})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw Strand 1 Node
+                ctx.beginPath();
+                ctx.arc(drawX1, y, 4 * perspective1, 0, Math.PI * 2);
+                // Cyan-ish color
+                ctx.fillStyle = `rgba(0, 200, 255, ${0.4 + perspective1 * 0.6})`;
+                ctx.fill();
+
+                // Draw Strand 2 Node
+                ctx.beginPath();
+                ctx.arc(drawX2, y, 4 * perspective2, 0, Math.PI * 2);
+                // Magenta-ish color
+                ctx.fillStyle = `rgba(255, 50, 150, ${0.4 + perspective2 * 0.6})`;
+                ctx.fill();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

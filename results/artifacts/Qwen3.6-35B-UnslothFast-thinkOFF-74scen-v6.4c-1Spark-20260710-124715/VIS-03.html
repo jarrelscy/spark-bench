@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050510;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let rotation = 0;
+
+        // Configuration
+        const config = {
+            nodeCount: 60,        // Total nodes per strand
+            radius: 150,          // Radius of the helix
+            verticalSpacing: 12,  // Vertical distance between nodes
+            rotationSpeed: 0.03,  // Speed of rotation
+            strandColor1: { r: 50, g: 200, b: 255 }, // Cyan
+            strandColor2: { r: 255, g: 100, b: 100 }, // Red/Pink
+            rungColor: { r: 200, g: 200, b: 255 },   // Pale Blue
+            lineWidth: 2.5,
+            nodeRadius: 4
+        };
+
+        // Resize handling
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 3D Point Projection
+        function project(x, y, z) {
+            const scale = 400 / (400 + z); // Simple perspective projection
+            const x2d = (width / 2) + (x * scale);
+            const y2d = (height / 2) + (y * scale);
+            return { x: x2d, y: y2d, scale: scale };
+        }
+
+        // Draw a single node
+        function drawNode(x, y, z, color, scale) {
+            const radius = config.nodeRadius * scale;
+            
+            // Glow effect
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+            gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.8)`);
+            gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Core
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+            ctx.fill();
+        }
+
+        // Draw a connecting line
+        function drawLine(x1, y1, x2, y2, color, width, alpha) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+            ctx.lineWidth = width;
+            ctx.stroke();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Store all renderable elements to sort by Z-depth
+            const renderList = [];
+
+            const totalHeight = config.nodeCount * config.verticalSpacing;
+            const startY = -totalHeight / 2;
+
+            for (let i = 0; i < config.nodeCount; i++) {
+                const yPos = startY + (i * config.verticalSpacing);
+                
+                // Calculate 3D coordinates
+                // Strand 1
+                const angle1 = rotation + (i * 0.2);
+                const x1 = Math.cos(angle1) * config.radius;
+                const z1 = Math.sin(angle1) * config.radius;
+
+                // Strand 2 (opposite side)
+                const angle2 = rotation + (i * 0.2) + Math.PI;
+                const x2 = Math.cos(angle2) * config.radius;
+                const z2 = Math.sin(angle2) * config.radius;
+
+                // Project to 2D
+                const p1 = project(x1, yPos, z1);
+                const p2 = project(x2, yPos, z2);
+
+                // Calculate average Z for the rung (for sorting)
+                const rungZ = (z1 + z2) / 2;
+
+                // Calculate average Z for the nodes (for sorting)
+                const nodeZ1 = z1;
+                const nodeZ2 = z2;
+
+                // Add to render list
+                // Rung
+                renderList.push({
+                    type: 'rung',
+                    z: rungZ,
+                    data: { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }
+                });
+
+                // Node 1
+                renderList.push({
+                    type: 'node',
+                    z: nodeZ1,
+                    data: { x: p1.x, y: p1.y, color: config.strandColor1, scale: p1.scale }
+                });
+
+                // Node 2
+                renderList.push({
+                    type: 'node',
+                    z: nodeZ2,
+                    data: { x: p2.x, y: p2.y, color: config.strandColor2, scale: p2.scale }
+                });
+            }
+
+            // Sort by Z-depth (back to front)
+            renderList.sort((a, b) => b.z - a.z);
+
+            // Render all elements
+            renderList.forEach(item => {
+                if (item.type === 'rung') {
+                    const { x1, y1, x2, y2 } = item.data;
+                    // Rung color fades slightly based on depth
+                    drawLine(x1, y1, x2, y2, config.rungColor, 1.5, 0.4);
+                } else if (item.type === 'node') {
+                    const { x, y, color, scale } = item.data;
+                    drawNode(x, y, 0, color, scale);
+                }
+            });
+
+            // Draw connecting backbone lines (simplified, just connecting nodes in order)
+            // Since we sorted by Z, we need to draw the lines carefully. 
+            // To keep it simple and performant, we can draw the backbone lines 
+            // before the nodes but after the rungs if we want, or just draw them 
+            // with low opacity. Let's draw them as part of the loop but handle 
+            // the connections. Actually, drawing lines between sorted nodes 
+            // breaks the visual continuity. 
+            // Better approach: Draw backbone lines *after* sorting, but we need 
+            // to know which nodes connect. 
+            // Let's draw the backbone lines separately, but sorted by the average Z of the segment.
+            
+            const backboneLines = [];
+            for (let i = 0; i < config.nodeCount - 1; i++) {
+                const yPos1 = startY + (i * config.verticalSpacing);
+                const yPos2 = startY + ((i + 1) * config.verticalSpacing);
+                
+                const angle1 = rotation + (i * 0.2);
+                const x1 = Math.cos(angle1) * config.radius;
+                const z1 = Math.sin(angle1) * config.radius;
+                
+                const angle2 = rotation + ((i + 1) * 0.2);
+                const x2 = Math.cos(angle2) * config.radius;
+                const z2 = Math.sin(angle2) * config.radius;
+                
+                const p1 = project(x1, yPos1, z1);
+                const p2 = project(x2, yPos2, z2);
+                
+                const avgZ = (z1 + z2) / 2;
+                
+                backboneLines.push({
+                    z: avgZ,
+                    strand1: { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y },
+                    strand2: { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }
+                });
+            }
+            
+            backboneLines.sort((a, b) => b.z - a.z);
+            
+            backboneLines.forEach(line => {
+                drawLine(line.strand1.x1, line.strand1.y1, line.strand1.x2, line.strand1.y2, config.strandColor1, config.lineWidth, 0.6);
+                drawLine(line.strand2.x1, line.strand2.y1, line.strand2.x2, line.strand2.y2, config.strandColor2, config.lineWidth, 0.6);
+            });
+
+            rotation += config.rotationSpeed;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

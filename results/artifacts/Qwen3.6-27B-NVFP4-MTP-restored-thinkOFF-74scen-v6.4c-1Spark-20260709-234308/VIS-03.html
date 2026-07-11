@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510; /* Deep dark blue/black */
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let frame = 0;
+    
+    // Configuration
+    const config = {
+        strandWidth: 2,
+        rungWidth: 1,
+        amplitude: 150,     // Width of the helix
+        wavelength: 300,    // Vertical distance for one full rotation
+        nodeSpacing: 15,    // Distance between nodes along the Y axis
+        rotationSpeed: 0.03,// Speed of rotation
+        nodeSize: 4         // Size of the dots
+    };
+
+    // Colors
+    const colorStrand1 = '#00f2ff'; // Cyan
+    const colorStrand2 = '#ff0055'; // Pink/Red
+    const colorRung = '#ffffff';
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        // Clear screen with a slight fade for trail effect (optional), 
+        // or just clearRect for crisp animation. Let's use clearRect.
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate the total number of nodes needed to cover the screen height
+        // plus a buffer to ensure they don't run off top/bottom during rotation
+        const totalNodes = Math.ceil(height / config.nodeSpacing) + 10;
+        
+        // Start Y offset to center the helix vertically
+        const startY = (height / 2) - (totalNodes * config.nodeSpacing / 2);
+
+        // We need to draw rungs first, then strands on top so nodes connect nicely
+        // However, for depth perception, we should ideally sort by Z.
+        // For simplicity in this 2D projection, we will draw all rungs, then all nodes.
+        // To make it look 3D, we vary opacity based on the "Z" depth (sine value).
+
+        const nodes = [];
+
+        // Generate Node Data
+        for (let i = 0; i < totalNodes; i++) {
+            const y = startY + i * config.nodeSpacing;
+            
+            // The angle determines the X position and "Depth" (Z)
+            // We use the global 'frame' variable to rotate the whole structure
+            const angle = (i * (Math.PI * 2) / (config.wavelength / config.nodeSpacing)) + (frame * config.rotationSpeed);
+
+            // Sine wave calculation
+            // Strand 1
+            const x1 = Math.sin(angle) * config.amplitude;
+            // Strand 2 (Offset by PI to be opposite)
+            const x2 = Math.sin(angle + Math.PI) * config.amplitude;
+            
+            // Calculate "Depth" factor (-1 to 1) for opacity sizing
+            // cos(angle) gives us the depth relative to the viewer
+            const depth1 = Math.cos(angle);
+            const depth2 = Math.cos(angle + Math.PI);
+
+            nodes.push({
+                index: i,
+                y: y,
+                x1: width / 2 + x1,
+                x2: width / 2 + x2,
+                depth1: depth1, // -1 (back) to 1 (front)
+                depth2: depth2
+            });
+        }
+
+        // Draw Rungs (Base Pairs)
+        ctx.lineWidth = config.rungWidth;
+        for (let node of nodes) {
+            // Determine opacity based on average depth to simulate depth of field
+            // If both are "back" (negative depth), make it fainter.
+            // If either is "front", make it brighter.
+            const avgDepth = (node.depth1 + node.depth2) / 2;
+            // Map depth (-1 to 1) to opacity (0.1 to 0.6)
+            const opacity = 0.1 + (avgDepth + 1) * 0.25; 
+
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+            
+            ctx.beginPath();
+            ctx.moveTo(node.x1, node.y);
+            ctx.lineTo(node.x2, node.y);
+            ctx.stroke();
+        }
+
+        // Draw Strands (Nodes)
+        // We draw circles to represent the sugar-phosphate backbone
+        for (let node of nodes) {
+            // Strand 1
+            const size1 = config.nodeSize * (0.5 + (node.depth1 + 1) / 2); // Scale size by depth
+            const opacity1 = 0.3 + (node.depth1 + 1) * 0.35; // Fade by depth
+
+            ctx.fillStyle = `rgba(0, 242, 255, ${opacity1})`;
+            ctx.beginPath();
+            ctx.arc(node.x1, node.y, Math.max(1, size1), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Strand 2
+            const size2 = config.nodeSize * (0.5 + (node.depth2 + 1) / 2);
+            const opacity2 = 0.3 + (node.depth2 + 1) * 0.35;
+
+            ctx.fillStyle = `rgba(255, 0, 85, ${opacity2})`;
+            ctx.beginPath();
+            ctx.arc(node.x2, node.y, Math.max(1, size2), 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Connect the dots with lines for smoother look
+        // We iterate through nodes again to draw lines between consecutive nodes
+        ctx.lineWidth = 1;
+        for (let i = 0; i < nodes.length - 1; i++) {
+            const n1 = nodes[i];
+            const n2 = nodes[i+1];
+
+            // Line 1
+            ctx.strokeStyle = `rgba(0, 242, 255, ${0.3 + (n1.depth1 + 1) * 0.2})`;
+            ctx.beginPath();
+            ctx.moveTo(n1.x1, n1.y);
+            ctx.lineTo(n2.x1, n2.y);
+            ctx.stroke();
+
+            // Line 2
+            ctx.strokeStyle = `rgba(255, 0, 85, ${0.3 + (n1.depth2 + 1) * 0.2})`;
+            ctx.beginPath();
+            ctx.moveTo(n1.x2, n1.y);
+            ctx.lineTo(n2.x2, n2.y);
+            ctx.stroke();
+        }
+
+        frame++;
+        requestAnimationFrame(draw);
+    }
+
+    // Start animation
+    draw();
+
+</script>
+</body>
+</html>

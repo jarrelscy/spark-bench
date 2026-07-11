@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotating DNA Double Helix</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #05060d;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="dna"></canvas>
+<script>
+(function () {
+  const canvas = document.getElementById('dna');
+  const ctx = canvas.getContext('2d');
+
+  let W, H;
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const NODES = 40;          // number of node pairs along the helix
+  const verticalSpacing = 26; // vertical distance between successive nodes
+  const amplitude = 130;      // horizontal spread of the helix
+  const twist = 0.45;         // phase increment per node
+  const rotSpeed = 0.02;      // rotation speed
+
+  let angle = 0;
+
+  function lerpColor(c1, c2, t) {
+    return [
+      Math.round(c1[0] + (c2[0] - c1[0]) * t),
+      Math.round(c1[1] + (c2[1] - c1[1]) * t),
+      Math.round(c1[2] + (c2[2] - c1[2]) * t)
+    ];
+  }
+
+  // strand base colors
+  const strandA = [80, 180, 255];   // cyan-blue
+  const strandB = [255, 120, 170];  // pink-magenta
+
+  function draw() {
+    ctx.fillStyle = 'rgba(5, 6, 13, 1)';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2;
+    const totalHeight = NODES * verticalSpacing;
+    const startY = (H - totalHeight) / 2;
+
+    // collect node info with depth for sorting
+    const items = [];
+
+    for (let i = 0; i < NODES; i++) {
+      const phase = i * twist + angle;
+      const y = startY + i * verticalSpacing;
+
+      // strand A
+      const xA = cx + Math.sin(phase) * amplitude;
+      const zA = Math.cos(phase); // depth -1..1
+      // strand B is opposite (half turn offset)
+      const xB = cx + Math.sin(phase + Math.PI) * amplitude;
+      const zB = Math.cos(phase + Math.PI);
+
+      items.push({
+        i, y, xA, zA, xB, zB, phase
+      });
+    }
+
+    // Draw rungs first (behind nodes), depth-aware
+    for (const it of items) {
+      const avgZ = (it.zA + it.zB) / 2;
+      const depthShade = 0.35 + (avgZ + 1) / 2 * 0.5;
+      const midColor = lerpColor(strandA, strandB, 0.5);
+      ctx.strokeStyle = `rgba(${midColor[0]},${midColor[1]},${midColor[2]},${0.15 + depthShade * 0.4})`;
+      ctx.lineWidth = 1 + depthShade * 2;
+      ctx.beginPath();
+      ctx.moveTo(it.xA, it.y);
+      ctx.lineTo(it.xB, it.y);
+      ctx.stroke();
+    }
+
+    // Draw connecting strand lines
+    function drawStrand(getX, getZ, baseColor) {
+      ctx.beginPath();
+      for (let k = 0; k < items.length; k++) {
+        const it = items[k];
+        const x = getX(it);
+        const y = it.y;
+        if (k === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(${baseColor[0]},${baseColor[1]},${baseColor[2]},0.5)`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    drawStrand(it => it.xA, it => it.zA, strandA);
+    drawStrand(it => it.xB, it => it.zB, strandB);
+
+    // Build node draw list sorted by depth so front nodes drawn last
+    const nodeDraws = [];
+    for (const it of items) {
+      nodeDraws.push({ x: it.xA, y: it.y, z: it.zA, color: strandA });
+      nodeDraws.push({ x: it.xB, y: it.y, z: it.zB, color: strandB });
+    }
+    nodeDraws.sort((a, b) => a.z - b.z);
+
+    for (const n of nodeDraws) {
+      const depth = (n.z + 1) / 2; // 0 far, 1 near
+      const radius = 3 + depth * 5;
+      const shade = 0.4 + depth * 0.6;
+      const c = n.color;
+      const r = Math.round(c[0] * shade + 20);
+      const g = Math.round(c[1] * shade + 20);
+      const b = Math.round(c[2] * shade + 20);
+
+      // glow
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, radius * 2.5);
+      grad.addColorStop(0, `rgba(${r},${g},${b},${0.9 * shade})`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, radius * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // core
+      ctx.fillStyle = `rgb(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+60)})`;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    angle += rotSpeed;
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>

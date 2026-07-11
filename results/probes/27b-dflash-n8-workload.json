@@ -1,0 +1,47 @@
+{
+  "label": "27b-dflash-n8-workload",
+  "endpoint": "http://10.0.0.120:8891/v1",
+  "model": "df27b",
+  "rows": [
+    {
+      "category": "math",
+      "decode_tps_med": 51.9,
+      "decode_tps_all": [
+        52.0,
+        51.9,
+        51.9
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "code",
+      "decode_tps_med": 29.7,
+      "decode_tps_all": [
+        29.7,
+        29.7,
+        29.7
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "prose",
+      "decode_tps_med": 25.6,
+      "decode_tps_all": [
+        25.6,
+        25.6,
+        25.6
+      ],
+      "out_tokens_med": 512
+    },
+    {
+      "category": "extraction",
+      "decode_tps_med": 49.3,
+      "decode_tps_all": [
+        49.3,
+        49.3,
+        49.4
+      ],
+      "out_tokens_med": 512
+    }
+  ]
+}

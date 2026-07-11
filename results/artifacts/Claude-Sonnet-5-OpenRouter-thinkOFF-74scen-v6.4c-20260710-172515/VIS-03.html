@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rotating DNA Double Helix</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #05050f;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+    background: #05050f;
+  }
+</style>
+</head>
+<body>
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+(function () {
+  const canvas = document.getElementById('dnaCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let width, height, centerX, centerY;
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    centerX = width / 2;
+    centerY = height / 2;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---- Helix parameters ----
+  const numPoints   = 46;          // nodes per strand
+  const numTurns    = 3.2;         // number of full spirals over the height
+  const angleStep   = (Math.PI * 2 * numTurns) / numPoints;
+  const rungEvery    = 2;          // draw a rung every N nodes
+
+  let rotation = 0;
+  const rotationSpeed = 0.012;
+
+  let lastTime = 0;
+
+  function getRadius() {
+    return Math.min(width, height) * 0.16;
+  }
+
+  function getSpacing() {
+    const margin = height * 0.08;
+    return (height - margin * 2) / (numPoints - 1);
+  }
+
+  function project(x, y, z, radius) {
+    // simple pseudo-perspective based on z (depth)
+    const persp = 1 + z / (radius * 4.5);
+    return {
+      x: centerX + x * persp,
+      y: y,
+      z: z,
+      scale: persp
+    };
+  }
+
+  function draw(timestamp) {
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+
+    // trailing fade effect on dark background
+    ctx.fillStyle = 'rgba(5, 5, 15, 0.22)';
+    ctx.fillRect(0, 0, width, height);
+
+    rotation += rotationSpeed * (dt / 16.6667 || 1);
+
+    const radius = getRadius();
+    const spacing = getSpacing();
+    const margin = height * 0.08;
+
+    const strand1 = [];
+    const strand2 = [];
+
+    for (let i = 0; i < numPoints; i++) {
+      const y = margin + i * spacing;
+      const angle = i * angleStep + rotation;
+
+      const x1 = Math.cos(angle) * radius;
+      const z1 = Math.sin(angle) * radius;
+
+      const x2 = Math.cos(angle + Math.PI) * radius;
+      const z2 = Math.sin(angle + Math.PI) * radius;
+
+      strand1.push(project(x1, y, z1, radius));
+      strand2.push(project(x2, y, z2, radius));
+    }
+
+    // ----- Draw rungs (base pairs) -----
+    for (let i = 0; i < numPoints; i += rungEvery) {
+      const p1 = strand1[i];
+      const p2 = strand2[i];
+      const avgZ = (p1.z + p2.z) / 2;
+      const depth = (avgZ / radius + 1) / 2; // 0..1
+      const alpha = 0.15 + depth * 0.45;
+
+      const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+      grad.addColorStop(0, `hsla(190, 80%, 65%, ${alpha})`);
+      grad.addColorStop(1, `hsla(320, 80%, 65%, ${alpha})`);
+
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.2 + depth * 1.6;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    // ----- Draw backbone strand curves -----
+    drawStrandBackbone(strand1, 195, timestamp);
+    drawStrandBackbone(strand2, 325, timestamp);
+
+    // ----- Draw nodes -----
+    drawStrandNodes(strand1, 195, radius, timestamp);
+    drawStrandNodes(strand2, 325, radius, timestamp);
+
+    requestAnimationFrame(draw);
+  }
+
+  function drawStrandBackbone(strand, baseHue, time) {
+    for (let i = 0; i < strand.length - 1; i++) {
+      const a = strand[i];
+      const b = strand[i + 1];
+      const avgZ = (a.z + b.z) / 2;
+      const depth = (avgZ / getRadius() + 1) / 2;
+      const alpha = 0.35 + depth * 0.55;
+      const hue = baseHue + 10 * Math.sin(i * 0.3 + time * 0.0006);
+
+      ctx.strokeStyle = `hsla(${hue}, 85%, 65%, ${alpha})`;
+      ctx.lineWidth = 1.5 + depth * 2.2;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+  }
+
+  function drawStrandNodes(strand, baseHue, radius, time) {
+    for (let i = 0; i < strand.length; i++) {
+      const p = strand[i];
+      const depth = (p.z / radius + 1) / 2; // 0..1
+      const alpha = 0.45 + depth * 0.55;
+      const r = 2.4 + depth * 3.6;
+      const hue = baseHue + 12 * Math.sin(i * 0.25 + time * 0.0008);
+
+      ctx.save();
+      ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
+      ctx.shadowBlur = 8 + depth * 10;
+      ctx.fillStyle = `hsla(${hue}, 90%, ${55 + depth * 25}%, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

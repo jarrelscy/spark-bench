@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Double Helix Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('dnaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        let width, height;
+        const numNodes = 60;
+        const spacing = 15;
+        const radius = 100;
+        const rotationSpeed = 0.02;
+        const perspective = 800; // Controls how much depth affects size
+        const viewOffsetX = 0;
+        const viewOffsetY = 0;
+
+        // Color Palette
+        const color1 = { r: 60, g: 180, b: 255 }; // Cyan/Blue
+        const color2 = { r: 255, g: 100, b: 120 }; // Red/Pink
+        const rungColor = { r: 255, g: 255, b: 255 }; // White rungs
+
+        // State
+        let rotation = 0;
+
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            // Center the view
+            ctx.translate(width / 2, height / 2);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Helper to get color components
+        function getColor(r, g, b, alpha) {
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Helper to project 3D point to 2D screen
+        function project(x, y, z) {
+            // Simple perspective projection
+            const scale = perspective / (perspective + z);
+            const px = x * scale;
+            const py = y * scale;
+            return { x: px, y: py, scale: scale };
+        }
+
+        function draw() {
+            // Clear canvas (clearing the translated context)
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Re-apply translation for drawing
+            ctx.translate(width / 2, height / 2);
+
+            // Calculate node positions
+            const nodes = [];
+            for (let i = 0; i < numNodes; i++) {
+                const angle = (i * spacing) * 0.05 + rotation;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+                const y = (i - numNodes / 2) * 15; // Vertical spacing
+
+                nodes.push({
+                    index: i,
+                    x: x,
+                    y: y,
+                    z: z,
+                    angle: angle
+                });
+            }
+
+            // Sort nodes by Z-depth so back nodes are drawn first
+            nodes.sort((a, b) => a.z - b.z);
+
+            // Draw Rungs (Bridges)
+            // We need to connect node i to node i + offset
+            // Since nodes are sorted, we need to find pairs carefully or draw twice
+            // A simpler way for rungs: iterate through original indices, calculate depth, sort rungs
+            const rungs = [];
+            const rungGap = 4; // Connect node i to node i + rungGap
+            for (let i = 0; i < numNodes - rungGap; i++) {
+                const node1 = nodes[i];
+                const node2 = nodes[i + rungGap];
+                
+                // Average Z for sorting rungs
+                const avgZ = (node1.z + node2.z) / 2;
+                rungs.push({
+                    id1: node1,
+                    id2: node2,
+                    z: avgZ,
+                    alpha: (node1.z + node2.z) / 200 // Rough opacity based on depth
+                });
+            }
+            
+            // Sort rungs by depth
+            rungs.sort((a, b) => a.z - b.z);
+
+            // Draw Rungs
+            ctx.lineWidth = 2;
+            for (const rung of rungs) {
+                const p1 = project(rung.id1.x, rung.id1.y, rung.id1.z);
+                const p2 = project(rung.id2.x, rung.id2.y, rung.id2.z);
+                
+                ctx.strokeStyle = getColor(rungColor.r, rungColor.g, rungColor.b, 0.3 + rung.alpha);
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+
+            // Draw Nodes and Strands
+            // We need to draw strands continuously, but nodes can overlap rungs
+            // Strategy: Draw all nodes, then draw strands over them? 
+            // Better: Draw nodes first, then strands. Or draw strands, then nodes on top.
+            // Let's draw nodes first, then strands on top for clarity.
+            
+            // Draw Nodes
+            for (const node of nodes) {
+                const p = project(node.x, node.y, node.z);
+                const size = 4 * p.scale;
+                
+                // Determine color based on strand (even/odd or sin/cos)
+                // Strand 1: cos (x > 0 roughly), Strand 2: sin
+                // Actually, let's use the angle. 
+                // Node i is on strand 1 if i % 2 == 0? No, they spiral together.
+                // Let's define strand 1 as the one with the 'cos' component in x, strand 2 with 'sin'.
+                // Wait, standard helix: x = cos(t), y = sin(t). 
+                // Here I used x = cos(angle), z = sin(angle).
+                // So Strand 1 is the one where we calculate x = cos(angle), z = sin(angle).
+                // Strand 2 is offset by PI.
+                
+                // Let's re-evaluate the node generation.
+                // Node i: angle = i * spacing * 0.05 + rotation
+                // Strand 1: x = cos(angle)
+                // Strand 2: x = cos(angle + PI) = -cos(angle)
+                // So if cos(angle) > 0, it's closer to front in X? No, X is horizontal.
+                
+                // Let's assign colors based on the angle.
+                // Angle range is approx -PI to PI.
+                // If angle is between 0 and PI, it's one strand. Else the other.
+                // Actually, simpler: 
+                // Strand 1 (Blue): x = cos(angle)
+                // Strand 2 (Red): x = cos(angle + PI) = -cos(angle)
+                // But wait, I stored node.x. 
+                // If node.x > 0, it's Strand 1? Not necessarily, depends on rotation.
+                // Let's use the index. 
+                // Node i corresponds to angle i*step.
+                // Strand 1: i % 2 == 0? No, they are interleaved in Z but continuous in X/Y.
+                // Let's just use the angle.
+                // Angle 0 -> x=1. Angle PI -> x=-1.
+                // So if angle is in [0, PI], x is positive (Strand 1). If [PI, 2PI], x is negative (Strand 2).
+                // Normalize angle to [0, 2PI].
+                
+                let normAngle = node.angle % (Math.PI * 2);
+                if (normAngle < 0) normAngle += Math.PI * 2;
+                
+                const isStrand1 = normAngle < Math.PI;
+                const c = isStrand1 ? color1 : color2;
+                
+                // Depth shading
+                const depthShade = (node.z + radius) / (2 * radius); // 0 to 1
+                const alpha = 0.6 + depthShade * 0.4;
+                
+                ctx.fillStyle = getColor(c.r, c.g, c.b, alpha);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Optional: Add glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = getColor(c.r, c.g, c.b, 0.5);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw Strands (Lines)
+            ctx.lineWidth = 3;
+            
+            // Draw Strand 1 (Blue)
+            ctx.strokeStyle = getColor(color1.r, color1.g, color1.b, 0.5);
+            ctx.beginPath();
+            for (let i = 0; i < numNodes; i++) {
+                const node = nodes.find(n => n.index === i); // Find original node
+                // Check if this node belongs to strand 1
+                let normAngle = node.angle % (Math.PI * 2);
+                if (normAngle < 0) normAngle += Math.PI * 2;
+                const isStrand1 = normAngle < Math.PI;
+                
+                if (isStrand1) {
+                    const p = project(node.x, node.y, node.z);
+                    if (i === 0 || !nodes.find(n => n.index === i-1 && n.angle % (Math.PI*2) < Math.PI)) {
+                        ctx.moveTo(p.x, p.y);
+                    } else {
+                        const prevNode = nodes.find(n => n.index === i-1);
+                        const prevP = project(prevNode.x, prevNode.y, prevNode.z);
+                        ctx.lineTo(p.x, p.y);
+                    }
+                }
+            }
+            ctx.stroke();
+
+            // Draw Strand 2 (Red)
+            ctx.strokeStyle = getColor(color2.r, color2.g, color2.b, 0.5);
+            ctx.beginPath();
+            for (let i = 0; i < numNodes; i++) {
+                const node = nodes.find(n => n.index === i);
+                let normAngle = node.angle % (Math.PI * 2);
+                if (normAngle < 0) normAngle += Math.PI * 2;
+                const isStrand2 = normAngle >= Math.PI;
+                
+                if (isStrand2) {
+                    const p = project(node.x, node.y, node.z);
+                    if (i === 0 || !nodes.find(n => n.index === i-1 && n.angle % (Math.PI*2) >= Math.PI)) {
+                        ctx.moveTo(p.x, p.y);
+                    } else {
+                        const prevNode = nodes.find(n => n.index === i-1);
+                        const prevP = project(prevNode.x, prevNode.y, prevNode.z);
+                        ctx.lineTo(p.x, p.y);
+                    }
+                }
+            }
+            ctx.stroke();
+
+            // Update rotation
+            rotation += rotationSpeed;
+
+            requestAnimationFrame(draw);
+        }
+
+        // Start animation
+        draw();
+    </script>
+</body>
+</html>

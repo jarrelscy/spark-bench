@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating DNA Double Helix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            /* Subtle glow effect */
+            filter: drop-shadow(0 0 10px rgba(0, 150, 255, 0.1)); 
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="dnaCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('dnaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let points = [];
+    
+    // Configuration
+    const config = {
+        strandCount: 2,
+        pointsPerStrand: 120, // Higher for smoother curves
+        radius: 100,         // Width of the helix
+        amplitude: 180,      // Vertical distance between nodes
+        rotationSpeed: 0.02,
+        colors: {
+            strand1: '#ff4d4d', // Reddish
+            strand2: '#4d79ff', // Blueish
+            rungs: 'rgba(255, 255, 255, 0.25)',
+            bg: '#050505'
+        }
+    };
+
+    // Resize canvas to fit window
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    // Generate the static 3D coordinates for the helix
+    function generateDNA() {
+        points = [];
+        const totalHeight = config.pointsPerStrand * config.amplitude;
+        
+        for (let i = 0; i < config.pointsPerStrand; i++) {
+            const angle = i * 0.2; // Twist per node
+            
+            // Strand 1
+            points.push({
+                x: Math.cos(angle) * config.radius,
+                y: i * config.amplitude - (totalHeight / 2),
+                z: Math.sin(angle) * config.radius,
+                color: config.colors.strand1,
+                id: 1
+            });
+
+            // Strand 2 (offset by PI)
+            points.push({
+                x: Math.cos(angle + Math.PI) * config.radius,
+                y: i * config.amplitude - (totalHeight / 2),
+                z: Math.sin(angle + Math.PI) * config.radius,
+                color: config.colors.strand2,
+                id: 2
+            });
+        }
+    }
+
+    // Rotate a point around the Y axis
+    function rotatePoint(point, angle) {
+        const rotated = { ...point };
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        
+        rotated.x = point.x * cos - point.z * sin;
+        rotated.z = point.x * sin + point.z * cos;
+        
+        // Project 3D to 2D perspective
+        // Perspective factor: closer objects are bigger
+        // We add a focal length offset to the Z to avoid division by zero
+        const focalLength = 400; 
+        const scale = focalLength / (focalLength + rotated.z);
+        
+        rotated.screenX = width / 2 + rotated.x * scale;
+        rotated.screenY = height / 2 + rotated.y;
+        rotated.scale = scale;
+        rotated.opacity = scale; // Fade out back nodes
+        rotated.zDepth = rotated.z;
+        
+        return rotated;
+    }
+
+    function draw() {
+        let rotationAngle = Date.now() * config.rotationSpeed;
+
+        // Clear canvas
+        ctx.fillStyle = config.colors.bg;
+        ctx.fillRect(0, 0, width, height);
+
+        // Transform all points
+        const projectedPoints = points.map(p => rotatePoint(p, rotationAngle));
+
+        // Sort by Z depth to handle transparency correctly
+        // We sort from back to front.
+        // Note: Because we draw rungs as single lines, sorting strictly by Z is tricky.
+        // However, since the rungs are horizontal and the strands wrap around, 
+        // drawing the rungs first (sorted by midpoint Z) then the nodes usually works fine
+        // for this specific geometry.
+        
+        // 1. Draw Rungs
+        ctx.lineWidth = 2;
+        for (let i = 0; i < config.pointsPerStrand; i++) {
+            const p1 = projectedPoints[i * 2];
+            const p2 = projectedPoints[i * 2 + 1];
+            
+            // Calculate midpoint Z for sorting/drawing order logic if needed, 
+            // but here we just draw them all.
+            // To make it look 3D, we can adjust opacity based on how far back the midpoint is.
+            const midZ = (p1.zDepth + p2.zDepth) / 2;
+            const alpha = Math.max(0.05, Math.min(0.3, (400 - midZ) / 800)); // Dynamic opacity
+
+            ctx.beginPath();
+            ctx.moveTo(p1.screenX, p1.screenY);
+            ctx.lineTo(p2.screenX, p2.screenY);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.stroke();
+        }
+
+        // 2. Draw Strands
+        // To draw continuous lines, we need to sort the points by their Y position 
+        // so we connect them sequentially along the strand, not by Z depth.
+        // However, standard canvas drawing is painter's algorithm. 
+        // If we just draw line segments, back segments might be drawn after front segments.
+        // To fix this perfectly requires clipping, but for a helix, simply drawing 
+        // segments with opacity based on Z works decently.
+        
+        // Let's create segments for sorting
+        const segments = [];
+        
+        // Add Strand 1 segments
+        for (let i = 0; i < config.pointsPerStrand - 1; i++) {
+            const p1 = projectedPoints[i * 2];
+            const p2 = projectedPoints[(i + 1) * 2];
+            segments.push({
+                p1, p2, color: config.colors.strand1, 
+                depth: (p1.zDepth + p2.zDepth) / 2
+            });
+        }
+
+        // Add Strand 2 segments
+        for (let i = 0; i < config.pointsPerStrand - 1; i++) {
+            const p1 = projectedPoints[i * 2 + 1];
+            const p2 = projectedPoints[(i + 1) * 2 + 1];
+            segments.push({
+                p1, p2, color: config.colors.strand2, 
+                depth: (p1.zDepth + p2.zDepth) / 2
+            });
+        }
+
+        // Sort segments by depth (back to front)
+        segments.sort((a, b) => a.depth - b.depth);
+
+        // Draw sorted segments
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        segments.forEach(seg => {
+            ctx.beginPath();
+            ctx.moveTo(seg.p1.screenX, seg.p1.screenY);
+            ctx.lineTo(seg.p2.screenX, seg.p2.screenY);
+            
+            // Calculate average scale/opacity for the line segment
+            const avgScale = (seg.p1.scale + seg.p2.scale) / 2;
+            const lineWidth = 4 * avgScale;
+            
+            ctx.lineWidth = lineWidth;
+            ctx.strokeStyle = seg.color;
+            ctx.globalAlpha = Math.max(0, Math.min(1, avgScale)); // Fade distant lines
+            ctx.stroke();
+        });
+        
+        ctx.globalAlpha = 1; // Reset alpha for next frame
+
+        // 3. Draw Nodes (on top of everything)
+        // We sort nodes by Z depth so front nodes cover back nodes
+        const sortedNodes = [...projectedPoints].sort((a, b) => a.zDepth - b.zDepth);
+
+        sortedNodes.forEach(p => {
+            ctx.beginPath();
+            const radius = 3 * p.scale;
+            ctx.arc(p.screenX, p.screenY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            
+            // Optional: White core for "neon" look
+            ctx.beginPath();
+            ctx.arc(p.screenX, p.screenY, radius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    // Init
+    window.addEventListener('resize', resize);
+    resize();
+    generateDNA();
+    draw();
+
+</script>
+
+</body>
+</html>

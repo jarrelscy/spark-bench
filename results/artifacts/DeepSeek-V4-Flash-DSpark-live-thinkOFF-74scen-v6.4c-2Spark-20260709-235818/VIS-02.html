@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxy"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementById('galaxy');
+            const ctx = canvas.getContext('2d');
+
+            let W, H, cx, cy, scale;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+                cx = W / 2;
+                cy = H / 2;
+                scale = Math.min(W, H) * 0.42;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            // ─── parameters ───────────────────────────────────────────────
+            const NUM_ARMS = 4;
+            const NUM_STARS = 750;
+            const NUM_BG = 280;
+            const CORE_RADIUS_BASE = 28;
+            const SPIRAL_TIGHTNESS = 2.8;
+            const ROTATION_SPEED = 0.25;
+
+            // ─── helpers ──────────────────────────────────────────────────
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+            function random(min, max) { return Math.random() * (max - min) + min; }
+
+            // ─── star colors by radius ────────────────────────────────────
+            function starColor(radius) {
+                // radius 0..1
+                let r, g, b;
+                if (radius < 0.25) {
+                    // core region: warm yellow → white
+                    const t = radius / 0.25;
+                    r = 255;
+                    g = lerp(190, 250, t);
+                    b = lerp(80, 230, t);
+                } else if (radius < 0.55) {
+                    // inner disk: white → pale blue
+                    const t = (radius - 0.25) / 0.30;
+                    r = lerp(255, 200, t);
+                    g = lerp(250, 215, t);
+                    b = lerp(230, 255, t);
+                } else if (radius < 0.80) {
+                    // mid disk: blue-white → blue
+                    const t = (radius - 0.55) / 0.25;
+                    r = lerp(200, 140, t);
+                    g = lerp(215, 175, t);
+                    b = 255;
+                } else {
+                    // outer disk: deep blue with a hint of purple
+                    const t = (radius - 0.80) / 0.20;
+                    r = lerp(140, 100, t);
+                    g = lerp(175, 130, t);
+                    b = lerp(255, 240, t);
+                }
+                return { r: Math.floor(r), g: Math.floor(g), b: Math.floor(b) };
+            }
+
+            // ─── galaxy stars ─────────────────────────────────────────────
+            class GalaxyStar {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    // radial distribution: slight concentration toward center
+                    this.radius = Math.pow(Math.random(), 0.65);
+                    this.arm = Math.floor(Math.random() * NUM_ARMS);
+
+                    const armAngle = (this.arm / NUM_ARMS) * Math.PI * 2;
+                    const radiusAngle = this.radius * SPIRAL_TIGHTNESS;
+                    const spread = 0.28 * (1 + this.radius * 0.6);
+                    const jitter = (Math.random() - 0.5) * spread;
+
+                    this.angle = armAngle + radiusAngle + jitter;
+
+                    // small radial jitter
+                    this.radius += (Math.random() - 0.5) * 0.04;
+                    this.radius = clamp(this.radius, 0.015, 1.0);
+
+                    // size: smaller toward edges, some random variation
+                    const baseSize = 0.4 + (1 - this.radius) * 1.2;
+                    this.size = baseSize * (0.6 + Math.random() * 0.8);
+
+                    // color
+                    const col = starColor(this.radius);
+                    this.color = col;
+
+                    // twinkle
+                    this.twinkleSpeed = random(0.6, 2.4);
+                    this.twinklePhase = random(0, Math.PI * 2);
+                    this.brightness = random(0.65, 1.0);
+
+                    // extra glow flag for larger stars
+                    this.glow = this.size > 1.6 && Math.random() > 0.5;
+                    this.glowSize = this.size * (2 + Math.random() * 3);
+                }
+            }
+
+            const stars = [];
+            for (let i = 0; i < NUM_STARS; i++) {
+                stars.push(new GalaxyStar());
+            }
+
+            // ─── background stars ─────────────────────────────────────────
+            const bgStars = [];
+            for (let i = 0; i < NUM_BG; i++) {
+                bgStars.push({
+                    x: Math.random(),
+                    y: Math.random(),
+                    size: random(0.3, 1.4),
+                    brightness: random(0.15, 0.6),
+                    twinkleSpeed: random(0.3, 1.8),
+                    twinklePhase: random(0, Math.PI * 2),
+                    hue: random(0, 360)
+                });
+            }
+
+            // ─── core glow layers ─────────────────────────────────────────
+            function drawCore(cx, cy, time) {
+                const pulse = 1 + 0.04 * Math.sin(time * 0.6);
+                const rBase = CORE_RADIUS_BASE * pulse;
+
+                // outer halo
+                const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, rBase * 3.2);
+                g1.addColorStop(0, 'rgba(255, 230, 180, 0.25)');
+                g1.addColorStop(0.3, 'rgba(255, 200, 120, 0.12)');
+                g1.addColorStop(0.7, 'rgba(255, 160, 70, 0.04)');
+                g1.addColorStop(1, 'rgba(255, 120, 40, 0)');
+                ctx.fillStyle = g1;
+                ctx.beginPath();
+                ctx.arc(cx, cy, rBase * 3.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // mid glow
+                const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, rBase * 1.8);
+                g2.addColorStop(0, 'rgba(255, 245, 210, 0.55)');
+                g2.addColorStop(0.4, 'rgba(255, 215, 150, 0.30)');
+                g2.addColorStop(0.8, 'rgba(255, 180, 100, 0.08)');
+                g2.addColorStop(1, 'rgba(255, 150, 70, 0)');
+                ctx.fillStyle = g2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, rBase * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // inner bright core
+                const g3 = ctx.createRadialGradient(cx, cy, 0, cx, cy, rBase * 0.9);
+                g3.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                g3.addColorStop(0.25, 'rgba(255, 250, 230, 0.92)');
+                g3.addColorStop(0.55, 'rgba(255, 225, 170, 0.60)');
+                g3.addColorStop(0.85, 'rgba(255, 190, 110, 0.20)');
+                g3.addColorStop(1, 'rgba(255, 160, 80, 0)');
+                ctx.fillStyle = g3;
+                ctx.beginPath();
+                ctx.arc(cx, cy, rBase * 0.9, 0, Math.PI * 2);
+                ctx.fill();
+
+                // central hot spot
+                const g4 = ctx.createRadialGradient(cx, cy, 0, cx, cy, rBase * 0.25);
+                g4.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                g4.addColorStop(0.5, 'rgba(255, 255, 240, 0.7)');
+                g4.addColorStop(1, 'rgba(255, 240, 200, 0)');
+                ctx.fillStyle = g4;
+                ctx.beginPath();
+                ctx.arc(cx, cy, rBase * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+
+                // tiny bright point
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // ─── draw a single star with glow ─────────────────────────────
+            function drawStar(x, y, size, color, alpha, glow) {
+                if (alpha < 0.01) return;
+                ctx.globalAlpha = alpha;
+
+                if (glow && size > 1.2) {
+                    const glowRadius = size * 3.5;
+                    const g = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
+                    g.addColorStop(0, `rgba(${color.r},${color.g},${color.b},${alpha * 0.25})`);
+                    g.addColorStop(1, `rgba(${color.r},${color.g},${color.b},0)`);
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // extra bright center for larger stars
+                if (size > 1.4 && alpha > 0.5) {
+                    ctx.globalAlpha = alpha * 0.3;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // ─── animation ────────────────────────────────────────────────
+            let time = 0;
+
+            function draw(timestamp) {
+                const dt = Math.min((timestamp - (time || timestamp)) / 1000, 0.05);
+                time = timestamp || 0;
+
+                // clear
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+
+                // ── background stars ──
+                for (const s of bgStars) {
+                    const twinkle = 0.5 + 0.5 * Math.sin(time * 0.001 * s.twinkleSpeed + s.twinklePhase);
+                    const alpha = s.brightness * twinkle * 0.6;
+                    ctx.globalAlpha = alpha;
+                    const hueShift = (s.hue + time * 0.02) % 360;
+                    ctx.fillStyle = `hsl(${hueShift}, 20%, ${70 + 30 * s.brightness}%)`;
+                    ctx.beginPath();
+                    ctx.arc(s.x * W, s.y * H, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+
+                // ── galaxy stars ──
+                const rotFactor = ROTATION_SPEED * 0.016;
+
+                for (const star of stars) {
+                    // differential rotation: inner rotates faster
+                    const angVel = rotFactor / (star.radius * 0.45 + 0.55);
+                    star.angle += angVel;
+
+                    const r = star.radius * scale;
+                    const x = cx + r * Math.cos(star.angle);
+                    const y = cy + r * Math.sin(star.angle);
+
+                    // twinkle
+                    const twinkle = 0.55 + 0.45 * Math.sin(time * 0.001 * star.twinkleSpeed + star.twinklePhase);
+                    const alpha = star.brightness * twinkle;
+
+                    drawStar(x, y, star.size, star.color, alpha, star.glow);
+                }
+
+                ctx.globalAlpha = 1;
+
+                // ── core ──
+                drawCore(cx, cy, time * 0.001);
+
+                // ── subtle lens flare / dust overlay ──
+                const dustGrad = ctx.createRadialGradient(cx, cy, scale * 0.1, cx, cy, scale * 1.1);
+                dustGrad.addColorStop(0, 'rgba(255, 240, 210, 0.03)');
+                dustGrad.addColorStop(0.3, 'rgba(255, 220, 180, 0.015)');
+                dustGrad.addColorStop(0.6, 'rgba(200, 200, 255, 0.008)');
+                dustGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = dustGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, scale * 1.1, 0, Math.PI * 2);
+                ctx.fill();
+
+                requestAnimationFrame(draw);
+            }
+
+            requestAnimationFrame(draw);
+
+            // ─── handle resize ────────────────────────────────────────────
+            window.addEventListener('resize', () => {
+                resize();
+                // rescale star positions will adapt naturally via scale variable
+            });
+
+        })();
+    </script>
+</body>
+</html>

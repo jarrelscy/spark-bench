@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Galaxy Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY;
+        const starCount = 1500;
+        const stars = [];
+
+        // Configuration
+        const config = {
+            rotationSpeed: 0.0015,
+            armCount: 4,
+            armSpread: 0.6, // How wide the arms are
+            coreSize: 150,  // Radius of the dense center
+            galaxySize: 300 // Base size multiplier
+        };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Determine if star is part of an arm or a random halo star
+                const isArmStar = Math.random() > 0.2;
+
+                // Distance from center (Log-normal distribution for clustering)
+                // Using simple random math to approximate a bell curve
+                const r1 = Math.random();
+                const r2 = Math.random();
+                const r3 = Math.random();
+                const r4 = Math.random();
+                
+                // Base distance
+                let dist = Math.sqrt(-2 * Math.log(r1) * Math.cos(2 * Math.PI * r2));
+                
+                // Scale distance
+                if (isArmStar) {
+                    dist = Math.max(10, dist * config.galaxySize);
+                } else {
+                    // Halo stars can be further out or very close
+                    dist = Math.max(5, dist * config.galaxySize * 1.5);
+                }
+
+                this.dist = dist;
+
+                // Angle calculation
+                // Spiral formula: theta = log(r) * slope
+                const logDist = Math.log(dist + 1);
+                const spiralAngle = logDist * 1.2; // Tightness of spiral
+
+                // Add random spread to the arm
+                const spread = (Math.random() - 0.5) * config.armSpread * (dist / 50);
+
+                if (isArmStar) {
+                    // Pick one of the arms
+                    const armIndex = Math.floor(Math.random() * config.armCount);
+                    const armAngle = (Math.PI * 2 / config.armCount) * armIndex;
+                    this.angle = spiralAngle + armAngle + spread;
+                } else {
+                    this.angle = Math.random() * Math.PI * 2;
+                }
+
+                // Color variation
+                const colorRand = Math.random();
+                if (colorRand < 0.6) {
+                    // Blue/White (Young stars)
+                    this.color = { r: 180, g: 200, b: 255 };
+                } else if (colorRand < 0.9) {
+                    // Yellow/Gold (Middle age)
+                    this.color = { r: 255, g: 240, b: 180 };
+                } else {
+                    // Red (Old stars)
+                    this.color = { r: 255, g: 180, b: 150 };
+                }
+
+                // Size
+                this.size = Math.random() * 1.5 + 0.5;
+                
+                // Twinkle properties
+                this.twinkleSpeed = Math.random() * 0.05 + 0.01;
+                this.twinklePhase = Math.random() * Math.PI * 2;
+                
+                // Individual rotation speed (Keplerian-ish: closer = faster)
+                // We divide by dist, but clamp it so they don't spin infinitely fast
+                this.speed = 0.005 / (Math.max(dist, 20) / 100);
+            }
+
+            update(time) {
+                // Update angle
+                this.angle += this.speed * config.rotationSpeed * time;
+
+                // Calculate position
+                this.x = centerX + Math.cos(this.angle) * this.dist;
+                this.y = centerY + Math.sin(this.angle) * this.dist;
+
+                // Twinkle effect
+                const twinkle = Math.sin(time * this.twinkleSpeed + this.twinklePhase);
+                this.alpha = 0.5 + (twinkle * 0.3);
+                if (this.alpha < 0.1) this.alpha = 0.1;
+                if (this.alpha > 0.9) this.alpha = 0.9;
+            }
+
+            draw(ctx) {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = `rgb(${this.color.r}, ${this.color.g}, ${this.color.b})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            resize();
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function drawCore() {
+            // Draw a glowing core
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, config.coreSize);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.1, 'rgba(255, 240, 200, 0.8)');
+            gradient.addColorStop(0.4, 'rgba(200, 180, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.globalCompositeOperation = 'screen';
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, config.coreSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        let lastTime = 0;
+
+        function animate(timestamp) {
+            // Calculate delta time for smooth animation regardless of frame rate
+            const dt = timestamp - lastTime;
+            lastTime = timestamp;
+
+            // Clear canvas with slight transparency for trails (optional, but looks nice)
+            // Or just clear completely for crisp stars
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, width, height);
+
+            drawCore();
+
+            // Update and draw stars
+            for (let i = 0; i < stars.length; i++) {
+                stars[i].update(timestamp);
+                stars[i].draw(ctx);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+        requestAnimationFrame(animate);
+
+    </script>
+</body>
+</html>
