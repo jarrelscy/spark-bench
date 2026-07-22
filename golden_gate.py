@@ -184,10 +184,12 @@ draw();
 V3D_RUN_FAIL = """<!DOCTYPE html><html><body style="margin:0;background:#111">
 <canvas id="c" width="480" height="300"></canvas><script>
 const x = document.getElementById("c").getContext("2d");
-function draw() {           // constant max-energy jiggle, no phases
+function draw() {           // constant-intensity noise: motion with NO phases
   x.fillStyle = "#181818"; x.fillRect(0, 0, 480, 300);
-  const dx = performance.now() / 40;  // constant velocity, no wrap
-  x.fillStyle = "#e8d8b0"; x.fillRect(210 + dx, 90, 60, 120);
+  x.fillStyle = "#e8d8b0";
+  for (let i = 0; i < 60; i++) {
+    x.fillRect(Math.random() * 460, Math.random() * 280, 14, 14);
+  }
   requestAnimationFrame(draw);
 }
 draw();
