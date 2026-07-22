@@ -136,6 +136,64 @@ def _sc(scenario_id):
     raise KeyError(scenario_id)
 
 
+
+
+# ---- v6.5 render-grader fixtures (2D canvas, time-based, compressed) ------ #
+V3D_RACE_PASS = """<!DOCTYPE html><html><body style="margin:0;background:#123">
+<canvas id="c" width="480" height="300"></canvas><script>
+const x = document.getElementById("c").getContext("2d");
+const t0 = performance.now();
+function draw() {
+  const t = ((performance.now() - t0) / 1000) % 6;  // 6s loop
+  x.fillStyle = "#334455"; x.fillRect(0, 0, 480, 300);
+  const bx = 40 + t * 60;                 // blue: steady
+  const rx = 20 + t * t * 14;             // red: accelerates, crosses ~4.3s
+  x.fillStyle = "#0026ff"; x.fillRect(bx, 130, 60, 30);
+  x.fillStyle = "#ff1a1a"; x.fillRect(rx, 180, 60, 30);
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>"""
+
+V3D_RACE_FAIL = """<!DOCTYPE html><html><body style="margin:0;background:#123">
+<canvas id="c" width="480" height="300"></canvas><script>
+const x = document.getElementById("c").getContext("2d");
+x.fillStyle = "#334455"; x.fillRect(0, 0, 480, 300);
+x.fillStyle = "#ff1a1a"; x.fillRect(100, 150, 60, 30);  // static, red only
+</script></body></html>"""
+
+V3D_RUN_PASS = """<!DOCTYPE html><html><body style="margin:0;background:#111">
+<canvas id="c" width="480" height="300"></canvas><script>
+const x = document.getElementById("c").getContext("2d");
+const t0 = performance.now();
+function amp(t) {           // stand 2s / walk 3s / run 3s / stand 4s+
+  if (t < 2) return 0; if (t < 5) return 14; if (t < 8) return 46; return 0;
+}
+function draw() {
+  const t = (performance.now() - t0) / 1000;
+  x.fillStyle = "#181818"; x.fillRect(0, 0, 480, 300);
+  const a = amp(Math.min(t, 12));
+  const dx = Math.sin(performance.now() / 55) * a;
+  const dy = Math.cos(performance.now() / 45) * a * 0.6;
+  x.fillStyle = "#e8d8b0"; x.fillRect(210 + dx, 90 + dy, 60, 120);
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>"""
+
+V3D_RUN_FAIL = """<!DOCTYPE html><html><body style="margin:0;background:#111">
+<canvas id="c" width="480" height="300"></canvas><script>
+const x = document.getElementById("c").getContext("2d");
+function draw() {           // constant max-energy jiggle, no phases
+  x.fillStyle = "#181818"; x.fillRect(0, 0, 480, 300);
+  const dx = performance.now() / 40;  // constant velocity, no wrap
+  x.fillStyle = "#e8d8b0"; x.fillRect(210 + dx, 90, 60, 120);
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>"""
+
+
 def run_gate(verbose=True):
     """Returns (ok: bool, summary: str). Prints a per-case line when verbose."""
     failures = []
@@ -201,6 +259,32 @@ def run_gate(verbose=True):
         s, r, _lat, _txt, _ratio = ev._run_agentic(_sc(sid), dead_parser_model(),
                                                    {}, 0.0, 30)
         case(f"harness+grader: dead-parser model on {sid}", s, 0.0, r)
+
+
+    # ---- layer 4: v6.5 render-based visual graders (range asserts) ----
+    if verbose:
+        print("golden gate — layer 4: v6.5 render graders on canned fixtures")
+    from visual_3d_grader import grade_race_render, grade_runner_render
+
+    def case_range(name, got, lo, hi, reason=""):
+        nonlocal n
+        n += 1
+        ok = lo <= got <= hi
+        if verbose:
+            print(f"  [{'ok ' if ok else 'FAIL'}] {name}: want [{lo},{hi}] "
+                  f"got {got:.2f}  {reason[:60]}")
+        if not ok:
+            failures.append(f"{name}: want [{lo},{hi}] got {got:.2f} ({reason[:80]})")
+
+    s, r = grade_race_render(V3D_RACE_PASS, render_seconds=10, fps=4.0)
+    case_range("v3d race: crossing fixture passes", s, 0.85, 1.0, r)
+    s, r = grade_race_render(V3D_RACE_FAIL, render_seconds=6, fps=4.0)
+    case_range("v3d race: static fixture fails", s, 0.0, 0.45, r)
+    s, r = grade_runner_render(V3D_RUN_PASS, render_seconds=13, fps=4.0)
+    case_range("v3d runner: phased fixture passes", s, 0.85, 1.0, r)
+    s, r = grade_runner_render(V3D_RUN_FAIL, render_seconds=13, fps=4.0)
+    case_range("v3d runner: constant-motion fixture fails", s, 0.0, 0.6, r)
+
 
     ok = not failures
     summary = (f"golden gate {'PASSED' if ok else 'FAILED'}: "

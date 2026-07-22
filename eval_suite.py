@@ -497,6 +497,32 @@ def expect_html_animation(min_bodies=6):
     return check
 
 
+
+
+def expect_3d_race():
+    """v6.5: render-based grading — red/blue visible, moving, overtake occurs."""
+    def check(resp):
+        from visual_3d_grader import grade_race_render
+        html = _strip_fences(resp.get("text", "") or "")
+        try:
+            return grade_race_render(html)
+        except Exception as e:
+            return (0.0, "grader-error(%s)" % type(e).__name__)
+    return check
+
+
+def expect_3d_locomotion():
+    """v6.5: render-based grading — motion energy tracks stand/walk/run/stand."""
+    def check(resp):
+        from visual_3d_grader import grade_runner_render
+        html = _strip_fences(resp.get("text", "") or "")
+        try:
+            return grade_runner_render(html)
+        except Exception as e:
+            return (0.0, "grader-error(%s)" % type(e).__name__)
+    return check
+
+
 # --------------------------------------------------------------------------- #
 # executable code graders
 # --------------------------------------------------------------------------- #
@@ -2233,6 +2259,43 @@ HARD_SCENARIOS = [
                               _strip_fences(resp.get("text", "") or ""), re.I)
                  else (0.5, "no helix/dna keywords present")),
              weights=[3, 1])),
+
+
+    # ---- visual (v6.5, RENDERED 3D narrative — graded by pixels, not regex) --- #
+    dict(id="VIS-04", domain="visual", group="capability", tier="hard",
+         difficulty=2.3, max_tokens=12288, temperature=0.6, artifact_ext="html",
+         messages=_msg(
+             "Write a single self-contained HTML file with a 3D animation using "
+             "three.js. three.js r160 is available as an ES module at "
+             "'./three.module.js' -- import it with:\n"
+             "  import * as THREE from './three.module.js';\n"
+             "Scene: two cars race on a straight track toward a visible finish "
+             "line. One car is bright RED, the other bright BLUE. The blue car "
+             "leads early, then the red car accelerates, overtakes mid-race, and "
+             "wins. After the red car crosses the finish line the race resets and "
+             "loops forever. Both cars must be clearly visible and large enough "
+             "to follow throughout (fill a meaningful part of the frame). Simple "
+             "ground and sky, camera keeps both cars in view. No external assets "
+             "besides the three.js import. Output ONLY the HTML in one code "
+             "block."),
+         grade=expect_3d_race()),
+    dict(id="VIS-05", domain="visual", group="capability", tier="hard",
+         difficulty=2.4, max_tokens=12288, temperature=0.6, artifact_ext="html",
+         messages=_msg(
+             "Write a single self-contained HTML file with a 3D animation using "
+             "three.js. three.js r160 is available as an ES module at "
+             "'./three.module.js' -- import it with:\n"
+             "  import * as THREE from './three.module.js';\n"
+             "Scene: a low-poly 3D humanoid figure performs this exact cycle on a "
+             "treadmill-style ground, side-on camera: stands still for 2 seconds, "
+             "walks in place for 3 seconds (limbs swinging at walking pace), runs "
+             "in place for 3 seconds (faster, larger limb swings, slight forward "
+             "lean), then stands still again for 2 seconds. The 10-second cycle "
+             "loops forever and must start immediately on load. Limb movement "
+             "must clearly differ between walking and running. No external "
+             "assets besides the three.js import. Output ONLY the HTML in one "
+             "code block."),
+         grade=expect_3d_locomotion()),
 
     # ---- planning (autonomous decomposition) ----------------------------- #
     # PL-01: Only grade the first step — a smart agent calls get_contacts

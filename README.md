@@ -2,7 +2,7 @@
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-**Current methodology: v6.4c · 74 scenarios · 12 domains · 12 agentic workflows**
+**Current methodology: v6.5 · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
 
 | | |
 |---|---|
@@ -75,7 +75,26 @@ Building in public means admitting mistakes and correcting them:
 4. **One model per Spark** — multi-tenant GPU runs contaminated speed.
 5. **Token tracking** + **serving throughput side sweep** (non-scoring `tier2` rows).
 
-### v6.x → v6.4c (current)
+### v6.4c → v6.5 (current)
+
+- **VIS-04/VIS-05: rendered 3D narrative scenarios.** The v6.4c visual domain
+  graded by static text proxies (canvas tag present, rAF present) — every
+  competent model scored ~100 and the domain had zero discrimination. v6.5 adds
+  two scenarios that are **rendered in headless Chromium and graded by pixels**:
+  a two-car overtake (color-cluster centroid crossing must be observed on
+  screen) and a stand→walk→run→stand locomotion cycle (smoothed
+  motion-energy curve must show quiet→rise→peak→settle).
+  three.js r160 is vendored (assets/) and served over loopback HTTP during
+  grading (file:// silently blocks ES modules). Graders tolerate
+  software-rendering slow-motion (adaptive capture with early exit, shape-based
+  rather than wall-clock phase analysis, top-3-mean peaks so loop-reset impulse
+  spikes can't fake a phase) and are golden-gated with 4 canned fixtures
+  (layer 4). Calibration evidence: the same model produced a 1.00 artifact and
+  a 0.32 artifact (GLM-5.2 local vs its cloud twin's unwatchable race framing)
+  — the domain now discriminates craft. v6.5 scores are NOT comparable to
+  v6.4c rows.
+
+### v6.x → v6.4c
 1. **v6.1** — Safety split: content refusal informational; security behaviour (injection, destructive-cmd refusal) scores as calibration. Reliability no longer gives 100% for consistent failure.
 2. **v6.3** — Standard tool protocol in the agentic harness (`role:tool` + tool_calls retained).
 3. **v6.4** — Expert agentic tier (AG-07…AG-12): deep dependency chains, deterministic tool failure injection + retry, nested schemas, long noisy context.
