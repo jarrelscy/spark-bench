@@ -552,6 +552,101 @@ def _build_haystack(approx_tokens, passcode, depth=0.5):
 # --------------------------------------------------------------------------- #
 GRADER_FILES = ["eval_suite.py", "spark_bench.py", "golden_gate.py"]
 
+# A flat perfect domain is only non-blocking when the current suite ran the
+# complete, known scenario set and its domain-specific evidence proves that
+# the graders actually exercised the outputs. This keeps the historical
+# all-pass detector while allowing genuinely perfect v6.5 results to rank.
+VERIFIED_FLAT_SCENARIOS = {
+    "structured": frozenset({"SO-02", "SOH-01", "SOH-02", "SOH-03", "SOH-04"}),
+    "agentic": frozenset({f"AG-{i:02d}" for i in range(1, 13)}),
+    "visual": frozenset({f"VIS-{i:02d}" for i in range(1, 6)}),
+}
+
+
+def _all_repeats_exact(rec, expected):
+    subs = rec.get("subs")
+    return (bool(subs) and all(round(float(x), 6) == expected for x in subs)
+            and rec.get("pass_rate") == 1.0
+            and not str(rec.get("reason", "")).startswith("error:"))
+
+
+def _verified_flat_success(domain, records):
+    """Return True only for a complete, evidence-bearing perfect domain."""
+    expected_ids = VERIFIED_FLAT_SCENARIOS.get(domain)
+    if not expected_ids or {r.get("id") for r in records} != expected_ids:
+        return False
+    if not all(round(float(r.get("score", -1)), 6) == 1.0
+               and _all_repeats_exact(r, 1.0) for r in records):
+        return False
+
+    if domain == "structured":
+        bad = ("no parseable", "missing", "bad ", "wrong type", "validation failed",
+               "extra keys")
+        return all(not any(token in str(r.get("reason", "")).lower()
+                           for token in bad) for r in records)
+
+    if domain == "agentic":
+        for rec in records:
+            reason = str(rec.get("reason", ""))
+            match = re.search(r"agentic\s+(\d+)/(\d+):", reason)
+            if not match or match.group(1) != match.group(2):
+                return False
+            if "CORRECTNESS GATE FAILED" in reason or "\u2717" in reason:
+                return False
+        return True
+
+    if domain == "visual":
+        by_id = {r["id"]: r for r in records}
+        if not all(r.get("artifact") and os.path.isfile(r["artifact"])
+                   for r in records):
+            return False
+        race = str(by_id["VIS-04"].get("reason", ""))
+        runner = str(by_id["VIS-05"].get("reason", ""))
+        race_evidence = ("red-visible", "blue-visible", "red-moves",
+                         "blue-moves", "overtake-event")
+        runner_evidence = ("scene-structure", "peak>start",
+                           "peak-not-loadflash", "settles")
+        bad = ("render(", "js-errors", "too-few-frames")
+        return (all(token in race for token in race_evidence)
+                and all(token in runner for token in runner_evidence)
+                and not any(token in race or token in runner for token in bad))
+
+    return False
+
+
+def classify_eval_integrity(res):
+    """Return (blocking quarantine flags, non-blocking verified-flat facts)."""
+    qflags = []
+    verified_flat = []
+    by_dom = {}
+    for scenario in res.get("scenarios", []):
+        if scenario.get("group") == "capability":
+            by_dom.setdefault(scenario["domain"], []).append(scenario)
+
+    for dname, records in sorted(by_dom.items()):
+        scores = [round(float(r["score"]), 6) for r in records]
+        if len(scores) >= 3 and len(set(scores)) == 1 and scores[0] in (0.0, 1.0):
+            if scores[0] == 1.0 and _verified_flat_success(dname, records):
+                verified_flat.append(f"{dname}=1")
+            else:
+                qflags.append(f"FLAT_DOMAIN:{dname}={scores[0]:g}")
+        elif (len(scores) >= 5
+              and sum(1 for x in scores if x == 0.0) >= 0.8 * len(scores)
+              and statistics.mean(scores) < 0.05):
+            qflags.append(f"DEAD_DOMAIN:{dname}")
+
+    allcap = [round(float(r["score"]), 6)
+              for records in by_dom.values() for r in records]
+    if len(by_dom) >= 2 and len(allcap) >= 6 and len(set(allcap)) == 1:
+        all_verified = (allcap[0] == 1.0
+                        and {item.split("=", 1)[0] for item in verified_flat}
+                        == set(by_dom))
+        if not all_verified:
+            qflags.append(f"FLAT_ALL:{allcap[0]:g}")
+    if not res.get("trial_stats", {}).get("valid", True):
+        qflags.append(f"ERROR_RATE:{res['trial_stats'].get('error_rate')}%")
+    return qflags, verified_flat
+
 
 def _abort_run(ctx, why, detail=""):
     ctx.add("eval", "provenance", "aborted", why, "", notes=detail[:120])
@@ -802,28 +897,16 @@ def run_eval(ctx, args):
     # 100.0; the v5 dead-parser signature was agentic flat at ~0. Either way,
     # a domain where every scenario scores identically at an extreme is a
     # harness symptom until a human clears it.
-    qflags = []
-    by_dom = {}
-    for s in res["scenarios"]:
-        if s["group"] == "capability":
-            by_dom.setdefault(s["domain"], []).append(round(s["score"], 6))
-    for dname, scores in sorted(by_dom.items()):
-        if len(scores) >= 3 and len(set(scores)) == 1 and scores[0] in (0.0, 1.0):
-            qflags.append(f"FLAT_DOMAIN:{dname}={scores[0]:g}")
-        # near-dead: the v5 parser bug scored a *uniform-ish* ~0, not an exact
-        # flat 0 (stray partial credit). >=80% exact zeros + tiny mean is a
-        # harness symptom, not a model this bad at everything.
-        elif (len(scores) >= 5
-              and sum(1 for x in scores if x == 0.0) >= 0.8 * len(scores)
-              and statistics.mean(scores) < 0.05):
-            qflags.append(f"DEAD_DOMAIN:{dname}")
-    allcap = [x for v in by_dom.values() for x in v]
-    if len(allcap) >= 6 and len(set(allcap)) == 1:
-        qflags.append(f"FLAT_ALL:{allcap[0]:g}")
-    if not res.get("trial_stats", {}).get("valid", True):
-        qflags.append(f"ERROR_RATE:{res['trial_stats'].get('error_rate')}%")
+    qflags, verified_flat = classify_eval_integrity(res)
     ctx.add("eval", "provenance", "quarantine",
             ";".join(qflags) if qflags else "clean", "")
+    ctx.add("eval", "provenance", "verified_flat",
+            ";".join(verified_flat) if verified_flat else "none", "")
+    if verified_flat:
+        detail = ";".join(verified_flat)
+        print(f"\n  [integrity] verified perfect domain(s): {detail}")
+        ctx.mdln(f"> **Verified perfect domains** - `{detail}` passed complete "
+                 "scenario-set and domain-evidence checks.\n")
     if qflags:
         print(f"\n  *** QUARANTINED: {';'.join(qflags)} — degenerate score "
               f"pattern; leaderboard will exclude this run until a human "
