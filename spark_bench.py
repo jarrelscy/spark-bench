@@ -882,11 +882,14 @@ def run_eval(ctx, args):
               f"score={rec['score']:.2f} cons={rec['consistency']:.2f} "
               f"({rec['reason'][:48]})")
 
-    tiers = None if args.tier == "all" else [args.tier]
+    challenge = args.tier == "challenge"
+    tiers = None if args.tier in ("all", "challenge") else [args.tier]
+    scenario_ids = ev.CHALLENGE_SCENARIO_IDS if challenge else None
     artifact_dir = os.path.join(args.out_dir, "artifacts", ctx.run_id)
     res = ev.run_suite(chat_fn, repeats=args.repeats, temperature=args.temperature,
                        domains=(args.domains.split(",") if args.domains else None),
-                       tiers=tiers, thinking=args.thinking, timeout=args.timeout,
+                       tiers=tiers, scenario_ids=scenario_ids,
+                       thinking=args.thinking, timeout=args.timeout,
                        weights=weights or None, artifact_dir=artifact_dir,
                        progress=progress)
     ov = res["overall"]
@@ -1090,8 +1093,10 @@ def main():
     se.add_argument("--temperature", type=float, default=0.3)
     se.add_argument("--thinking", choices=["auto", "on", "off"], default="auto",
                     help="inject chat_template_kwargs.enable_thinking")
-    se.add_argument("--tier", choices=["base", "hard", "all"], default="all",
-                    help="base = original suite, hard = adversarial+visual, all = both")
+    se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
+                    default="all", help="base = original suite, hard = "
+                    "adversarial+visual, challenge = v6.7 diagnostic subset, "
+                    "all = complete v6.6 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--weights", default="",

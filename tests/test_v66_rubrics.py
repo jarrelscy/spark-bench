@@ -392,6 +392,37 @@ class VisualGraderPortabilityTests(unittest.TestCase):
             self.assertIsNone(visual_3d_grader._chromium_executable())
 
 
+class ChallengeTierTests(unittest.TestCase):
+    def test_challenge_manifest_is_valid_and_cross_domain(self):
+        all_ids = {item["id"] for item in eval_suite.SCENARIOS}
+        self.assertEqual(len(eval_suite.CHALLENGE_SCENARIO_IDS), 20)
+        self.assertTrue(eval_suite.CHALLENGE_SCENARIO_IDS <= all_ids)
+        domains = {item["domain"] for item in eval_suite.SCENARIOS
+                   if item["id"] in eval_suite.CHALLENGE_SCENARIO_IDS}
+        self.assertEqual(domains, {
+            "agentic", "code", "composition", "instruction", "long_context",
+            "planning", "robustness", "safety", "tool_use", "visual",
+        })
+
+    def test_challenge_selection_and_methodology_stamp(self):
+        fixtures = [
+            {"id": scenario_id, "domain": "code", "group": "capability",
+             "tier": "hard", "difficulty": 1.0, "max_tokens": 20,
+             "messages": [{"role": "user", "content": "test"}],
+             "grade": lambda _resp: (1.0, "fixture")}
+            for scenario_id in ("CODE-14", "CP-02", "NOT-SELECTED")
+        ]
+        selected = frozenset({"CODE-14", "CP-02"})
+        with patch.object(eval_suite, "SCENARIOS", fixtures), \
+                patch.object(eval_suite, "CHALLENGE_SCENARIO_IDS", selected):
+            result = eval_suite.run_suite(
+                lambda *_args, **_kwargs: response(text="fixture"), repeats=1,
+                scenario_ids=selected)
+        self.assertEqual({item["id"] for item in result["scenarios"]}, selected)
+        self.assertEqual(result["trial_stats"]["methodology"], "v6.7-challenge")
+        self.assertEqual(result["meta"]["scenario_ids"], sorted(selected))
+
+
 class SandboxLifecycleTests(unittest.TestCase):
     def test_result_pipe_eof_just_before_child_exit_is_not_a_timeout(self):
         real_write = os.write

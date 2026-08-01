@@ -44,7 +44,18 @@ CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "code", "agentic"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
 METHODOLOGY_VERSION = "v6.6"
+CHALLENGE_METHODOLOGY_VERSION = "v6.7-challenge"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
+
+# Selected from the first controlled three-model v6.6 cohort. Each case
+# separated at least two models; shared-perfect cases remain in the full suite
+# as regression gates instead of diluting this diagnostic view.
+CHALLENGE_SCENARIO_IDS = frozenset({
+    "AG-07", "AP-01", "CODE-12", "CODE-13", "CODE-14", "CP-02",
+    "IFH-02", "LCH-01", "MSC-02", "PL-02", "RO-01", "RO-03",
+    "RR-01", "RR-02", "RR-04", "SAH-02", "SAH-03", "TUH-10",
+    "VIS-04", "VIS-05",
+})
 
 
 def weighted_component_average(comp, weights, keys):
@@ -4128,12 +4139,14 @@ def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget
 
 
 def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
+              scenario_ids=None,
               thinking="auto", timeout=300, max_tokens_scale=1.0,
               weights=None, artifact_dir=None, progress=None):
     """chat_fn(messages, max_tokens, temperature, tools, extra) -> resp dict.
-    tiers: subset of {'base','hard'} (None = all). artifact_dir: where to save
-    generated artifacts (e.g. the visual HTML). Returns {scenarios, domains,
-    overall, artifacts, meta}."""
+    tiers: subset of {'base','hard','expert'} (None = all). scenario_ids:
+    optional exact scenario subset. artifact_dir: where to save generated
+    artifacts (e.g. visual HTML). Returns {scenarios, domains, overall,
+    artifacts, meta}."""
     import os
     weights = dict(DEFAULT_WEIGHTS, **(weights or {}))
     extra_base = {}
@@ -4145,9 +4158,11 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
         # OpenRouter reasoning support — works alongside chat_template_kwargs
         if thinking == "on":
             extra_base["reasoning"] = {"effort": "high"}
+    selected_ids = frozenset(scenario_ids) if scenario_ids is not None else None
     pool = [s for s in SCENARIOS
             if (not domains or s["domain"] in domains)
-            and (not tiers or s.get("tier", "base") in tiers)]
+            and (not tiers or s.get("tier", "base") in tiers)
+            and (selected_ids is None or s["id"] in selected_ids)]
     sc_results = []
     artifacts = []
     for sc in pool:
@@ -4332,9 +4347,12 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
               f"(transport/timeout, not model quality) — TrueScore is not meaningful.",
               file=_sys.stderr)
 
+    methodology = (CHALLENGE_METHODOLOGY_VERSION
+                   if selected_ids == CHALLENGE_SCENARIO_IDS
+                   else METHODOLOGY_VERSION)
     trial_stats = dict(
         repeats=repeats,
-        methodology=METHODOLOGY_VERSION,
+        methodology=methodology,
         valid=run_valid,
         error_rate=round(error_rate * 100, 1),
         pass_at_1=round(pass_at_1 * 100, 1),
@@ -4349,7 +4367,8 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                    median_latency_s=med_lat, n_scenarios=len(sc_results),
                    rating=rating(truescore))
     meta = dict(repeats=repeats, temperature=temperature, thinking=thinking,
-                tiers=tiers, weights=weights)
+                tiers=tiers, scenario_ids=sorted(selected_ids) if selected_ids else None,
+                weights=weights)
     return dict(scenarios=sc_results, domains=domains_out, overall=overall,
                 artifacts=artifacts, meta=meta, trial_stats=trial_stats)
 
