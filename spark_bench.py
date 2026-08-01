@@ -555,7 +555,7 @@ GRADER_FILES = ["eval_suite.py", "spark_bench.py", "golden_gate.py"]
 # A flat perfect domain is only non-blocking when the current suite ran the
 # complete, known scenario set and its domain-specific evidence proves that
 # the graders actually exercised the outputs. This keeps the historical
-# all-pass detector while allowing genuinely perfect v6.5 results to rank.
+# all-pass detector while allowing evidence-backed perfect domains to rank.
 VERIFIED_FLAT_SCENARIOS = {
     "structured": frozenset({"SO-02", "SOH-01", "SOH-02", "SOH-03", "SOH-04"}),
     "agentic": frozenset({f"AG-{i:02d}" for i in range(1, 13)}),

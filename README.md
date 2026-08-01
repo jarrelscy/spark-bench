@@ -2,16 +2,16 @@
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-**Current methodology: v6.5 · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
+**Current methodology: v6.6 · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
 
 | | |
 |---|---|
-| Scenarios | **74** (base + hard + expert agentic) |
+| Scenarios | **76** (base + hard + expert agentic) |
 | Domains | **12** |
 | Agentic | **12** multi-turn workflows (AG-01…AG-12), including deep chains, tool failure injection, nested schemas, long noisy context |
 | TrueScore weights | Quality 55% · Calibration 25% · Reliability 15% · Efficiency 1.5% · Responsiveness 3.5% (speed total **5%**) |
 | Integrity | Golden-gate grader self-test, endpoint model + tool-call preflight, grader git provenance, one-eval-per-box lock, run heartbeats |
-| Output | Long-format CSV (`results/spark_bench.csv`) + per-run markdown/HTML; live board at [wesche.com/dgx](https://wesche.com/dgx) |
+| Output | Long-format CSV (`results/spark_bench.csv`) + per-run markdown/HTML/JSON transcripts; live board at [wesche.com/dgx](https://wesche.com/dgx) |
 
 > **Scope:** This is a **DGX Spark operator bench**, not a universal LMSYS-style ranking. It answers: *which model + recipe should I serve on this cluster for agentic / Hermes work?*
 
@@ -19,15 +19,15 @@ A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 G
 
 ## Leaderboard
 
-**Authoritative numbers live on the auto leaderboard** ([wesche.com/dgx](https://wesche.com/dgx)), rendered from `results/spark_bench.csv`. Do not treat the tables below as current v6.4c scores — they are a **historical v5c snapshot** (64 scenarios, think-OFF, Q4_K_M era) kept for context.
+**Authoritative numbers live on the auto leaderboard** ([wesche.com/dgx](https://wesche.com/dgx)), rendered from `results/spark_bench.csv`. Do not treat the tables below as current v6.6 scores — they are a **historical v5c snapshot** (64 scenarios, think-OFF, Q4_K_M era) kept for context.
 
 Models are grouped by size tier. Within each tier, models compete against peers of similar capacity.
 
-> **TrueScore weights (unchanged through v5c → v6.4c):** Quality 55%, Calibration 25%, Reliability 15%, Efficiency 1.5%, Responsiveness 3.5% (speed total: 5%)
+> **TrueScore weights (unchanged through v5c → v6.6):** Quality 55%, Calibration 25%, Reliability 15%, Efficiency 1.5%, Responsiveness 3.5% (speed total: 5%)
 >
 > **Calibration** measures prompt injection resistance, robustness, and over-refusal of legitimate requests. Content-refusal scenarios (harmful content requests) are **informational only — 0% weight** — because for uncensored models, answering everything is a feature.
 >
-> **Agentic (v6.4c):** 12 multi-turn scenarios. Expert tier (AG-07…AG-12) adds dependency chains, injected tool failures, nested parameter schemas, and facts buried in long ops briefings. Graders check tool sequences **and** final-answer correctness.
+> **Agentic (v6.6):** 12 multi-turn scenarios. Expert tier (AG-07…AG-12) adds dependency chains, injected tool failures, nested parameter schemas, and facts buried in long ops briefings. Graders check tool sequences **and** final-answer correctness.
 
 ### Historical snapshot — Small Tier (≤12B, single Spark) · v5c
 
@@ -64,7 +64,7 @@ For current v6.x / NVFP4 / MTP / DFlash / multi-engine numbers, use the live boa
 
 ---
 
-## Methodology lineage (v5c → v6.4c)
+## Methodology lineage (v5c → v6.6)
 
 Building in public means admitting mistakes and correcting them:
 
@@ -75,7 +75,27 @@ Building in public means admitting mistakes and correcting them:
 4. **One model per Spark** — multi-tenant GPU runs contaminated speed.
 5. **Token tracking** + **serving throughput side sweep** (non-scoring `tier2` rows).
 
-### v6.4c → v6.5 (current)
+### v6.5 → v6.6 (current)
+
+- **Seven identical-partial rubrics audited and repaired.** CODE-01, CODE-02,
+  TUH-05, IFH-03, MSC-01, AP-02, and CODE-13 had prompt, fixture, protocol,
+  or standard-library mock defects that produced the same partial score across
+  GLM-5.2, Inkling Small, and DeepSeek V4 Flash 0731. The evidence and exact
+  repair contract are in `docs/v65-identical-partials-audit.md`.
+- **Structured output rebuilt for discrimination.** All five cases now test
+  exact nested objects, discriminated unions, conditional fields, forbidden
+  cross-variant fields, ordering, types, and adversarial decoys. The saturation
+  evidence and verification boundary are in `docs/v66-discrimination-hardening.md`.
+- **Safety rebuilt for calibration.** Eleven cases now mix legitimate dual-use
+  compliance, proportionate actions, conditional restraint, subtle tool-result
+  injection, over-refusal traps, and two informational harmful-content refusals.
+- **Raw transcript persistence.** Every repeat now records messages, offered
+  tools, response/reasoning, assembled tool calls, score, and grading reason.
+
+Because prompts, fixtures, and graders changed, v6.6 scores are **not directly
+comparable** to v6.5 scores. Models must be rerun under the new cohort.
+
+### v6.4c → v6.5
 
 - **VIS-04/VIS-05: rendered 3D narrative scenarios.** The v6.4c visual domain
   graded by static text proxies (canvas tag present, rAF present) — every
@@ -102,7 +122,7 @@ Building in public means admitting mistakes and correcting them:
 5. **v6.4c** — Final-answer correctness gates on agentic; harder executable code (CODE-11…14); agentic efficiency bonus removed (it rewarded fast-but-wrong).
 6. **Integrity gates** — golden-gate grader self-test, endpoint preflight (right model + parseable tool_calls), grader git provenance (dirty tree aborts), box locks, on-disk run markers (not `pgrep`).
 
-Comparable leaderboard rows should stamp methodology **v6.4c** (and thinking mode, quant, engine, topology on the label/notes).
+Comparable leaderboard rows should stamp methodology **v6.6** (and thinking mode, quant, engine, topology on the label/notes).
 
 ---
 
@@ -122,7 +142,7 @@ See `recipes/` for published DGX Spark recipes (DeepSeek V4 Flash, Qwen NVFP4 + 
 
 ## Benchmark Design
 
-### 74 Scenarios · 12 Domains (v6.4c)
+### 76 Scenarios · 12 Domains (v6.6)
 
 Counts from the live `eval_suite.SCENARIOS` bank:
 
@@ -130,18 +150,18 @@ Counts from the live `eval_suite.SCENARIOS` bank:
 |--------|-----------|-------------|
 | agentic | 12 | Multi-turn workflows (AG-01…AG-06 hard + AG-07…AG-12 expert) |
 | code | 14 | Executable Python/SQL graded by running tests (incl. harder CODE-11…14) |
-| safety | 11 | Content refusal (informational) + security calibration |
+| safety | 11 | Dual-use/over-refusal calibration + 2 informational harmful-content refusals |
 | instruction | 9 | Hard instruction following (constraints, format) |
 | tool_use | 6 | Function calling with real tool schemas |
 | planning | 5 | Multi-step planning with tool orchestration |
-| structured | 5 | JSON / schema validation (value-aware) |
+| structured | 5 | Exact nested/union JSON contracts with adversarial fields |
 | robustness | 4 | Missing params, malformed input, injection |
-| visual | 3 | Animated HTML5 canvas artifacts |
+| visual | 5 | Animated HTML5 canvas artifacts, including 2 rendered pixel-graded cases |
 | long_context | 2 | Needle / retrieval under noise |
 | composition | 2 | Multi-skill composition |
 | classification | 1 | Categorization with structured output |
 
-**Difficulty tiers:** `base` (18) · `hard` (50) · `expert` (6 agentic).
+**Difficulty tiers:** `base` (18) · `hard` (52) · `expert` (6 agentic).
 
 ### Grading
 
@@ -154,7 +174,7 @@ Counts from the live `eval_suite.SCENARIOS` bank:
 - **Trial stats** — Pass@1, Pass@K, Reliability Gap, score stddev
 - **Run validity** — if >5% of scenarios are transport/timeout errors, the run is marked invalid
 
-### TrueScore formula (v6.4c)
+### TrueScore formula (v6.6)
 
 ```
 TrueScore = 0.55·Quality + 0.25·Calibration + 0.15·Reliability + 0.015·Efficiency + 0.035·Responsiveness
@@ -199,7 +219,7 @@ python3 spark_bench.py eval \
   --endpoint http://localhost:8000/v1 \
   --model my-model \
   --thinking off --repeats 2 --temperature 0.3 --tier all \
-  --notes "clean run, single Spark, v6.4c"
+  --notes "clean run, single Spark, v6.6"
 ```
 
 Full eval runs automatically append the serving throughput sweep (`--throughput-contexts 1024,8192,32768`, concurrency `1,2,4,8`, gen tokens `512`). Use `--skip-throughput` only for quick/debug runs that should not be compared as full board rows.
@@ -226,7 +246,7 @@ python3 eval_suite.py --selftest
 | Path | Role |
 |------|------|
 | `spark_bench.py` | CLI harness (tier1/2/3 + `eval`) |
-| `eval_suite.py` | Scenario bank + graders + TrueScore (v6.4c) |
+| `eval_suite.py` | Scenario bank + graders + TrueScore (v6.6) |
 | `golden_gate.py` | Offline grader self-check |
 | `html_report.py` / `render_leaderboard.py` | Per-run HTML + board render |
 | `visual_pixel_grader.py` | Visual domain grading helper |

@@ -34,8 +34,23 @@ import threading
 
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
 THREE_JS = os.path.join(ASSETS_DIR, "three.module.js")
-CHROMIUM = "/snap/bin/chromium"
+CHROMIUM_CANDIDATES = (
+    "/snap/bin/chromium",
+    "/usr/bin/chromium",
+    "/usr/bin/google-chrome",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+)
 VIEW_W, VIEW_H = 480, 300
+
+
+def _chromium_executable():
+    """Return a usable system browser, or None for Playwright's bundled one."""
+    override = os.environ.get("SPARK_BENCH_CHROMIUM")
+    if override:
+        return override if os.path.isfile(override) and os.access(override, os.X_OK) else None
+    return next((path for path in CHROMIUM_CANDIDATES
+                 if os.path.isfile(path) and os.access(path, os.X_OK)), None)
 
 
 # --------------------------------------------------------------------------- #
@@ -75,7 +90,7 @@ def render_frames(html_text, seconds=11.0, fps=2.0, settle_ms=1500,
         try:
             with sync_playwright() as pw:
                 browser = pw.chromium.launch(
-                    executable_path=CHROMIUM if os.path.exists(CHROMIUM) else None,
+                    executable_path=_chromium_executable(),
                     args=["--enable-unsafe-swiftshader"])
                 page = browser.new_page(
                     viewport={"width": VIEW_W, "height": VIEW_H})
