@@ -826,6 +826,26 @@ class _RunMarker:
 # --------------------------------------------------------------------------- #
 # Eval : deep graded multi-domain score (see eval_suite.py)
 # --------------------------------------------------------------------------- #
+def _record_eval_trial_stats(ctx, trial_stats):
+    """Persist the validity and methodology contract beside score rows."""
+    if not trial_stats:
+        return
+    ctx.add("eval", "provenance", "methodology",
+            trial_stats.get("methodology", "unknown"), "")
+    ctx.add("eval", "provenance", "run_valid",
+            "PASS" if trial_stats.get("valid", False) else "FAIL", "")
+    for metric, unit in (
+            ("error_rate", "percent"),
+            ("repeats", "count"),
+            ("pass_at_1", "percent"),
+            ("pass_at_k", "percent"),
+            ("reliability_gap", "percent"),
+            ("score_stddev", "frac"),
+            ("mean_scenario_stddev", "frac")):
+        if trial_stats.get(metric) is not None:
+            ctx.add("eval", "provenance", metric, trial_stats[metric], unit)
+
+
 def run_eval(ctx, args):
     import eval_suite as ev
 
@@ -918,6 +938,7 @@ def run_eval(ctx, args):
                  f"pattern (harness symptom until verified).\n")
 
     # ---- CSV rows ---- #
+    _record_eval_trial_stats(ctx, res.get("trial_stats", {}))
     for k in ("truescore", "capability_score", "operational_score", "quality",
               "calibration", "reliability", "efficiency", "responsiveness"):
         if ov.get(k) is None:
@@ -968,6 +989,8 @@ def run_eval(ctx, args):
         ctx.mdln("## Trial Statistics\n")
         ctx.mdln("| metric | value | meaning |")
         ctx.mdln("|--------|------:|---------|")
+        ctx.mdln(f"| Methodology | {ts.get('methodology','?')} | scenario and grader contract |")
+        ctx.mdln(f"| Run Valid | {'yes' if ts.get('valid') else 'no'} | transport error rate {ts.get('error_rate','?')}% |")
         ctx.mdln(f"| Pass@1 | {ts.get('pass_at_1','?')}% | scenarios passing (≥50%) on at least 1 repeat |")
         ctx.mdln(f"| Pass@K | {ts.get('pass_at_k','?')}% | scenarios passing on ALL repeats |")
         ctx.mdln(f"| Reliability Gap | {ts.get('reliability_gap','?')}% | Pass@1 − Pass@K (flakiness cost) |")
@@ -1006,7 +1029,10 @@ def run_eval(ctx, args):
     # Trial statistics
     ts = res.get("trial_stats", {})
     if ts:
-        print(f"  --- Trial Stats: Pass@1={ts.get('pass_at_1','?')}% "
+        print(f"  --- Trial Stats: Method={ts.get('methodology','?')} "
+              f"Valid={'yes' if ts.get('valid') else 'no'} "
+              f"ErrorRate={ts.get('error_rate','?')}% "
+              f"Pass@1={ts.get('pass_at_1','?')}% "
               f"Pass@K={ts.get('pass_at_k','?')}% "
               f"RelGap={ts.get('reliability_gap','?')}% "
               f"ScoreStdDev={ts.get('score_stddev','?')} "

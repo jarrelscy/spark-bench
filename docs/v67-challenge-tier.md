@@ -41,9 +41,11 @@ python3 spark_bench.py eval \
   --skip-throughput
 ```
 
-Challenge runs stamp methodology `v6.7-challenge`. Their scores are comparable
-to other challenge runs using the same contract, not to full-suite v6.6 scores.
-The full suite remains the correctness and regression qualification gate.
+Challenge runs use methodology `v6.7-challenge`. The current emitter persists
+that methodology, run validity, error rate, repeat count, and trial statistics
+as CSV provenance. Challenge scores are comparable to other challenge runs
+using the same contract, not to full-suite v6.6 scores. The full suite remains
+the correctness and regression qualification gate.
 
 ## Interpretation
 
@@ -63,6 +65,9 @@ assertions before it is used as a public model-ranking claim.
 The challenge tier was validated with three repeats per scenario on benchmark
 commit `eff5ca0d170b12bf8e69f578d1bff9182339ee27`. All runs passed the 12/12
 golden gate and endpoint/tool-parser preflight, and none had a transport error.
+That cohort predates the CSV trial-provenance emitter: methodology is encoded in
+each run label and produced by the internal result, but is not a standalone CSV
+row. Raw results are preserved rather than rewritten after the fact.
 
 | deployment | ChallengeScore | capability | reliability | Pass@K | median latency | output tokens | wall time |
 |---|---:|---:|---:|---:|---:|---:|---:|

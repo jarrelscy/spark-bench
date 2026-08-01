@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import patch
 
 import eval_suite
+import spark_bench
 import visual_3d_grader
 
 
@@ -421,6 +422,28 @@ class ChallengeTierTests(unittest.TestCase):
         self.assertEqual({item["id"] for item in result["scenarios"]}, selected)
         self.assertEqual(result["trial_stats"]["methodology"], "v6.7-challenge")
         self.assertEqual(result["meta"]["scenario_ids"], sorted(selected))
+
+    def test_trial_contract_is_persisted_as_provenance(self):
+        class RecordingContext:
+            def __init__(self):
+                self.rows = []
+
+            def add(self, *args, **kwargs):
+                self.rows.append((args, kwargs))
+
+        ctx = RecordingContext()
+        spark_bench._record_eval_trial_stats(ctx, {
+            "methodology": "v6.7-challenge", "valid": True,
+            "error_rate": 0.0, "repeats": 3, "pass_at_1": 90.0,
+            "pass_at_k": 75.0, "reliability_gap": 15.0,
+            "score_stddev": 0.3, "mean_scenario_stddev": 0.063,
+        })
+        values = {args[2]: args[3] for args, _kwargs in ctx.rows}
+        self.assertEqual(values["methodology"], "v6.7-challenge")
+        self.assertEqual(values["run_valid"], "PASS")
+        self.assertEqual(values["error_rate"], 0.0)
+        self.assertEqual(values["repeats"], 3)
+        self.assertEqual(values["pass_at_k"], 75.0)
 
 
 class SandboxLifecycleTests(unittest.TestCase):
