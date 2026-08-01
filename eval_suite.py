@@ -658,6 +658,7 @@ def _sandboxed(fn, timeout=8, mem_mb=768):
     os.close(w)
     deadline = _time.time() + timeout
     chunks = []
+    saw_eof = False
     while True:
         remain = deadline - _time.time()
         if remain <= 0:
@@ -666,15 +667,25 @@ def _sandboxed(fn, timeout=8, mem_mb=768):
         if ready:
             chunk = os.read(r, 65536)
             if not chunk:
+                saw_eof = True
                 break
             chunks.append(chunk)
     os.close(r)
-    try:
-        done, _status = os.waitpid(pid, os.WNOHANG)
-        if done == 0:
+    if not saw_eof:
+        try:
             os.killpg(pid, _sig.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            try:
+                os.kill(pid, _sig.SIGKILL)
+            except ProcessLookupError:
+                pass
+        try:
             os.waitpid(pid, 0)
-            raise _EvalTimeout(f"sandbox timeout after {timeout}s")
+        except ChildProcessError:
+            pass
+        raise _EvalTimeout(f"sandbox timeout after {timeout}s")
+    try:
+        os.waitpid(pid, 0)
     except ChildProcessError:
         pass
     if not chunks:

@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -389,6 +390,22 @@ class VisualGraderPortabilityTests(unittest.TestCase):
                 self.assertEqual(visual_3d_grader._chromium_executable(), browser.name)
         with patch.dict(os.environ, {"SPARK_BENCH_CHROMIUM": "/missing/browser"}):
             self.assertIsNone(visual_3d_grader._chromium_executable())
+
+
+class SandboxLifecycleTests(unittest.TestCase):
+    def test_result_pipe_eof_just_before_child_exit_is_not_a_timeout(self):
+        real_write = os.write
+
+        def write_then_pause(fd, payload):
+            written = real_write(fd, payload)
+            os.close(fd)
+            time.sleep(0.05)
+            return written
+
+        with patch.object(os, "write", side_effect=write_then_pause):
+            result = eval_suite._sandboxed(lambda: (1.0, "passed"), timeout=2)
+
+        self.assertEqual((1.0, "passed"), result)
 
 
 if __name__ == "__main__":
