@@ -1,4 +1,9 @@
-# v6.7 Challenge Tier
+# v6.7 Challenge Tier (Historical)
+
+> **Superseded for new runs by v6.7.1.** A transcript audit found six prompt,
+> tool, or grader contract defects in this cohort. The original artifacts below
+> remain useful evidence, but the 79.2 / 75.6 / 69.7 scores are not qualified
+> as final model rankings. See `docs/v671-contract-repair.md`.
 
 The v6.7 challenge tier is a 20-scenario diagnostic view selected from the
 first controlled three-model v6.6 cohort. It is meant to expose model profile
@@ -23,8 +28,9 @@ regression gates, but they provide no ranking information in this cohort.
 
 The challenge manifest contains scenarios that separated at least two models,
 prioritizing score spread and coverage of distinct failure modes. It spans ten
-domains and preserves the two rendered visual checks. Scenario prompts and
-graders are unchanged from v6.6.
+domains and preserves the two rendered visual checks. The original cohort
+reused v6.6 prompts and graders; v6.7.1 repairs the contracts identified by the
+subsequent transcript audit.
 
 `AG-07, AP-01, CODE-12, CODE-13, CODE-14, CP-02, IFH-02, LCH-01, MSC-02,
 PL-02, RO-01, RO-03, RR-01, RR-02, RR-04, SAH-02, SAH-03, TUH-10, VIS-04,
@@ -41,11 +47,11 @@ python3 spark_bench.py eval \
   --skip-throughput
 ```
 
-Challenge runs use methodology `v6.7-challenge`. The current emitter persists
-that methodology, run validity, error rate, repeat count, and trial statistics
-as CSV provenance. Challenge scores are comparable to other challenge runs
-using the same contract, not to full-suite v6.6 scores. The full suite remains
-the correctness and regression qualification gate.
+These historical challenge runs use methodology `v6.7-challenge`. New runs use
+`v6.7.1-challenge`. The current emitter persists methodology, run validity,
+error rate, repeat count, and trial statistics as CSV provenance. Scores are
+comparable only when they use the same contract. The full suite remains the
+correctness and regression qualification gate.
 
 ## Interpretation
 
@@ -94,18 +100,20 @@ full v6.6 cohort to 3/20 (15%). Mean per-scenario score spread increased from
 Single-model scenario wins were DeepSeek 5, GLM 2, and Inkling 1; twelve cases
 had a two- or three-model tie. The per-task matrix matters more than that count:
 
-- DeepSeek led dependency-heavy planning, multi-tool completion, and the
-  thread-safe counter implementation. It was the best balanced deployment.
-- GLM led the merge-stream code case and average race-animation quality, and
-  tied DeepSeek on computed composition and phased animation. It was verbose
-  and weak on buried-fact retrieval and tool completion.
+- DeepSeek led dependency-heavy planning and multi-tool completion. Its
+  apparent counter win is invalid because the answer violated the old prompt's
+  lock prohibition while the grader awarded full credit.
+- GLM led average race-animation quality and tied DeepSeek on computed
+  composition and phased animation. Its apparent merge-stream win is invalid
+  because the old prose and executable calling convention conflicted.
 - Inkling led long-context retrieval and tied for the strongest abstention and
   robustness behavior. It was fast and consistent on short turns, but several
   planning, composition, and code failures were consistently wrong.
 
-Three scenarios remained perfect for all models (`RR-01`, `SAH-02`, `SAH-03`),
-while `RR-02` remained identically weak at 0.25. Keep the perfect cases as
-compact regression gates; redesign `RR-02` before using it to rank models.
+Three scenarios remained perfect for all models (`RR-01`, `SAH-02`, `SAH-03`).
+`RR-02` remained identically weak at 0.25 because its tautology regex rejected
+the common quoted fixture used by every model; v6.7.1 repairs that false
+negative. Keep the perfect cases as compact regression gates.
 
 The two rendered cases consumed most wall time, especially for GLM. They should
 remain in model-selection runs, while routine regressions can use domain filters

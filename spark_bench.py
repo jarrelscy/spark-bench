@@ -1121,8 +1121,8 @@ def main():
                     help="inject chat_template_kwargs.enable_thinking")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
-                    "adversarial+visual, challenge = v6.7 diagnostic subset, "
-                    "all = complete v6.6 suite")
+                    "adversarial+visual, challenge = v6.7.1 diagnostic subset, "
+                    "all = complete v6.7.1 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--weights", default="",

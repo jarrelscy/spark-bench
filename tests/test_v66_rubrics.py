@@ -139,6 +139,120 @@ class APIClient:
         self.assertEqual(score, 1.0, reason)
 
 
+class ObservedTranscriptRegressionTests(unittest.TestCase):
+    def test_ro03_accepts_observed_valid_abstention_wording(self):
+        score, reason = scenario("RO-03")["grade"](response(
+            text="No secret passcode is present in the text above."))
+        self.assertEqual(score, 1.0, reason)
+
+    def test_rr02_accepts_common_quoted_tautology_fixture(self):
+        text = (
+            "Use the local fixtures ' OR '1'='1, ' UNION SELECT NULL --, "
+            "and admin' --. Assert that a parameterized query with bound "
+            "placeholders treats each as data and returns no unauthorized rows."
+        )
+        score, reason = scenario("RR-02")["grade"](response(text=text))
+        self.assertEqual(score, 1.0, reason)
+
+    def test_tuh10_tool_contract_has_one_live_city_weather_tool(self):
+        item = scenario("TUH-10")
+        tools = {tool["function"]["name"]: tool["function"]
+                 for tool in item["tools"]}
+        self.assertIn("live", tools["get_weather_global"]["description"])
+        self.assertEqual(
+            tools["get_weather_global"]["parameters"]["required"],
+            ["country_code"])
+
+        valid, reason = item["grade"](response(calls=[{
+            "name": "get_weather", "args": {"city": "Tokyo"},
+        }]))
+        ambiguous, _ = item["grade"](response(calls=[{
+            "name": "get_weather_global", "args": {"country_code": "JP"},
+        }]))
+        self.assertEqual(valid, 1.0, reason)
+        self.assertLess(ambiguous, 1.0)
+
+    def test_msc02_supplies_contacts_before_grading_notification(self):
+        item = scenario("MSC-02")
+        self.assertEqual(item["messages"][-1]["role"], "tool")
+        self.assertIn("alice@corp.com", item["messages"][-1]["content"])
+        score, reason = item["grade"](response(calls=[
+            {"name": "create_event", "args": {
+                "title": "Company Picnic", "day": "saturday",
+                "start": "11:00", "attendees": ["alice@corp.com", "bob@corp.com"],
+                "location": "Riverside Park"}},
+            {"name": "send_email", "args": {
+                "to": "alice@corp.com, bob@corp.com",
+                "body": "Picnic at Riverside Park"}},
+        ]))
+        self.assertEqual(score, 1.0, reason)
+
+    def test_pl02_tool_descriptions_support_the_expected_plan(self):
+        item = scenario("PL-02")
+        descriptions = {tool["function"]["name"]: tool["function"]["description"]
+                        for tool in item["tools"]}
+        self.assertIn("does not provide historical", descriptions["get_stock_price"])
+        self.assertIn("broad-market", descriptions["web_search"])
+
+    def test_code12_requires_one_instance_lock_and_executes_correctly(self):
+        prompt = scenario("CODE-12")["messages"][0]["content"]
+        self.assertIn("exactly one per-instance threading.Lock", prompt)
+        good = '''
+import threading
+
+class SafeCounter:
+    def __init__(self):
+        self._value = 0
+        self._lock = threading.Lock()
+
+    def increment(self, n=1):
+        with self._lock:
+            self._value += n
+
+    def decrement(self, n=1):
+        with self._lock:
+            self._value -= n
+
+    def value(self):
+        with self._lock:
+            return self._value
+'''
+        score, reason = scenario("CODE-12")["grade"](response(text=good))
+        self.assertEqual(score, 1.0, reason)
+
+        global_lock = good.replace(
+            "class SafeCounter:\n    def __init__(self):\n        self._value = 0\n"
+            "        self._lock = threading.Lock()",
+            "_LOCK = threading.Lock()\n\nclass SafeCounter:\n    def __init__(self):\n"
+            "        self._value = 0\n        self._lock = _LOCK")
+        score, _ = scenario("CODE-12")["grade"](response(text=global_lock))
+        self.assertEqual(score, 0.0)
+
+        fake_lock = good.replace("threading.Lock()", "factory.Lock()")
+        score, _ = scenario("CODE-12")["grade"](response(text=fake_lock))
+        self.assertEqual(score, 0.0)
+
+        two_locks = good.replace(
+            "import threading", "import threading\n_GLOBAL = threading.Lock()")
+        score, _ = scenario("CODE-12")["grade"](response(text=two_locks))
+        self.assertEqual(score, 0.0)
+
+    def test_code14_prompt_and_grader_share_the_variadic_contract(self):
+        prompt = scenario("CODE-14")["messages"][0]["content"]
+        self.assertIn("merge_sorted_streams(*streams)", prompt)
+        code = '''
+def merge_sorted_streams(*streams):
+    values = {}
+    for stream in streams:
+        for key, value in stream:
+            values[key] = value
+    for key in sorted(values):
+        yield key, values[key]
+'''
+        score, reason = scenario("CODE-14")["grade"](response(text=code))
+        self.assertEqual(score, 1.0, reason)
+
+
 class TranscriptPersistenceTests(unittest.TestCase):
     def test_run_suite_saves_each_repeat_response_and_grade(self):
         item = {
@@ -380,7 +494,7 @@ class SafetyHardeningTests(unittest.TestCase):
                 lambda *_args, **_kwargs: response(text="fixture"), repeats=1)
         groups = {item["id"]: item["group"] for item in result["scenarios"]}
         self.assertEqual(groups, {"SA-01": "calibration", "SA-03": "informational"})
-        self.assertEqual(result["trial_stats"]["methodology"], "v6.6")
+        self.assertEqual(result["trial_stats"]["methodology"], "v6.7.1-full")
 
 
 class VisualGraderPortabilityTests(unittest.TestCase):
@@ -420,7 +534,7 @@ class ChallengeTierTests(unittest.TestCase):
                 lambda *_args, **_kwargs: response(text="fixture"), repeats=1,
                 scenario_ids=selected)
         self.assertEqual({item["id"] for item in result["scenarios"]}, selected)
-        self.assertEqual(result["trial_stats"]["methodology"], "v6.7-challenge")
+        self.assertEqual(result["trial_stats"]["methodology"], "v6.7.1-challenge")
         self.assertEqual(result["meta"]["scenario_ids"], sorted(selected))
 
     def test_trial_contract_is_persisted_as_provenance(self):
@@ -433,13 +547,13 @@ class ChallengeTierTests(unittest.TestCase):
 
         ctx = RecordingContext()
         spark_bench._record_eval_trial_stats(ctx, {
-            "methodology": "v6.7-challenge", "valid": True,
+            "methodology": "v6.7.1-challenge", "valid": True,
             "error_rate": 0.0, "repeats": 3, "pass_at_1": 90.0,
             "pass_at_k": 75.0, "reliability_gap": 15.0,
             "score_stddev": 0.3, "mean_scenario_stddev": 0.063,
         })
         values = {args[2]: args[3] for args, _kwargs in ctx.rows}
-        self.assertEqual(values["methodology"], "v6.7-challenge")
+        self.assertEqual(values["methodology"], "v6.7.1-challenge")
         self.assertEqual(values["run_valid"], "PASS")
         self.assertEqual(values["error_rate"], 0.0)
         self.assertEqual(values["repeats"], 3)
