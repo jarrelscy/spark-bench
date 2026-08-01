@@ -424,6 +424,26 @@ class ChallengeTierTests(unittest.TestCase):
 
 
 class SandboxLifecycleTests(unittest.TestCase):
+    def test_child_stdout_and_stderr_are_contained(self):
+        for stream_fd in (1, 2):
+            with self.subTest(stream_fd=stream_fd):
+                capture_r, capture_w = os.pipe()
+                saved_stream = os.dup(stream_fd)
+                try:
+                    os.dup2(capture_w, stream_fd)
+                    os.close(capture_w)
+
+                    def noisy_child():
+                        os.write(stream_fd, b"untrusted-noise")
+                        return "ok"
+
+                    self.assertEqual(eval_suite._sandboxed(noisy_child), "ok")
+                finally:
+                    os.dup2(saved_stream, stream_fd)
+                    os.close(saved_stream)
+                self.assertEqual(os.read(capture_r, 1024), b"")
+                os.close(capture_r)
+
     def test_result_pipe_eof_just_before_child_exit_is_not_a_timeout(self):
         real_write = os.write
 

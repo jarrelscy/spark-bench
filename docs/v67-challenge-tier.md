@@ -57,3 +57,52 @@ This tier is intentionally cohort-derived, so it is diagnostic rather than a
 fresh holdout. A future challenge revision should add new variants with buried
 distractors, stateful recovery, cross-document synthesis, and temporal rendered
 assertions before it is used as a public model-ranking claim.
+
+## Validation cohort
+
+The challenge tier was validated with three repeats per scenario on benchmark
+commit `eff5ca0d170b12bf8e69f578d1bff9182339ee27`. All runs passed the 12/12
+golden gate and endpoint/tool-parser preflight, and none had a transport error.
+
+| deployment | ChallengeScore | capability | reliability | Pass@K | median latency | output tokens | wall time |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| DeepSeek V4 Flash 0731, TP2 DSpark K5, 1M | **79.2** | **76.8** | 86.1 | **75%** | 2.36s | 32,606 | **14.6m** |
+| GLM-5.2 QuantTrio, TP4 MTP K5, 316K | 75.6 | 68.5 | 80.3 | 65% | 3.29s | 50,342 | 33.9m |
+| Inkling Small, TP2 spec off reasoning0, 262K | 69.7 | 52.7 | **97.0** | 65% | **1.73s** | **18,199** | 20.8m |
+
+These are deployment scores, not a weights-only comparison: topology, context,
+speculation, and serving engine are part of each qualified contract. Wall time
+includes the golden gate and rendered visual grading.
+
+The tier reduced the shared-perfect ceiling from 36/76 scenarios (47%) in the
+full v6.6 cohort to 3/20 (15%). Mean per-scenario score spread increased from
+0.164 to 0.393, and median spread increased from 0.062 to 0.357.
+
+## Pairwise view
+
+| pair | first wins | second wins | ties | mean score delta |
+|---|---:|---:|---:|---:|
+| DeepSeek vs GLM | 8 | 5 | 7 | +0.036 DeepSeek |
+| DeepSeek vs Inkling | 8 | 5 | 7 | +0.125 DeepSeek |
+| GLM vs Inkling | 8 | 3 | 9 | +0.090 GLM |
+
+Single-model scenario wins were DeepSeek 5, GLM 2, and Inkling 1; twelve cases
+had a two- or three-model tie. The per-task matrix matters more than that count:
+
+- DeepSeek led dependency-heavy planning, multi-tool completion, and the
+  thread-safe counter implementation. It was the best balanced deployment.
+- GLM led the merge-stream code case and average race-animation quality, and
+  tied DeepSeek on computed composition and phased animation. It was verbose
+  and weak on buried-fact retrieval and tool completion.
+- Inkling led long-context retrieval and tied for the strongest abstention and
+  robustness behavior. It was fast and consistent on short turns, but several
+  planning, composition, and code failures were consistently wrong.
+
+Three scenarios remained perfect for all models (`RR-01`, `SAH-02`, `SAH-03`),
+while `RR-02` remained identically weak at 0.25. Keep the perfect cases as
+compact regression gates; redesign `RR-02` before using it to rank models.
+
+The two rendered cases consumed most wall time, especially for GLM. They should
+remain in model-selection runs, while routine regressions can use domain filters
+to run the non-visual challenge cases first and schedule rendered validation as
+a separate add-on.

@@ -655,6 +655,16 @@ def _sandboxed(fn, timeout=8, mem_mb=768):
                 raise OSError("network disabled in grader sandbox")
             _sock.socket = _blocked
             os.chdir(tempfile.mkdtemp(prefix="sbx-"))
+            # Generated programs can fan out failing threads and emit megabytes
+            # of tracebacks. They have no scoring value, so contain both streams
+            # inside the child instead of flooding the benchmark process.
+            sink = os.open(os.devnull, os.O_WRONLY)
+            try:
+                os.dup2(sink, 1)
+                os.dup2(sink, 2)
+            finally:
+                if sink > 2:
+                    os.close(sink)
             payload = pickle.dumps(("ok", fn()))
         except BaseException as e:
             try:
