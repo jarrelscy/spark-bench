@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "1/5 tests: t1:fail(got [(1, 'b'), (2, 'd')]), t2:error(generator raised StopIteration), t3:error(generator raised StopIteration), t4:error(generator raised StopIteration), t5:pass",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 392,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    import heapq\n\n    # Convert each stream to an iterator and initialize the heap with the first element of each non\u2011empty stream\n    iters = [iter(s) for s in streams]\n    heap = []  # elements are (key, stream_index)\n    for idx, it in enumerate(iters):\n        try:\n            first_key, first_val = next(it)\n            heap.append((first_key, idx))\n        except StopIteration:\n            pass  # empty stream, ignore\n    heapq.heapify(heap)\n\n    # Keep the latest value for each key seen so far\n    latest = {}\n\n    while heap:\n        key, idx = heapq.heappop(heap)\n        # Update the latest value for this key (the current stream's value overwrites any previous one)\n        latest[key] = next(iters[idx])[1]  # fetch next (key, value) from the same stream\n\n        # Push the next element from the same stream, if any\n        try:\n            nxt_key, nxt_val = next(iters[idx])\n            heapq.heappush(heap, (nxt_key, idx))\n        except StopIteration:\n            pass  # stream exhausted\n\n    # The heap processes keys in sorted order, but because later streams may emit the same key,\n    # we need to ensure the final output respects the \"last value seen\" rule.\n    # Since the heap yields keys in increasing order, we can simply emit the accumulated latest values\n    # in that order. However, if a later stream contains a key that appears earlier in the heap order,\n    # its value will have been overwritten already, so the final `latest` dict already holds the correct values.\n    for k in sorted(latest):\n        yield (k, latest[k])\n```",
+    "tool_calls": [],
+    "total_seconds": 6.08177333399999
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.2,
+  "tools": null
+}

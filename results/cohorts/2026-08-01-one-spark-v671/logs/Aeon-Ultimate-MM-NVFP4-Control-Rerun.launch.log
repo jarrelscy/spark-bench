@@ -1,0 +1,6 @@
+image_id	sha256:d74b35b7aeeebe9e5c386fe27241eada8732055ccc6e856a6fd000df00c6ca1a
+a9624af3774df04c5d9b5c0254fe6684de0223340becd82cf34472c17296c50f  /home/raulwesche/models/aeon-ultimate-mm-nvfp4-mtp/config.json
+dcf128805c8f264e3730ef719968bad3f935b9f64023516d943c74497c738738  /home/raulwesche/models/aeon-ultimate-mm-nvfp4-mtp/model.safetensors
+6d3ffa1136050a3c94cfa88b52d07e41434c5f463b5687e9cc5a9b161e95b38f
+API: http://10.0.0.183:8211/v1
+Model: aeon-ultimate-mm-control

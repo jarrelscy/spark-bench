@@ -1,0 +1,121 @@
+timestamp	model	host	phase	result	detail
+2026-08-01T14:47:38-05:00	qwen3.6-27b-nvfp4	10.0.0.120	launch	start	/home/raulwesche/models/qwen36-27b-nvfp4-official
+2026-08-01T14:53:44-05:00	qwen3.6-27b-nvfp4	10.0.0.120	launch	ready	http://10.0.0.120:8211/v1
+2026-08-01T16:27:12-05:00	qwen3.6-27b-nvfp4	10.0.0.120	benchmark	passed	{"run_id": "Qwen3.6-27B-NVFP4-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-145344", "pid": 66911, "started": "2026-08-01T14:54:35", "last_beat": "2026-08-01T15:48:34", "scenarios_done": 20, "finished": "2026-08-01T15:48:34", "summary": "truescore=80.5 quarantine=clean"}
+2026-08-01T16:27:12-05:00	agents-a1-nvfp4	10.0.0.183	launch	start	/home/raulwesche/models/agents-a1-nvfp4
+2026-08-01T16:32:54-05:00	agents-a1-nvfp4	10.0.0.183	launch	ready	http://10.0.0.183:8211/v1
+2026-08-01T16:53:17-05:00	agents-a1-nvfp4	10.0.0.183	benchmark	passed	{"run_id": "Agents-A1-NVFP4-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-163254", "pid": 72633, "started": "2026-08-01T16:34:05", "last_beat": "2026-08-01T16:53:17", "scenarios_done": 20, "finished": "2026-08-01T16:53:17", "summary": "truescore=79.9 quarantine=clean"}
+2026-08-01T16:53:20-05:00	aeon-ultimate-mm-nvfp4	10.0.0.183	launch	start	/home/raulwesche/models/aeon-ultimate-mm-nvfp4-mtp
+2026-08-01T17:00:43-05:00	aeon-ultimate-mm-nvfp4	10.0.0.183	launch	ready	http://10.0.0.183:8211/v1
+2026-08-01T18:05:59-05:00	aeon-ultimate-mm-nvfp4	10.0.0.183	benchmark	passed	{"run_id": "Aeon-Ultimate-MM-NVFP4-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-170043", "pid": 74871, "started": "2026-08-01T17:01:51", "last_beat": "2026-08-01T18:05:59", "scenarios_done": 20, "finished": "2026-08-01T18:05:59", "summary": "truescore=82.9 quarantine=FLAT_DOMAIN:code=1"}
+2026-08-01T18:06:02-05:00	laguna-s-21-nvfp4	10.0.0.183	launch	start	/home/raulwesche/models/laguna-s-21-nvfp4
+2026-08-01T18:08:25-05:00	qwen3.6-27b-nvfp4	10.0.0.120	benchmark	skipped	existing DONE marker
+2026-08-01T18:08:25-05:00	agents-a1-nvfp4	10.0.0.183	benchmark	skipped	existing DONE marker
+2026-08-01T18:08:25-05:00	aeon-ultimate-mm-nvfp4	10.0.0.183	benchmark	skipped	existing DONE marker
+2026-08-01T18:08:25-05:00	laguna-s-21-nvfp4	10.0.0.183	launch	start	/home/raulwesche/models/laguna-s-21-nvfp4
+2026-08-01T18:17:19-05:00	laguna-s-21-nvfp4	10.0.0.183	launch	ready	http://10.0.0.183:8211/v1
+2026-08-01T18:19:01-05:00	laguna-s-21-nvfp4	10.0.0.183	benchmark	failed	spark-bench exit 2
+2026-08-01T18:19:03-05:00	leanstral-nvfp4	10.0.0.183	launch	start	/home/raulwesche/models/leanstral-nvfp4
+2026-08-01T18:19:28-05:00	leanstral-nvfp4	10.0.0.183	launch	failed	endpoint did not become ready
+2026-08-01T18:19:28-05:00	gemma4-31b-nvfp4	10.0.0.183	launch	start	/home/raulwesche/models/gemma4-31b-nvfp4
+2026-08-01T18:20:05-05:00	gemma4-31b-nvfp4	10.0.0.183	launch	failed	endpoint did not become ready
+2026-08-01T18:20:05-05:00	qwopus-awq	10.0.0.183	launch	start	/home/raulwesche/models/qwopus-awq
+2026-08-01T18:24:17-05:00	qwopus-awq	10.0.0.183	launch	ready	http://10.0.0.183:8211/v1
+2026-08-01T19:35:08-05:00	qwopus-awq	10.0.0.183	benchmark	passed	{"run_id": "Qwopus-AWQ-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-182417", "pid": 79721, "started": "2026-08-01T18:25:29", "last_beat": "2026-08-01T19:35:08", "scenarios_done": 20, "finished": "2026-08-01T19:35:08", "summary": "truescore=83.1 quarantine=clean"}
+2026-08-01T19:35:11-05:00	ornith-1.0-35b-nvfp4	10.0.0.120	launch	start	/home/raulwesche/models/ornith-nvfp4
+2026-08-01T19:40:19-05:00	ornith-1.0-35b-nvfp4	10.0.0.120	launch	ready	http://10.0.0.120:8211/v1
+2026-08-01T20:01:50-05:00	ornith-1.0-35b-nvfp4	10.0.0.120	benchmark	passed	{"run_id": "Ornith-1.0-35B-NVFP4-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-194019", "pid": 84285, "started": "2026-08-01T19:41:24", "last_beat": "2026-08-01T20:01:50", "scenarios_done": 20, "finished": "2026-08-01T20:01:50", "summary": "truescore=77.2 quarantine=clean"}
+2026-08-01T20:01:52-05:00	nemotron-3-nano-aeon-nvfp4	10.0.0.109	launch	start	/home/raulwesche/models/nemotron-3-nano-aeon-nvfp4
+2026-08-01T20:06:25-05:00	nemotron-3-nano-aeon-nvfp4	10.0.0.109	launch	ready	http://10.0.0.109:8211/v1
+2026-08-01T20:16:16-05:00	nemotron-3-nano-aeon-nvfp4	10.0.0.109	benchmark	passed	{"run_id": "Nemotron-3-Nano-Aeon-NVFP4-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-200626", "pid": 88456, "started": "2026-08-01T20:07:31", "last_beat": "2026-08-01T20:16:16", "scenarios_done": 20, "finished": "2026-08-01T20:16:16", "summary": "truescore=75.5 quarantine=clean"}
+2026-08-01T20:16:19-05:00	hauhaucs-35b-nvfp4	10.0.0.109	launch	start	/home/raulwesche/models/hauhaucs-35b-nvfp4
+2026-08-01T20:21:26-05:00	hauhaucs-35b-nvfp4	10.0.0.109	launch	ready	http://10.0.0.109:8211/v1
+2026-08-01T20:42:15-05:00	hauhaucs-35b-nvfp4	10.0.0.109	benchmark	passed	{"run_id": "HauHauCS-35B-NVFP4-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-202126", "pid": 90214, "started": "2026-08-01T20:22:32", "last_beat": "2026-08-01T20:42:15", "scenarios_done": 20, "finished": "2026-08-01T20:42:15", "summary": "truescore=76.5 quarantine=clean"}
+2026-08-01T20:42:18-05:00	qwythos-9b	10.0.0.120	launch	start	/home/raulwesche/models/qwythos-9b
+2026-08-01T20:45:54-05:00	qwythos-9b	10.0.0.120	launch	ready	http://10.0.0.120:8211/v1
+2026-08-01T21:28:04-05:00	qwythos-9b	10.0.0.120	benchmark	passed	{"run_id": "Qwythos-9B-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-204554", "pid": 92570, "started": "2026-08-01T20:47:00", "last_beat": "2026-08-01T21:28:04", "scenarios_done": 20, "finished": "2026-08-01T21:28:04", "summary": "truescore=79.8 quarantine=clean"}
+2026-08-01T21:28:11-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	setup	start	Mia 8670ba25; Entrpi fc993fc9; DS4 82d2a6f7
+2026-08-01T21:41:16-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	setup	failed	see setup log
+2026-08-01T21:41:38-05:00	qwen35-9b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-01T21:42:51-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	setup	start	Mia 8670ba25; Entrpi fc993fc9; DS4 82d2a6f7
+2026-08-01T21:43:15-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	setup	failed	see setup log
+2026-08-01T21:43:31-05:00	qwen35-9b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-01T21:44:43-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	setup	ready	prevalidated endpoint; context=1000000
+2026-08-01T21:44:43-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	benchmark	start	DSpark
+2026-08-01T21:45:59-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	setup	ready	prevalidated endpoint; context=1000000
+2026-08-01T21:45:59-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	benchmark	start	DSpark
+2026-08-01T22:14:02-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	benchmark	passed	DSpark
+2026-08-01T22:14:02-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	benchmark	start	spec-off control
+2026-08-01T22:56:22-05:00	deepseek-v4-flash-0731-ds4	10.0.0.183	benchmark	passed	spec-off control
+2026-08-01T22:56:44-05:00	qwen35-9b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-01T22:58:14-05:00	qwen35-9b	10.0.0.120	stage	passed	staged
+2026-08-01T22:58:14-05:00	qwen35-9b	10.0.0.120	benchmark	start	vLLM
+2026-08-01T23:53:40-05:00	qwen35-9b	10.0.0.120	benchmark	passed	vLLM
+2026-08-01T23:53:40-05:00	minicpm-v46	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-01T23:54:13-05:00	minicpm-v46	10.0.0.120	stage	passed	staged
+2026-08-01T23:54:13-05:00	minicpm-v46	10.0.0.120	benchmark	start	vLLM
+2026-08-01T23:58:20-05:00	minicpm-v46	10.0.0.120	benchmark	failed	vLLM; see MiniCPM-V-4.6-BF16.benchmark.log
+2026-08-01T23:58:20-05:00	gemma4-mmproj	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-01T23:58:28-05:00	gemma4-mmproj	10.0.0.120	stage	passed	staged
+2026-08-01T23:58:28-05:00	gemma4-31b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-01T23:59:55-05:00	gemma4-31b	10.0.0.120	stage	passed	staged
+2026-08-01T23:59:55-05:00	gemma4-31b	10.0.0.120	benchmark	start	llama.cpp fallback
+2026-08-02T00:36:15-05:00	gemma4-31b	10.0.0.120	benchmark	failed	llama.cpp fallback; see Gemma4-31B-QAT-Q4.benchmark.log
+2026-08-02T00:36:15-05:00	holo31-35b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-02T00:38:10-05:00	holo31-35b	10.0.0.120	stage	passed	staged
+2026-08-02T00:38:10-05:00	holo31-35b	10.0.0.120	benchmark	start	llama.cpp fallback
+2026-08-02T00:48:38-05:00	holo31-35b	10.0.0.120	benchmark	passed	llama.cpp fallback
+2026-08-02T00:48:38-05:00	bonsai-27b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-02T00:48:56-05:00	bonsai-27b	10.0.0.120	stage	passed	staged
+2026-08-02T00:48:56-05:00	bonsai-27b	10.0.0.120	benchmark	start	llama.cpp fallback
+2026-08-02T01:15:00-05:00	bonsai-27b	10.0.0.120	benchmark	passed	llama.cpp fallback
+2026-08-02T01:15:00-05:00	ternary-bonsai-27b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-02T01:15:42-05:00	ternary-bonsai-27b	10.0.0.120	stage	passed	staged
+2026-08-02T01:15:42-05:00	ternary-bonsai-27b	10.0.0.120	benchmark	start	llama.cpp fallback
+2026-08-02T01:19:36-05:00	ternary-bonsai-27b	10.0.0.120	benchmark	failed	llama.cpp fallback; see Ternary-Bonsai-27B-Q2.benchmark.log
+2026-08-02T01:19:36-05:00	internlm3-8b	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-02T01:20:02-05:00	internlm3-8b	10.0.0.120	stage	passed	staged
+2026-08-02T01:20:02-05:00	internlm3-8b	10.0.0.120	benchmark	start	llama.cpp fallback
+2026-08-02T01:21:16-05:00	internlm3-8b	10.0.0.120	benchmark	failed	llama.cpp fallback; see InternLM3-8B-Q4KM.benchmark.log
+2026-08-02T01:21:16-05:00	deepseek-v4-iq2xxs	10.0.0.120	stage	start	NAS to 10.0.0.120
+2026-08-02T01:27:42-05:00	deepseek-v4-iq2xxs	10.0.0.120	stage	passed	staged
+2026-08-02T01:27:42-05:00	deepseek-v4-iq2xxs	10.0.0.120	benchmark	start	llama.cpp fallback
+2026-08-02T01:34:29-05:00	deepseek-v4-iq2xxs	10.0.0.120	benchmark	failed	llama.cpp fallback; see DeepSeek-V4-Flash-IQ2XXS.benchmark.log
+2026-08-02T01:34:37-05:00	minicpm-v46-qwen3-xml	10.0.0.120	benchmark	start	correct tokenizer XML contract
+2026-08-02T01:45:52-05:00	minicpm-v46-qwen3-xml	10.0.0.120	benchmark	passed	correct tokenizer XML contract
+2026-08-02T01:45:52-05:00	qwen35-9b-mtp-k1	10.0.0.120	benchmark	start	native MTP K1
+2026-08-02T01:47:48-05:00	qwen35-9b-mtp-k1	10.0.0.120	benchmark	failed	native MTP K1
+2026-08-02T01:47:48-05:00	qwopus-awq-mtp-k1	10.0.0.183	benchmark	start	native MTP K1
+2026-08-02T02:45:21-05:00	qwopus-awq-mtp-k1	10.0.0.183	benchmark	passed	native MTP K1
+2026-08-02T02:45:21-05:00	aeon-ultimate-mm-mtp-k1	10.0.0.183	benchmark	start	MTP compatibility probe
+2026-08-02T02:52:45-05:00	aeon-ultimate-mm-mtp-k1	10.0.0.183	benchmark	failed	MTP compatibility probe
+2026-08-02T02:52:45-05:00	ornith-dflash-k8	10.0.0.120	benchmark	start	dedicated DFlash K8
+2026-08-02T03:44:08-05:00	ornith-dflash-k8	10.0.0.120	benchmark	passed	dedicated DFlash K8
+2026-08-02T03:44:08-05:00	laguna-s21-correct-parser	10.0.0.183	benchmark	start	poolside contract fallback
+2026-08-02T04:06:35-05:00	laguna-s21-correct-parser	10.0.0.183	benchmark	failed	poolside contract fallback
+2026-08-02T04:06:35-05:00	leanstral-vllm025	10.0.0.183	benchmark	start	vLLM 0.25 fallback
+2026-08-02T04:14:35-05:00	leanstral-vllm025	10.0.0.183	benchmark	failed	vLLM 0.25 fallback
+2026-08-02T04:14:37-05:00	aeon-ultimate-mm-control	10.0.0.183	benchmark	start	vLLM distinct-checkpoint tail
+2026-08-02T04:22:01-05:00	aeon-ultimate-mm-control	10.0.0.183	benchmark	failed	vLLM distinct-checkpoint tail
+2026-08-02T04:22:01-05:00	qwen36-35b-heretic	10.0.0.183	benchmark	start	vLLM distinct-checkpoint tail
+2026-08-02T04:48:08-05:00	qwen36-35b-heretic	10.0.0.183	benchmark	passed	vLLM distinct-checkpoint tail
+2026-08-02T04:48:08-05:00	qwable-5-27b	10.0.0.183	benchmark	start	llama.cpp distinct-checkpoint tail
+2026-08-02T05:42:12-05:00	qwable-5-27b	10.0.0.183	benchmark	passed	llama.cpp distinct-checkpoint tail
+2026-08-02T05:42:12-05:00	qwen36-27b-pitune	10.0.0.120	benchmark	start	llama.cpp distinct-checkpoint tail
+2026-08-02T06:26:03-05:00	qwen36-27b-pitune	10.0.0.120	benchmark	passed	llama.cpp distinct-checkpoint tail
+2026-08-02T06:26:03-05:00	gemma4-26b	10.0.0.120	benchmark	start	llama.cpp distinct-checkpoint tail
+2026-08-02T06:40:41-05:00	gemma4-26b	10.0.0.120	benchmark	passed	llama.cpp distinct-checkpoint tail
+2026-08-02T06:40:41-05:00	nemotron3-nano-omni	10.0.0.120	benchmark	start	llama.cpp distinct-checkpoint tail
+2026-08-02T06:51:23-05:00	nemotron3-nano-omni	10.0.0.120	benchmark	passed	llama.cpp distinct-checkpoint tail
+2026-08-02T06:51:23-05:00	huihui-qwen36-35b	10.0.0.120	benchmark	start	llama.cpp distinct-checkpoint tail
+2026-08-02T07:03:39-05:00	huihui-qwen36-35b	10.0.0.120	benchmark	passed	llama.cpp distinct-checkpoint tail
+2026-08-02T07:03:39-05:00	qwen36-27b-obliteratus	10.0.0.120	stage	start	NAS distinct-checkpoint tail
+2026-08-02T07:05:29-05:00	qwen36-27b-obliteratus	10.0.0.120	stage	passed	NAS distinct-checkpoint tail
+2026-08-02T07:05:29-05:00	qwen36-27b-obliteratus	10.0.0.120	benchmark	start	llama.cpp distinct-checkpoint tail
+2026-08-02T07:52:45-05:00	qwen36-27b-obliteratus	10.0.0.120	benchmark	passed	llama.cpp distinct-checkpoint tail
+2026-08-02T07:53:02-05:00	aeon-ultimate-mm-control	10.0.0.183	benchmark	start	deferred control; 20-minute readiness window
+2026-08-02T09:12:33-05:00	aeon-ultimate-mm-control	10.0.0.183	benchmark	passed	deferred control
+2026-08-02T09:12:33-05:00	qwen35-9b-mtp-k1	10.0.0.120	benchmark	start	deferred retry after SSH JSON quoting fix
+2026-08-02T09:43:47-05:00	qwen35-9b-mtp-k1	10.0.0.120	benchmark	passed	deferred retry after SSH JSON quoting fix
+2026-08-02T09:43:47-05:00	deepseek-v4-iq2xxs	10.0.0.120	benchmark	start	deferred retry; 20-minute readiness window
+2026-08-02T10:42:12-05:00	deepseek-v4-iq2xxs	10.0.0.120	benchmark	passed	deferred llama.cpp retry

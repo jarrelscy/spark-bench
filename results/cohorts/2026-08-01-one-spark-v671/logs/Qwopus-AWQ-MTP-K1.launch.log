@@ -1,0 +1,20 @@
+image_id	sha256:d74b35b7aeeebe9e5c386fe27241eada8732055ccc6e856a6fd000df00c6ca1a
+ce0317a257f6a1c4cdb5c4354ce08e6ff2f064d0768f2f4b6ee7f9c7c05ea4ca  /home/raulwesche/models/qwopus-awq/config.json
+51f03221b43603211f51d625de7ec71d9b822dd58a380a2687e2fc13bac5b543  /home/raulwesche/models/qwopus-awq/model-00001-of-00013.safetensors
+6188a1b316a65260374613c96dd636b625dccc04e4bdb81a11c4ece949afc4af  /home/raulwesche/models/qwopus-awq/model-00002-of-00013.safetensors
+04fb336331c7358c218fd5548920837719c8d7252550443779b2beec8a66e233  /home/raulwesche/models/qwopus-awq/model-00003-of-00013.safetensors
+a159869256e722cf03d768ae053a562ca638da7914b90ac70d1e10d441ac410e  /home/raulwesche/models/qwopus-awq/model-00004-of-00013.safetensors
+bdddfe2b817f1b96df3345eea8a5513632daf79a1e5b9b03427d76b9eba07f3a  /home/raulwesche/models/qwopus-awq/model-00005-of-00013.safetensors
+6c411cf98457a92630588a668302eb02cf8f9e02815a6f7106709e1469b57c57  /home/raulwesche/models/qwopus-awq/model-00006-of-00013.safetensors
+22f6d1c89c15962d9a27a43c2c4a54e53a89f5acea12e915d53966fa9fde39af  /home/raulwesche/models/qwopus-awq/model-00007-of-00013.safetensors
+5744d06591bca583fd7e70d69b3f57b3422eff01565b73b4d19683360a8001dc  /home/raulwesche/models/qwopus-awq/model-00008-of-00013.safetensors
+363221bc4b3da842fa832d4b198158067f29313b031f8720895cc6a56cc57eda  /home/raulwesche/models/qwopus-awq/model-00009-of-00013.safetensors
+7b4d120399d172f2fd7e80ace6ee06ebb4aa6a9fd678071d4bd6949f85f9bbab  /home/raulwesche/models/qwopus-awq/model-00010-of-00013.safetensors
+523519d7fa60253296b229d2486060d7e5c457e24a422c3fd1ae4e8c2287ebd8  /home/raulwesche/models/qwopus-awq/model-00011-of-00013.safetensors
+e72381d38bbf07df91aa6671d874ee0b00ab54070c53934ba30e9365293c9365  /home/raulwesche/models/qwopus-awq/model-00012-of-00013.safetensors
+abed7b0a601b5837427b299e44faad8ad0ec64bdce16da2147736eeff4bb86a9  /home/raulwesche/models/qwopus-awq/model-00013-of-00013.safetensors
+fe4340d236ef4d68f860793d9eda3748f0e0d9caac04dfa203f24a1aa07337d0  /home/raulwesche/models/qwopus-awq/model.safetensors.index.json
+713b0fafacc94c9e541925872de3bcc3507cf5af73abbce525298467b8b4b10f  /home/raulwesche/models/qwopus-awq/model_extra_tensors.safetensors
+c81a80dc48db0948e92fe06907374552de0caa135b17e43978766d5f06e5951f
+API: http://10.0.0.183:8211/v1
+Model: qwopus-awq-mtp-k1

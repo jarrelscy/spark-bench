@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 500,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merge zero or more sorted streams of (key, value) tuples.\n    Keys are integers. For duplicate keys, the last value seen wins\n    (later streams override earlier ones; within a stream, later occurrences override earlier ones).\n    \"\"\"\n    # We need to process all streams, tracking the latest value for each key.\n    # Since streams are sorted by key, we can use a heap or iterative approach.\n    # However, because \"last value seen\" means we need to handle overlaps carefully,\n    # a simple approach is to iterate through all streams in order, updating a dictionary\n    # of key -> value, but we need to yield in sorted order.\n    #\n    # Since the output must be a generator and sorted by key, we can:\n    # 1. Collect all (key, value) pairs, resolving duplicates by keeping the last one.\n    # 2. Sort by key and yield.\n    #\n    # But wait: if we just collect all into a dict, the order of iteration over streams matters.\n    # Stream 0, then Stream 1, etc. For same key, later stream overrides.\n    # Within a stream, later occurrence overrides.\n    #\n    # So we can iterate through each stream, and for each (k, v), set result[k] = v.\n    # Then sort the keys and yield.\n    #\n    # This works because:\n    # - Streams are iterables, so we can iterate through them.\n    # - We process stream 0, then stream 1, etc.\n    # - For each stream, we iterate through its (key, value) pairs in order.\n    # - If a key appears multiple times in the same stream, the last one wins (since we overwrite).\n    # - If a key appears in multiple streams, the later stream's value overwrites the earlier one.\n    #\n    # After processing all streams, we sort the keys and yield (key, value).\n    \n    result = {}\n    for stream in streams:\n        for key, value in stream:\n            result[key] = value\n    \n    # Sort by key\n    for key in sorted(result.keys()):\n        yield (key, result[key])\n```",
+    "tool_calls": [],
+    "total_seconds": 56.805140125000435
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

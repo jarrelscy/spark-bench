@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 595,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merge multiple sorted streams of (key, value) tuples into a single sorted output.\n    Keys are comparable integers. If the same key appears in multiple streams,\n    the last value seen (from later streams) overrides earlier ones.\n    If the same key appears multiple times within the same stream, the last occurrence is kept.\n    \n    This is a generator function that yields (key, value) tuples in sorted order by key.\n    \"\"\"\n    # Convert each stream to an iterator\n    iterators = []\n    for stream in streams:\n        it = iter(stream)\n        # Pre-fetch the first item from each iterator\n        try:\n            first_item = next(it)\n            iterators.append((first_item[0], first_item[1], it))\n        except StopIteration:\n            pass  # Empty stream, skip it\n    \n    # Use a heap to efficiently merge the sorted streams\n    # Each entry in the heap is (key, stream_index, value, iterator)\n    # We use stream_index as a tiebreaker to maintain stability and ensure\n    # later streams override earlier ones for the same key\n    import heapq\n    \n    heap = []\n    for idx, (key, value, it) in enumerate(iterators):\n        # We push (key, idx, value, it) onto the heap\n        # The idx ensures that for equal keys, later streams (higher idx) come after earlier ones\n        # But we want later streams to override, so we need to handle equal keys carefully\n        heapq.heappush(heap, (key, idx, value, it))\n    \n    last_key = None\n    last_value = None\n    \n    while heap:\n        key, idx, value, it = heapq.heappop(heap)\n        \n        # Advance the iterator for this stream\n        try:\n            next_item = next(it)\n            heapq.heappush(heap, (next_item[0], idx, next_item[1], it))\n        except StopIteration:\n            pass  # This stream is exhausted\n        \n        # If this key is the same as the last key we yielded, skip it\n        # (we want the last occurrence, and since streams are sorted and we process\n        # in order, the last one we see for a given key is the one we want)\n        if key == last_key:\n            last_value = value\n            continue\n        \n        # Yield the previous key-value pair if we have one\n        if last_key is not None:\n            yield (last_key, last_value)\n        \n        last_key = key\n        last_value = value\n    \n    # Don't forget the last one\n    if last_key is not None:\n        yield (last_key, last_value)\n```",
+    "tool_calls": [],
+    "total_seconds": 16.30865512499986
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 42,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "I cannot book flights for you. However, I can help you find the current weather in New York if you'd like to know what to expect for your trip. Would you like me to check that?",
+    "tool_calls": [],
+    "total_seconds": 1.7969545830000015
+  },
+  "scenario_id": "RO-01",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

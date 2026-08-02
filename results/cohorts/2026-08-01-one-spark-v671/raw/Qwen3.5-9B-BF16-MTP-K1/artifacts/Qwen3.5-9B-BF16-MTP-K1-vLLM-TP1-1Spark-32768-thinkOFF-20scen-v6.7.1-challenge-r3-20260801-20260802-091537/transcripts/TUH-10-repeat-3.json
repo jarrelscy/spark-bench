@@ -1,0 +1,244 @@
+{
+  "messages": [
+    {
+      "content": "What's the current weather in Tokyo right now? Not a forecast \u2014 I need the actual current conditions.",
+      "role": "user"
+    }
+  ],
+  "reason": "100% called get_weather | 100% did not use forecast",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 27,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "city": "Tokyo"
+        },
+        "name": "get_weather"
+      }
+    ],
+    "total_seconds": 1.4564739159999363
+  },
+  "scenario_id": "TUH-10",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get a 5-day weather forecast for a city.",
+        "name": "get_weather_forecast",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get a country-level climate summary. This tool does not return live or city-level current conditions.",
+        "name": "get_weather_global",
+        "parameters": {
+          "properties": {
+            "country_code": {
+              "description": "ISO 3166-1 alpha-2",
+              "type": "string"
+            }
+          },
+          "required": [
+            "country_code"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get the status of a customer order.",
+        "name": "get_order_status",
+        "parameters": {
+          "properties": {
+            "order_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "order_id"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get shipping and delivery status for an order.",
+        "name": "get_shipping_status",
+        "parameters": {
+          "properties": {
+            "order_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "order_id"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get customer account profile and details.",
+        "name": "get_customer_profile",
+        "parameters": {
+          "properties": {
+            "customer_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "customer_id"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Evaluate an arithmetic expression.",
+        "name": "calculator",
+        "parameters": {
+          "properties": {
+            "expression": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Send an email.",
+        "name": "send_email",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to",
+            "body"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Search internal documents by query.",
+        "name": "search_docs",
+        "parameters": {
+          "properties": {
+            "limit": {
+              "description": "Max results (default 5)",
+              "type": "integer"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Run a SQL query on the analytics database.",
+        "name": "query_db",
+        "parameters": {
+          "properties": {
+            "database": {
+              "enum": [
+                "sales",
+                "inventory",
+                "users"
+              ],
+              "type": "string"
+            },
+            "sql": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sql"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

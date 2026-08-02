@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 352,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "Here's the Python generator function:\n\n```python\ndef merge_sorted_streams(*streams):\n    import heapq\n    from itertools import chain\n\n    # We'll use a min-heap to merge streams efficiently\n    # Each entry is (key, value, stream_index, occurrence_count)\n    # occurrence_count helps break ties and keep last occurrence per stream\n    \n    iterators = [iter(s) for s in streams]\n    heap = []\n    \n    # Initialize heap with first element from each non-empty stream\n    for idx, it in enumerate(iterators):\n        try:\n            key, value = next(it)\n            heapq.heappush(heap, (key, value, idx, 0))\n        except StopIteration:\n            pass\n    \n    # Track last seen key and its value for deduplication\n    last_key = None\n    last_value = None\n    \n    while heap:\n        key, value, idx, count = heapq.heappop(heap)\n        \n        # If key is different from last_key, yield previous (if exists)\n        if last_key is not None and key != last_key:\n            yield (last_key, last_value)\n        \n        # Update last_key and last_value (override for same key)\n        last_key = key\n        last_value = value\n        \n        # Get next element from the same stream\n        try:\n            next_key, next_value = next(iterators[idx])\n            heapq.heappush(heap, (next_key, next_value, idx, count + 1))\n        except StopIteration:\n            pass\n    \n    # Yield the last remaining key-value pair\n    if last_key is not None:\n        yield (last_key, last_value)\n```",
+    "tool_calls": [],
+    "total_seconds": 28.732816124999772
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

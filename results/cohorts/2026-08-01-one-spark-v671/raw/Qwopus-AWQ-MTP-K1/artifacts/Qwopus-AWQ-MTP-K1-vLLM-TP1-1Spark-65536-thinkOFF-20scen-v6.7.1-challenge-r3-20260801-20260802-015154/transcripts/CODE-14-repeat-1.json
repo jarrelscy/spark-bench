@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 760,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merge multiple sorted streams of (key, value) tuples into a single sorted output.\n    If the same key appears in multiple streams, the last value seen (from the latest stream) is kept.\n    If the same key appears multiple times within the same stream, the last occurrence is kept.\n    \"\"\"\n    # Create iterators for each stream, filtering out duplicate keys within each stream\n    # by keeping only the last occurrence of each key.\n    def dedup_stream(stream):\n        \"\"\"Yield (key, value) tuples from a sorted stream, keeping only the last occurrence of each key.\"\"\"\n        prev_key = None\n        prev_value = None\n        for key, value in stream:\n            if key == prev_key:\n                # Same key as previous, update the value (keep last occurrence)\n                prev_value = value\n            else:\n                # New key, yield the previous one if it exists\n                if prev_key is not None:\n                    yield (prev_key, prev_value)\n                prev_key = key\n                prev_value = value\n        # Yield the last one\n        if prev_key is not None:\n            yield (prev_key, prev_value)\n\n    # Create deduplicated iterators for each stream\n    iterators = []\n    for stream in streams:\n        it = dedup_stream(stream)\n        iterators.append(it)\n\n    # Use a heap to merge the sorted streams\n    # Each entry in the heap is (key, stream_index, value)\n    # We use stream_index as a tiebreaker to ensure stable ordering\n    import heapq\n\n    heap = []\n    for idx, it in enumerate(iterators):\n        try:\n            key, value = next(it)\n            heapq.heappush(heap, (key, idx, value))\n        except StopIteration:\n            pass\n\n    while heap:\n        key, idx, value = heapq.heappop(heap)\n\n        # Check if there are other streams with the same key\n        # We need to collect all values for this key from all streams that have this key\n        # and take the last one (highest stream index)\n        # But since we're using a heap, we might not have all of them yet.\n        # Actually, since all streams are sorted, if multiple streams have the same key,\n        # they will all be at the top of the heap (or close to it).\n        # We need to pop all entries with the same key and take the one with the highest stream index.\n\n        # Collect all entries with the same key\n        entries = [(key, idx, value)]\n        while heap and heap[0][0] == key:\n            k, i, v = heapq.heappop(heap)\n            entries.append((k, i, v))\n\n        # Take the entry with the highest stream index (last stream overrides)\n        best = max(entries, key=lambda x: x[1])\n        yield (best[0], best[2])\n\n        # Push the next element from the stream of the best entry back into the heap\n        # Actually, we need to push the next element from ALL streams that had this key,\n        # because we popped them all.\n        for k, i, v in entries:\n            it = iterators[i]\n            try:\n                next_key, next_value = next(it)\n                heapq.heappush(heap, (next_key, i, next_value))\n            except StopIteration:\n                pass\n```",
+    "tool_calls": [],
+    "total_seconds": 50.70546550000017
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

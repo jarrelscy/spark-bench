@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/5 tests: t1:pass, t2:fail(got [(1, 'a'), (1, 'b'), (2, 'c')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 463,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merge multiple sorted streams of (key, value) tuples into a single sorted output.\n    For duplicate keys, the last value seen (from later streams or later positions) wins.\n    \"\"\"\n    # Create iterators for each stream\n    iterators = [iter(s) for s in streams]\n    \n    # Track the current head of each iterator\n    # Each entry is (key, value, stream_index) or None if exhausted\n    heads = []\n    for idx, it in enumerate(iterators):\n        try:\n            key, value = next(it)\n            heads.append((key, value, idx))\n        except StopIteration:\n            heads.append(None)\n    \n    # We need to handle the \"last value wins\" rule for duplicate keys.\n    # Since streams are sorted by key, we can process keys in order.\n    # When we see a key, we need to collect all values for that key from all streams\n    # that have this key at their current head, and take the last one.\n    \n    while any(h is not None for h in heads):\n        # Find the minimum key among all active heads\n        min_key = None\n        for h in heads:\n            if h is not None:\n                if min_key is None or h[0] < min_key:\n                    min_key = h[0]\n        \n        if min_key is None:\n            break\n        \n        # Collect all values for this min_key from all streams\n        # The last one (by stream index order, since we iterate in order) wins\n        last_value = None\n        for idx, h in enumerate(heads):\n            if h is not None and h[0] == min_key:\n                last_value = h[1]\n                # Advance this iterator\n                it = iterators[idx]\n                try:\n                    key, value = next(it)\n                    heads[idx] = (key, value, idx)\n                except StopIteration:\n                    heads[idx] = None\n        \n        if last_value is not None:\n            yield (min_key, last_value)\n```",
+    "tool_calls": [],
+    "total_seconds": 39.30692754099982
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.8,
+  "tools": null
+}

@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 192,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "To book a flight, I typically need more details such as:\n1.  **Departure City**: Where are you flying from?\n2.  **Specific Time**: \"Tomorrow morning\" is helpful, but do you have a preferred departure time (e.g., before 9 AM)?\n3.  **Passenger Details**: How many people are traveling?\n4.  **Airline/Price Preference**: Do you have a preferred airline or budget?\n\nSince I don't have direct access to a live booking engine in this specific interface, here is what you can do:\n\n1.  **Check the Weather**: Would you like to know the current weather in New York to help decide what to pack?\n2.  **Search Online**: I recommend checking sites like Google Flights, Expedia, or Kayak for the most up-to-date prices and availability.\n\nLet me know if you'd like the weather forecast!",
+    "tool_calls": [],
+    "total_seconds": 22.038167791999996
+  },
+  "scenario_id": "RO-01",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

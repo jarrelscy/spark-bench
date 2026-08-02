@@ -1,0 +1,1 @@
+/Users/wesche/projects/one-spark-model-sweep/run-llamacpp-benchmark.sh: line 28: 19510 Terminated: 15          "$ROOT/launch-llamacpp.sh" "$HOST" "$GGUF" "$SERVED_NAME" "$MAX_CONTEXT" "$MMPROJ" > "$ROOT/${SLUG}.launch.log" 2>&1

@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/5 tests: t1:fail(got [(1, 'a'), (2, 'c'), (3, 'b')]), t2:fail(got [(1, 'a'), (2, 'c')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 208,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    if not streams:\n        return\n    # Collect all items from all streams into a single list, preserving order\n    all_items = []\n    for stream in streams:\n        for item in stream:\n            all_items.append(item)\n    # Sort by key, then by original index (to handle same key across streams)\n    # We need to keep track of original index to ensure later occurrences win\n    indexed = [(i, item) for i, item in enumerate(all_items)]\n    indexed.sort(key=lambda x: (x[1][0], x[0]))\n    # Now iterate and keep only the last value for each key\n    result = []\n    last_key = None\n    for _, (key, value) in indexed:\n        if key != last_key:\n            result.append((key, value))\n            last_key = key\n    for item in result:\n        yield item\n```",
+    "tool_calls": [],
+    "total_seconds": 16.513019708999764
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.6,
+  "tools": null
+}

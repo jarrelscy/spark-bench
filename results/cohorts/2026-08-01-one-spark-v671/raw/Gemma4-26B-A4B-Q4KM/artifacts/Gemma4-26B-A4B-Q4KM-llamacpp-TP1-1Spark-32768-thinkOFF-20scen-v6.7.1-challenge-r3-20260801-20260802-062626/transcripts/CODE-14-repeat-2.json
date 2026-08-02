@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 519,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport heapq\n\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merges multiple sorted streams of (key, value) tuples.\n    If keys collide, the value from the stream with the higher index \n    (or the later occurrence in the same stream) is kept.\n    \"\"\"\n    # Use heapq.merge to get a single stream of (key, value) tuples \n    # sorted by key. Since heapq.merge is stable, if keys are equal, \n    # the order depends on the input order of streams.\n    # However, to handle the \"last value wins\" rule correctly across \n    # different streams, we need to ensure that for equal keys, \n    # the one from the stream with the highest index comes last.\n    \n    # We wrap each stream element to include the stream index to help \n    # heapq.merge maintain a predictable order for equal keys.\n    # We want: (key, stream_index, value)\n    # This way, if keys are equal, the one with the higher stream_index \n    # is considered \"greater\" and comes later in the sorted sequence.\n    \n    iterators = []\n    for i, s in enumerate(streams):\n        # We use a generator expression to transform (k, v) -> (k, i, v)\n        iterators.append(((k, i, v) for k, v in s))\n\n    # heapq.merge will yield tuples in ascending order.\n    # For equal keys, it will sort by stream index 'i'.\n    merged_iter = heapq.merge(*iterators)\n\n    last_key = None\n    last_val = None\n\n    for key, stream_idx, value in merged_iter:\n        if key == last_key:\n            # If the key is the same as the previous one, \n            # the new one overrides the old one.\n            last_val = value\n        else:\n            # If it's a new key, yield the previous one (if it exists)\n            if last_key is not None:\n                yield (last_key, last_val)\n            last_key = key\n            last_val = value\n\n    # Yield the final buffered element\n    if last_key is not None:\n        yield (last_key, last_val)\n```",
+    "tool_calls": [],
+    "total_seconds": 9.757355666999956
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

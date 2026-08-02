@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Output ONLY a JSON array of exactly three fruit names as strings. Do not include any fruit that is red. No prose.",
+      "role": "user"
+    }
+  ],
+  "reason": "len 3; forbidden ['Apple']",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 11,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "[\"Banana\", \"Orange\", \"Apple\"]",
+    "tool_calls": [],
+    "total_seconds": 0.9501085839999917
+  },
+  "scenario_id": "IFH-02",
+  "score": 0.7,
+  "tools": null
+}

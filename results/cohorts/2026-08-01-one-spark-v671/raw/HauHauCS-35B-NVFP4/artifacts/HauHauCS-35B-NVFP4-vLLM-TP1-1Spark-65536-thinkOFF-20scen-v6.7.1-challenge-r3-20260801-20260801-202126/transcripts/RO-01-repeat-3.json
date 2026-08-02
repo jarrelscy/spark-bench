@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 41,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "I'd be happy to help! Could you please specify which airport in New York you'd like to fly into (e.g., JFK, LaGuardia, or Newark) and your departure city?",
+    "tool_calls": [],
+    "total_seconds": 1.0988310839999968
+  },
+  "scenario_id": "RO-01",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

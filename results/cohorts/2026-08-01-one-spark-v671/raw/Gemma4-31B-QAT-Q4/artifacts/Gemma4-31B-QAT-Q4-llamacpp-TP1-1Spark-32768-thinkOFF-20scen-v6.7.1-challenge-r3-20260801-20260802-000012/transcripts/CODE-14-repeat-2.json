@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 663,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport heapq\n\ndef merge_sorted_streams(*streams):\n    # Initialize a min-heap with the first element of each non-empty stream.\n    # We store (key, stream_index, value) to handle sorting and tracking.\n    heap = []\n    iterators = [iter(s) for s in streams]\n    \n    for i, it in enumerate(iterators):\n        try:\n            key, val = next(it)\n            heapq.heappush(heap, (key, i, val))\n        except StopIteration:\n            pass\n\n    last_key = None\n    last_val = None\n    has_started = False\n\n    while heap:\n        key, i, val = heapq.heappop(heap)\n        \n        # Update the current tracking key/value\n        last_key = key\n        last_val = val\n        has_started = True\n\n        # Pull the next element from the stream that just yielded\n        try:\n            next_key, next_val = next(iterators[i])\n            heapq.heappush(heap, (next_key, i, next_val))\n        except StopIteration:\n            pass\n\n        # Peek at the heap: if the next smallest key is the same as current,\n        # we don't yield yet because we must keep the LAST value seen.\n        if not heap or heap[0][0] != last_key:\n            yield (last_key, last_val)\n\n    # Handle the final element if the loop ended\n    if has_started and (not heap):\n        # The loop logic above yields when the key changes. \n        # If the loop finishes, the very last key/val pair hasn't been yielded yet\n        # unless the heap was empty. However, the logic `if not heap` inside the loop\n        # handles the final element. To be safe and clean:\n        pass\n\n# Correcting the yield logic to ensure the final element is emitted:\ndef merge_sorted_streams(*streams):\n    iterators = [iter(s) for s in streams]\n    heap = []\n    for i, it in enumerate(iterators):\n        try:\n            k, v = next(it)\n            heapq.heappush(heap, (k, i, v))\n        except StopIteration:\n            pass\n\n    current_key = None\n    current_val = None\n    started = False\n\n    while heap:\n        k, i, v = heapq.heappop(heap)\n        current_key = k\n        current_val = v\n        started = True\n\n        try:\n            nk, nv = next(iterators[i])\n            heapq.heappush(heap, (nk, i, nv))\n        except StopIteration:\n            pass\n\n        if not heap or heap[0][0] != current_key:\n            yield (current_key, current_val)\n```",
+    "tool_calls": [],
+    "total_seconds": 57.71101937499998
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

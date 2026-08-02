@@ -1,0 +1,20 @@
+image_id	sha256:d74b35b7aeeebe9e5c386fe27241eada8732055ccc6e856a6fd000df00c6ca1a
+deab35a8477b8e2871764d12e9e33af228c78aef1b073659ab3a5d8a6ceb9d36  /home/raulwesche/models/laguna-s-21-nvfp4/config.json
+80518caa724f3ec5bd0470767196354a7f64abdb35d48272d4e99ad69033f5bc  /home/raulwesche/models/laguna-s-21-nvfp4/model-00001-of-00014.safetensors
+820c842ffb7ae8e9194fcf4065a42fb7c07a16c778199428466f3a273e2b5021  /home/raulwesche/models/laguna-s-21-nvfp4/model-00002-of-00014.safetensors
+04f5fffa73885e25ee1b7cdda91a0694375b786f903970c0443c808d8fad9482  /home/raulwesche/models/laguna-s-21-nvfp4/model-00003-of-00014.safetensors
+9bca976e9c83994f05f0387091655f4a3e763aac671c6ff82eafee52d2da2f26  /home/raulwesche/models/laguna-s-21-nvfp4/model-00004-of-00014.safetensors
+324829efb416227d885fcb1fc3a90b68f7ebe5cfbcaf80c4d9063b2c908489e0  /home/raulwesche/models/laguna-s-21-nvfp4/model-00005-of-00014.safetensors
+560ebc627b686211da1bc3e286181ec0394f5f0ad62f6e18b12aecd646ed9448  /home/raulwesche/models/laguna-s-21-nvfp4/model-00006-of-00014.safetensors
+fb08bdbcd6b81a8dae481b78e3e9ed63636863e9a492fc29554aeb7b8ea0206d  /home/raulwesche/models/laguna-s-21-nvfp4/model-00007-of-00014.safetensors
+1f99f3ef4edb547c4198cd426527f4888d8838ee907b410aba58345689e3a801  /home/raulwesche/models/laguna-s-21-nvfp4/model-00008-of-00014.safetensors
+4704c1278648134026d2af30e26743967e69f3164aa1152fec9d4d2d299529a3  /home/raulwesche/models/laguna-s-21-nvfp4/model-00009-of-00014.safetensors
+2417eeb1905f7ba68e5cd33a0aa0e9ef7bfdbddf0ffbf77738fc4358d8f6f56c  /home/raulwesche/models/laguna-s-21-nvfp4/model-00010-of-00014.safetensors
+b514d82a3c12b965222d63c92bd796b62178c65f9c7677fbf91856f63f217779  /home/raulwesche/models/laguna-s-21-nvfp4/model-00011-of-00014.safetensors
+aded66fad205ae52b6869ee04cdc1ece6b79cbd8a6919061316a8d9438705fa5  /home/raulwesche/models/laguna-s-21-nvfp4/model-00012-of-00014.safetensors
+5ce940e388edb9b10e4bc21ee7e6fe3b08f32d6e63967e7483279f2091cd4f0c  /home/raulwesche/models/laguna-s-21-nvfp4/model-00013-of-00014.safetensors
+69c7b4087149252cf69f26f790ad937272357497577e5c8eee4e0499e10b4c6f  /home/raulwesche/models/laguna-s-21-nvfp4/model-00014-of-00014.safetensors
+c872bd9b5ac116cebfd78a5f27565787dbceae76985cef041179110d0b03cd2b  /home/raulwesche/models/laguna-s-21-nvfp4/model.safetensors.index.json
+8a20ff3001751eb9bc046bdf331263ea47c4bada4d001cfcc0bd9308bf468d78
+API: http://10.0.0.183:8211/v1
+Model: laguna-s-21-nvfp4

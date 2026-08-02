@@ -1,0 +1,157 @@
+{
+  "messages": [
+    {
+      "content": "Find all Q3 revenue reports, read them, and calculate total revenue across all regions. Give me the final number.",
+      "role": "user"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"query\": \"Q3 revenue report\"}",
+            "name": "search_docs"
+          },
+          "id": "call00001",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"results\": [{\"path\": \"/reports/q3_na.csv\", \"title\": \"Q3 North America Revenue\"}, {\"path\": \"/reports/q3_emea.csv\", \"title\": \"Q3 EMEA Revenue\"}]}",
+      "role": "tool",
+      "tool_call_id": "call00001"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"path\": \"/reports/q3_na.csv\"}",
+            "name": "read_file"
+          },
+          "id": "call00002",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "region,revenue\nNA,2800000",
+      "role": "tool",
+      "tool_call_id": "call00002"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"path\": \"/reports/q3_emea.csv\"}",
+            "name": "read_file"
+          },
+          "id": "call00003",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "region,revenue\nEMEA,1400000",
+      "role": "tool",
+      "tool_call_id": "call00003"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"expression\": \"2800000 + 1400000\"}",
+            "name": "calculator"
+          },
+          "id": "call00004",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"result\": 4200000}",
+      "role": "tool",
+      "tool_call_id": "call00004"
+    }
+  ],
+  "reason": "100% answer '4200000' present | 100% 0 calls (want 0)",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 81,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "I found two Q3 revenue reports and read them:\n\n1. **Q3 North America Revenue** (`/reports/q3_na.csv`): $2,800,000\n2. **Q3 EMEA Revenue** (`/reports/q3_emea.csv`): $1,400,000\n\nThe total revenue across all regions is **$4,200,000**.",
+    "tool_calls": [],
+    "total_seconds": 3.171389708000106
+  },
+  "scenario_id": "CP-02",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Search internal documents by query.",
+        "name": "search_docs",
+        "parameters": {
+          "properties": {
+            "limit": {
+              "description": "Max results (default 5)",
+              "type": "integer"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Read a file from disk.",
+        "name": "read_file",
+        "parameters": {
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Evaluate an arithmetic expression.",
+        "name": "calculator",
+        "parameters": {
+          "properties": {
+            "expression": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

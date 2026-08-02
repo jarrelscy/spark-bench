@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/5 tests: t1:fail(got [(1, 'a'), (2, 'c'), (3, 'b'), (3, 'd')]), t2:fail(got [(1, 'a'), (1, 'b'), (2, 'c')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 212,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "import heapq\n\ndef merge_sorted_streams(*streams):\n    streams = [stream for stream in streams]  # Convert to list if not already\n    heap = []\n    stream_iters = [iter(stream) for stream in streams]\n    for i, it in enumerate(stream_iters):\n        try:\n            key, value = next(it)\n            heapq.heappush(heap, (key, i, value, it))\n        except StopIteration:\n            pass\n\n    while heap:\n        key, stream_index, value, it = heap[0]\n        try:\n            next_key, next_value = next(it)\n            if next_key == key:\n                heap[0] = (key, stream_index, next_value, it)\n            else:\n                heapq.heappop(heap)\n                heapq.heappush(heap, (next_key, stream_index, next_value, it))\n        except StopIteration:\n            heapq.heappop(heap)\n        yield key, value",
+    "tool_calls": [],
+    "total_seconds": 2.9001377920000095
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.6,
+  "tools": null
+}

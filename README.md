@@ -11,7 +11,7 @@ A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 G
 | Agentic | **12** multi-turn workflows (AG-01…AG-12), including deep chains, tool failure injection, nested schemas, long noisy context |
 | TrueScore weights | Quality 55% · Calibration 25% · Reliability 15% · Efficiency 1.5% · Responsiveness 3.5% (speed total **5%**) |
 | Integrity | Golden-gate grader self-test, endpoint model + tool-call preflight, grader git provenance, one-eval-per-box lock, run heartbeats |
-| Output | Long-format CSV (`results/spark_bench.csv`) + per-run markdown/HTML/JSON transcripts; live board at [wesche.com/dgx](https://wesche.com/dgx) |
+| Output | Long-format CSV (`results/spark_bench.csv`) + per-run markdown/HTML/JSON transcripts; current qualified board at [wesche.com/dgx](https://wesche.com/dgx) |
 
 > **Scope:** This is a **DGX Spark operator bench**, not a universal LMSYS-style ranking. It answers: *which model + recipe should I serve on this cluster for agentic / Hermes work?*
 
@@ -19,7 +19,28 @@ A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 G
 
 ## Leaderboard
 
-**Authoritative numbers live on the auto leaderboard** ([wesche.com/dgx](https://wesche.com/dgx)), rendered from `results/spark_bench.csv`. Do not treat the tables below as current v6.7.1 scores — they are a **historical v5c snapshot** (64 scenarios, think-OFF, Q4_K_M era) kept for context.
+**The live leaderboard** ([wesche.com/dgx](https://wesche.com/dgx)) shows only
+the 29 qualified runs from the current one-Spark `v6.7.1-challenge` cohort.
+The complete 40-attempt evidence pack, including quarantine and preflight
+failures, is in
+[`results/cohorts/2026-08-01-one-spark-v671`](results/cohorts/2026-08-01-one-spark-v671/README.md).
+The master `results/spark_bench.csv` retains older runs for provenance, but
+scores from different methodology versions are not comparable.
+
+### Current one-Spark cohort
+
+| # | Deployment | TrueScore | Quality | Calibration | Reliability |
+|---:|---|---:|---:|---:|---:|
+| 1 | DeepSeek V4 Flash 0731, DS4 spec-off | **92.0** | 93.8 | 92.7 | 86.8 |
+| 2 | DeepSeek V4 Flash 0731, DSpark | **86.7** | 88.7 | 87.1 | 79.6 |
+| 3 | Qwopus AWQ, MTP K1 | **85.8** | 78.1 | 100.0 | 91.9 |
+| 4 | Aeon Ultimate MM NVFP4, spec-off control | **85.3** | 82.7 | 93.7 | 83.8 |
+| 5 | Gemma 4 26B-A4B Q4_K_M | **84.6** | 79.5 | 88.9 | 92.3 |
+
+The full 29-row ranking is in
+[`results-qualified.tsv`](results/cohorts/2026-08-01-one-spark-v671/results-qualified.tsv).
+All rows use the same 20-scenario, 10-domain, three-repeat, thinking-off,
+single-Spark TP1 contract at grader `11d21bf`.
 
 Models are grouped by size tier. Within each tier, models compete against peers of similar capacity.
 

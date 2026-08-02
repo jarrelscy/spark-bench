@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "no fabricated call but did not clearly decline",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 35,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "I can check the weather for you, but I don't have access to a flight booking system. You'll need to check with an airline or travel agency for that!",
+    "tool_calls": [],
+    "total_seconds": 0.8203113330000065
+  },
+  "scenario_id": "RO-01",
+  "score": 0.4,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

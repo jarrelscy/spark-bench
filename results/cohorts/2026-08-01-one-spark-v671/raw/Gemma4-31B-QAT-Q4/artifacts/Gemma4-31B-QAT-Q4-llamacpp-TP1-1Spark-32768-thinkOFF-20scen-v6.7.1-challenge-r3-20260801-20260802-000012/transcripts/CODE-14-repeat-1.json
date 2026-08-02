@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 331,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport heapq\n\ndef merge_sorted_streams(*streams):\n    # Initialize a min-heap with the first element of each stream\n    # Store as (key, stream_index, value)\n    # stream_index ensures stability and allows us to track which iterator to advance\n    heap = []\n    iterators = [iter(s) for s in streams]\n    \n    for i, it in enumerate(iterators):\n        try:\n            key, val = next(it)\n            heapq.heappush(heap, (key, i, val))\n        except StopIteration:\n            pass\n\n    last_key = None\n    last_val = None\n\n    while heap:\n        key, i, val = heapq.heappop(heap)\n        \n        # Update the current tracking key/value\n        last_key = key\n        last_val = val\n        \n        # Advance the iterator that provided the popped element\n        try:\n            next_key, next_val = next(iterators[i])\n            heapq.heappush(heap, (next_key, i, next_val))\n        except StopIteration:\n            pass\n        \n        # Peek at the heap: if the next element has the same key, \n        # we don't yield yet because it might override the current value.\n        if not heap or heap[0][0] != last_key:\n            yield (last_key, last_val)\n```",
+    "tool_calls": [],
+    "total_seconds": 28.858857208000018
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Humanoid Cycle</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from './three.module.js';
+
+        // Scene Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x222222);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(4, 2, 0);
+        camera.lookAt(0, 1, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        // Treadmill Ground
+        const groundGeo = new THREE.BoxGeometry(10, 0.2, 3);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        scene.add(ground);
+
+        // Humanoid Construction (Low Poly)
+        const group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({ color: 0x00ffcc });
+
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.4), mat);
+        torso.position.y = 1.4;
+        group.add(torso);
+
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), mat);
+        head.position.y = 0.6;
+        torso.add(head);
+
+        // Limbs
+        function createLimb(w, h, d) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+            mesh.position.y = -h / 2; // Pivot from top
+            return mesh;
+        }
+
+        const leftLeg = createLimb(0.2, 0.7, 0.2);
+        leftLeg.position.set(-0.15, 0.4, 0);
+        torso.add(leftLeg);
+
+        const rightLeg = createLimb(0.2, 0.7, 0.2);
+        rightLeg.position.set(0.15, 0.4, 0);
+        torso.add(rightLeg);
+
+        const leftArm = createLimb(0.15, 0.6, 0.15);
+        leftArm.position.set(-0.4, 0.3, 0);
+        torso.add(leftArm);
+
+        const rightArm = createLimb(0.15, 0.6, 0.15);
+        rightArm.position.set(0.4, 0.3, 0);
+        torso.add(rightArm);
+
+        scene.add(group);
+
+        // Animation Logic
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = clock.getElapsedTime();
+            const cycleTime = t % 10; // 10 second loop
+
+            let swingSpeed = 0;
+            let swingAmplitude = 0;
+            let lean = 0;
+            let bounce = 0;
+
+            if (cycleTime < 2) {
+                // State: Stand Still
+                swingSpeed = 0;
+                swingAmplitude = 0;
+                lean = 0;
+                bounce = 0;
+            } else if (cycleTime < 5) {
+                // State: Walk (3 seconds)
+                swingSpeed = 6; 
+                swingAmplitude = 0.4;
+                lean = 0.05;
+                bounce = Math.sin(t * swingSpeed * 2) * 0.02;
+            } else if (cycleTime < 8) {
+                // State: Run (3 seconds)
+                swingSpeed = 12;
+                swingAmplitude = 0.8;
+                lean = 0.2;
+                bounce = Math.sin(t * swingSpeed * 2) * 0.08;
+            } else {
+                // State: Stand Still (2 seconds)
+                swingSpeed = 0;
+                swingAmplitude = 0;
+                lean = 0;
+                bounce = 0;
+            }
+
+            // Apply Lean
+            torso.rotation.z = lean;
+
+            // Apply Limb Movement
+            const phase = t * swingSpeed;
+            
+            // Legs (opposite)
+            leftLeg.rotation.z = Math.sin(phase) * swingAmplitude;
+            rightLeg.rotation.z = -Math.sin(phase) * swingAmplitude;
+            
+            // Arms (opposite to legs)
+            leftArm.rotation.z = -Math.sin(phase) * swingAmplitude;
+            rightArm.rotation.z = Math.sin(phase) * swingAmplitude;
+
+            // Vertical bounce
+            group.position.y = bounce;
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

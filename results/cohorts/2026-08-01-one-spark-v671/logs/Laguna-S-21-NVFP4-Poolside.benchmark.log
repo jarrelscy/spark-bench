@@ -1,0 +1,42 @@
+127.0.0.1 - - [02/Aug/2026 03:51:20] "GET /artifact.html HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:20] "GET /favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:26] "GET /artifact.html HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:26] "GET /favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:34] "GET /artifact.html HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:34] "GET /favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:50] "GET /artifact.html HTTP/1.1" 200 -
+127.0.0.1 - - [02/Aug/2026 03:51:50] "GET /favicon.ico HTTP/1.1" 200 -
+
+[gate] RUN ABORTED: preflight_models_unavailable  URLError: <urlopen error [Errno 61] Connection refused>
+
+=== spark-bench run Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-035119 ===
+
+[gate] golden gate: grader self-check on canned transcripts
+golden gate — layer 1: check-level selftest
+  [ok ] 17/17 grader self-tests passed
+golden gate — layer 2: agentic grader on golden transcripts
+  [ok ] AG-11 perfect transcript: want 1.0 got 1.0000  agentic 5/5: ✓ event titled with the buried code, ✓ event on the burie
+  [ok ] AG-11 partial transcript (1/5 checks): want 0.2 got 0.2000  agentic 1/5: ✓ event titled with the buried code, ✗ event on the burie
+  [ok ] AG-11 garbage transcript (no tools): want 0.0 got 0.0000  agentic 0/5: ✗ event titled with the buried code, ✗ event on the burie
+  [ok ] unknown scenario id scores 0: want 0.0 got 0.0000  unknown agentic scenario AG-99
+golden gate — layer 3: harness end-to-end with scripted models
+  [ok ] harness+grader: perfect scripted model on AG-11: want 1.0 got 1.0000  agentic 5/5: ✓ event titled with the buried code, ✓ event on the burie
+  [ok ] harness+grader: dead-parser model on AG-11: want 0.0 got 0.0000  agentic 0/5: ✗ event titled with the buried code, ✗ event on the burie
+  [ok ] harness+grader: dead-parser model on AG-09: want 0.0 got 0.0000  agentic 0/6: ✗ query with properly NESTED date_range, ✗ overdue status
+golden gate — layer 4: v6.5 render graders on canned fixtures
+  [ok ] v3d race: crossing fixture passes: want [0.85,1.0] got 1.00  html-doc=y, self-contained=y, no-js-errors=y, red-visible(11
+  [ok ] v3d race: static fixture fails: want [0.0,0.45] got 0.32  html-doc=y, self-contained=y, no-js-errors=y, red-visible(18
+  [ok ] v3d runner: phased fixture passes: want [0.85,1.0] got 1.00  html-doc=y, self-contained=y, no-js-errors=y, scene-structur
+  [ok ] v3d runner: constant-motion fixture fails: want [0.0,0.6] got 0.49  html-doc=y, self-contained=y, no-js-errors=y, scene-structur
+  => golden gate PASSED: 12/12 cases
+  [eval] provenance             golden_gate            = PASS   (golden gate PASSED: 12/12 cases)
+  [eval] provenance             grader_git             = 11d21bf 
+[gate] grader version: 11d21bf
+
+[gate] preflight: endpoint identity + tool-call parse probe
+  [eval] provenance             aborted                = preflight_models_unavailable   (URLError: <urlopen error [Errno 61] Connection refused>)
+
+  -> appended 3 rows to /Users/wesche/projects/spark-bench-v671-runs/2026-08-01-one-spark-sweep/Laguna-S-21-NVFP4-Poolside/spark_bench.csv
+  -> wrote summary /Users/wesche/projects/spark-bench-v671-runs/2026-08-01-one-spark-sweep/Laguna-S-21-NVFP4-Poolside/runs/Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-035119.md
+  -> wrote html report /Users/wesche/projects/spark-bench-v671-runs/2026-08-01-one-spark-sweep/Laguna-S-21-NVFP4-Poolside/runs/Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-035119.html
+  -> updated latest report /Users/wesche/projects/spark-bench-v671-runs/2026-08-01-one-spark-sweep/Laguna-S-21-NVFP4-Poolside/latest.html

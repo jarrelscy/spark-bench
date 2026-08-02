@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/5 tests: t1:fail(got [(1, 'a'), (2, 'c'), (3, 'b'), (3, 'd')]), t2:fail(got [(1, 'a'), (1, 'b'), (2, 'c')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 173,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    import heapq\n    \n    # Heap entries: (key, stream_index, iterator, value)\n    heap = []\n    stream_iters = [iter(s) for s in streams]\n    \n    for idx, it in enumerate(stream_iters):\n        try:\n            key, value = next(it)\n            heapq.heappush(heap, (key, idx, it, value))\n        except StopIteration:\n            pass\n    \n    while heap:\n        key, idx, it, value = heapq.heappop(heap)\n        yield key, value\n        \n        try:\n            next_key, next_value = next(it)\n            heapq.heappush(heap, (next_key, idx, it, next_value))\n        except StopIteration:\n            pass\n```",
+    "tool_calls": [],
+    "total_seconds": 13.754529457999979
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.6,
+  "tools": null
+}

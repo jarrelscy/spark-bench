@@ -1,0 +1,1 @@
+{"run_id": "Qwen3.6-27B-PiTune-Q4KM-llamacpp-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-054236", "pid": 46313, "started": "2026-08-02T05:43:25", "last_beat": "2026-08-02T06:26:03", "scenarios_done": 20, "finished": "2026-08-02T06:26:03", "summary": "truescore=76.8 quarantine=clean"}

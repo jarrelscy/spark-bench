@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 444,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    import heapq\n    from itertools import chain\n\n    # We'll use a min-heap of (key, value, stream_index, order_index)\n    # But we need to handle the \"last value wins\" logic.\n    # Since streams are sorted by key, we can process them in order.\n    # We'll use a priority queue that yields (key, value, stream_index)\n    # and we'll keep track of the last seen value for each key.\n    \n    # However, a simpler approach: iterate through all streams in sorted order,\n    # and for each key, keep the last value from the last stream that has it.\n    # Since streams are sorted, we can merge them with a heap and then\n    # deduplicate by key, keeping the last occurrence.\n    \n    # We'll use a heap of (key, value, stream_id)\n    # But to handle \"last in same stream\", we need to process each stream's\n    # last occurrence for a given key. Since streams are sorted, we can\n    # just take all items and then deduplicate by key keeping the last.\n    \n    # Implementation: push all items into a min-heap with stream index\n    # to break ties, then yield after deduplication.\n    \n    heap = []\n    stream_id = 0\n    for stream in streams:\n        for key, value in stream:\n            heapq.heappush(heap, (key, value, stream_id))\n        stream_id += 1\n    \n    # Now extract in order and deduplicate\n    last_key = None\n    last_value = None\n    while heap:\n        key, value, sid = heapq.heappop(heap)\n        if key != last_key:\n            if last_key is not None:\n                yield (last_key, last_value)\n            last_key = key\n            last_value = value\n        else:\n            # same key, later stream or later in same stream overrides\n            last_value = value\n    if last_key is not None:\n        yield (last_key, last_value)\n```",
+    "tool_calls": [],
+    "total_seconds": 34.87189891600019
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 50,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "\nI need more information to book your flight. Could you specify which city you're flying from? Also, let me know your preferred time window for the flight (e.g., 8-10 AM) and any specific airline preference.",
+    "tool_calls": [],
+    "total_seconds": 0.7958646250000072
+  },
+  "scenario_id": "RO-01",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

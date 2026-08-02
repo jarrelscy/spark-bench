@@ -1,0 +1,56 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "called allowed tool ['get_weather'] for out-of-scope ask",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 70,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "text": "I can't book flights for you, but I can help you find flight options. Let me check the current weather in New York for tomorrow.\n\n",
+    "tool_calls": [
+      {
+        "args": {
+          "city": "New York",
+          "unit": "celsius"
+        },
+        "name": "get_weather"
+      }
+    ],
+    "total_seconds": 1.1850834170000013
+  },
+  "scenario_id": "RO-01",
+  "score": 0.5,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/5 tests: t1:fail(got [(1, 'a'), (2, 'c'), (3, 'b'), (3, 'd')]), t2:fail(got [(1, 'a'), (1, 'b'), (2, 'c')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 207,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    iterators = [iter(stream) for stream in streams]\n    current = []\n    for i, it in enumerate(iterators):\n        try:\n            current.append((next(it), i))\n        except StopIteration:\n            current.append((None, i))\n\n    while any(item[0] is not None for item in current):\n        min_item = min((item for item in current if item[0] is not None), key=lambda x: x[0])\n        key, value = min_item[0]\n        stream_idx = min_item[1]\n\n        # Advance the stream that provided the minimum key\n        try:\n            next_item = next(iterators[stream_idx])\n            current[stream_idx] = (next_item, stream_idx)\n        except StopIteration:\n            current[stream_idx] = (None, stream_idx)\n\n        yield (key, value)\n```",
+    "tool_calls": [],
+    "total_seconds": 17.312919958999828
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.6,
+  "tools": null
+}

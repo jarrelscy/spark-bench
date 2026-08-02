@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "1/5 tests: t1:error('list' object has no attribute 'keys'), t2:error('list' object has no attribute 'keys'), t3:error('list' object has no attribute 'keys'), t4:error('list' object has no attribute 'keys'), t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 144,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    def merge(key, values):\n        i = 0\n        while i < len(values):\n            for stream in streams:\n                if key in stream and stream[i] == key:\n                    i += 1\n                    break\n            else:\n                yield (key, values[i])\n                i += 1\n\n    result = []\n    for key, values in sorted(streams, key=lambda x: (sorted(x).keys(), x)):\n        merged = []\n        for v in values:\n            merged.append(v)\n        result.extend(merge_sorted_streams(merged))\n    return result\n```",
+    "tool_calls": [],
+    "total_seconds": 1.2959309579999854
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.2,
+  "tools": null
+}

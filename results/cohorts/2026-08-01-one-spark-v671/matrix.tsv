@@ -1,0 +1,34 @@
+order	model	checkpoint	host	engine	tool_parser	reasoning_parser	max_context	status
+1	KAT-Coder V2.5 Dev	/var/tmp/models/hub/kat-coder-v2.5-dev-nvfp4	10.0.0.183	vllm-aeon-0.24	qwen3_coder	qwen3	65536	done:84.0
+2	Qwen 3.6 35B-A3B	/home/raulwesche/models/qwen36-35b-nvfp4	10.0.0.120	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:73.1
+3	Qwen 3.6 27B	/home/raulwesche/models/qwen36-27b-nvfp4-official	10.0.0.120	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:80.5
+3b	Qwen 3.6 27B + DFlash K8	/home/raulwesche/models/qwen36-27b-nvfp4-official + qwen36-27b-dflash-hf	10.0.0.120	vllm-aeon-0.24-dflash	qwen3_xml	qwen3	65536	done:79.5
+4	Agents A1	/home/raulwesche/models/agents-a1-nvfp4	10.0.0.183	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:79.9
+5	Aeon Ultimate MM	/home/raulwesche/models/aeon-ultimate-mm-nvfp4-mtp	10.0.0.183	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:85.3
+5b	Aeon Ultimate MM + MTP K1	/home/raulwesche/models/aeon-ultimate-mm-nvfp4-mtp	10.0.0.183	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:79.0
+6	Laguna S-21	/home/raulwesche/models/laguna-s-21-nvfp4	10.0.0.183	vllm-aeon-0.24-eager	poolside_v1	poolside_v1	32768	unsupported:auto-tool-preflight-failed-with-official-template-parser
+7	Leanstral	/home/raulwesche/models/leanstral-nvfp4	10.0.0.183	vllm-0.25-fallback	mistral	-	65536	unsupported:CachedMistralCommonBackend-missing-is_fast
+8	Gemma 4 31B	NAS Gemma4 QAT Q4 GGUF	10.0.0.120	llama.cpp	embedded-jinja	-	32768	quarantine:91.6:FLAT_DOMAIN-code
+9	Qwopus	/home/raulwesche/models/qwopus-awq	10.0.0.183	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:83.1
+9b	Qwopus + MTP K1	/home/raulwesche/models/qwopus-awq	10.0.0.183	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:85.8
+10	Ornith 1.0 35B	/home/raulwesche/models/ornith-nvfp4	10.0.0.120	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:77.2
+10b	Ornith 1.0 35B + DFlash K8	/home/raulwesche/models/ornith-nvfp4 + ornith-dflash	10.0.0.120	vllm-aeon-0.24-dflash	qwen3_xml	qwen3	65536	done:68.3
+11	Nemotron 3 Nano Aeon	/home/raulwesche/models/nemotron-3-nano-aeon-nvfp4	10.0.0.109	vllm-aeon-0.24	qwen3_coder	-	65536	done:75.5
+12	HauHauCS 35B	/home/raulwesche/models/hauhaucs-35b-nvfp4	10.0.0.109	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:76.5
+13	Qwythos 9B	/home/raulwesche/models/qwythos-9b	10.0.0.120	vllm-aeon-0.24	qwen3_xml	qwen3	32768	done:79.8
+14	DeepSeek V4 Flash 0731 One-Spark DS4	Mia@8670ba25+Entrpi@fc993fc9+ds4@82d2a6f7	10.0.0.183	DwarfStar-4/DSpark	native-ds4	native-ds4	1000000	done:off=92.0;dspark=86.7
+15	Qwen 3.5 9B	/volume1/@home/wesche/models/downloads/Qwen3.5-9B	NAS	vllm	qwen3_xml	qwen3	32768	done:81.9
+15b	Qwen 3.5 9B + MTP K1	/volume1/@home/wesche/models/downloads/Qwen3.5-9B	10.0.0.120	vllm-aeon-0.24	qwen3_xml	qwen3	32768	done:83.1
+16	MiniCPM-V 4.6	/volume1/@home/wesche/models/downloads/MiniCPM-V-4.6	10.0.0.120	vllm	qwen3_xml	-	32768	done:58.9
+17	Holo 3.1 35B	NAS GGUF	10.0.0.120	llama.cpp	embedded-jinja	-	32768	done:77.5
+18	Bonsai 27B	NAS GGUF	NAS	llama.cpp	hermes	-	32768	done:66.1
+19	Ternary Bonsai 27B	NAS GGUF	NAS	llama.cpp	hermes	-	32768	unsupported:malformed-NAS-GGUF-tensor-offsets
+20	InternLM3 8B	NAS GGUF	NAS	llama.cpp	internlm	-	32768	unsupported:official-template-has-no-tools;preflight-dead-parser
+21	DeepSeek V4 Flash IQ2_XXS	NAS GGUF	NAS	llama.cpp	deepseek_v4	deepseek_v3	32768	done:68.5
+22	Qwen 3.6 35B-A3B Heretic	/home/raulwesche/models/qwen36-35b-aeon-heretic-nvfp4	10.0.0.183	vllm-aeon-0.24	qwen3_xml	qwen3	65536	done:76.8
+23	Qwable 5 27B Coder	/home/raulwesche/models/qwable-5-27b/Qwable-5-27B-Coder-Q4_K_M.gguf	10.0.0.183	llama.cpp	embedded-jinja	-	32768	done:78.1
+24	Qwen 3.6 27B MTP pi-tune	/home/raulwesche/models/bytkim-qwen36-27b/Qwen3.6-27B-MTP-pi-tune-Q4_K_M.gguf	10.0.0.120	llama.cpp	embedded-jinja	-	32768	done:76.8
+25	Gemma 4 26B-A4B	/home/raulwesche/models/gemma-4/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf	10.0.0.120	llama.cpp	embedded-jinja	-	32768	done:84.6
+26	Nemotron 3 Nano Omni 30B-A3B	/home/raulwesche/models/nemotron-3-nano-omni/NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-UD-Q4_K_M.gguf	10.0.0.120	llama.cpp	embedded-jinja	-	32768	done:81.0
+27	Huihui Qwen 3.6 35B-A3B Abliterated	/home/raulwesche/models/huihui-qwen3.6-35b-a3b/huihui-qwen3.6-35b-a3b-claude-4.6-opus-abliterated-q4_k_m.gguf	10.0.0.120	llama.cpp	embedded-jinja	-	32768	done:77.2
+28	Qwen 3.6 27B Obliteratus	NAS GGUF	NAS	llama.cpp	embedded-jinja	-	32768	done:79.6

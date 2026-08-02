@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 792,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport heapq\n\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merges multiple sorted streams of (key, value) tuples.\n    If keys collide, the value from the stream with the higher index \n    (later stream) is kept. Within a stream, the last occurrence of a key is kept.\n    \"\"\"\n    # Create iterators for all streams\n    iterators = [iter(s) for s in streams]\n    \n    # The heap will store (key, stream_index, value)\n    # stream_index is used to handle ties in keys and ensure we know which stream it came from\n    heap = []\n    \n    for i, it in enumerate(iterators):\n        try:\n            key, val = next(it)\n            heapq.heappush(heap, (key, i, val))\n        except StopIteration:\n            pass\n\n    last_key = None\n    last_val = None\n\n    while heap:\n        key, i, val = heapq.heappop(heap)\n        \n        # Advance the iterator that provided the popped element\n        try:\n            next_key, next_val = next(iterators[i])\n            heapq.heappush(heap, (next_key, i, next_val))\n        except StopIteration:\n            pass\n\n        # If this key is the same as the one we just processed, \n        # we effectively \"update\" the value. \n        # Because we want the LAST value seen for a key, and we are \n        # processing in sorted order, we need to peek ahead or \n        # buffer the current key until we are sure no more identical keys exist.\n        \n        # To handle the \"last value seen\" requirement across different streams:\n        # We collect all items with the same key.\n        current_key_group = [(key, i, val)]\n        \n        while heap and heap[0][0] == key:\n            k, idx, v = heapq.heappop(heap)\n            current_key_group.append((k, idx, v))\n            # Advance the iterator for the stream that just provided the duplicate key\n            try:\n                nk, nv = next(iterators[idx])\n                heapq.heappush(heap, (nk, idx, nv))\n            except StopIteration:\n                pass\n        \n        # The requirement: \"If the same key appears in multiple streams, keep only the LAST value seen\"\n        # and \"If the same key appears multiple times within the same stream, keep the last occurrence.\"\n        # This means for a group of identical keys, we pick the one with the highest stream index.\n        # If multiple items in the group have the same stream index, the last one in the group \n        # (which is the one we popped last) is the one to keep.\n        \n        # Sort group by stream index to find the \"latest\" stream, \n        # but since we need to respect the order within a stream, \n        # and the heap/iterator logic naturally processes a single stream in order,\n        # the last item in 'current_key_group' with the highest 'i' is our winner.\n        \n        best_val = None\n        max_stream_idx = -1\n        \n        for k, idx, v in current_key_group:\n            if idx >= max_stream_idx:\n                max_stream_idx = idx\n                best_val = v\n        \n        yield (key, best_val)\n```",
+    "tool_calls": [],
+    "total_seconds": 14.912946041000055
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

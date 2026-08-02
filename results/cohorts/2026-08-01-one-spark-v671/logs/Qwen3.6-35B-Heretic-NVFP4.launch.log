@@ -1,0 +1,6 @@
+image_id	sha256:d74b35b7aeeebe9e5c386fe27241eada8732055ccc6e856a6fd000df00c6ca1a
+77c1f9f1db3bb9f1ec9fcfb7fe96442b8e43d526dc25758c41457b08faa5aa2c  /home/raulwesche/models/qwen36-35b-aeon-heretic-nvfp4/config.json
+f08b622b68b704ea2f16afc14836e19a72388fd0659a79aeef7e0372b11ca4d0  /home/raulwesche/models/qwen36-35b-aeon-heretic-nvfp4/model.safetensors
+586bba86512389939fdf4eb379727bdaedac28954deaf4be132e0786c94c47f9
+API: http://10.0.0.183:8211/v1
+Model: qwen3.6-35b-heretic

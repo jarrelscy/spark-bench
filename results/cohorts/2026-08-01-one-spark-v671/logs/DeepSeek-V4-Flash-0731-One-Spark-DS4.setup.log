@@ -1,0 +1,51 @@
+[02:42:52] Verifying host...
+[02:42:52] GPU: NVIDIA GB10, 12.1
+[02:42:52] nvcc: /usr/local/cuda/bin/nvcc
+Cuda compilation tools, release 13.0, V13.0.88
+[33mWARN:[0m Only 86 GiB free under /home/raulwesche — deferring to the upgrade space check.
+[32mOK:[0m Host checks passed.
+[02:42:52] Source dir: /home/raulwesche/bench-recipes/ds4-v0.5.2
+[02:42:52] Fast-forwarding /home/raulwesche/bench-recipes/ds4-v0.5.2 ...
+From https://github.com/Entrpi/ds4
+ * tag               v0.5.2     -> FETCH_HEAD
+HEAD is now at 82d2a6f v0.5.2 cut: changelog
+[02:42:52] Building ds4, ds4-server, ds4-bench (CUDA_ARCH=sm_121, -j20) ...
+make ds4 ds4-server ds4-bench ds4-eval ds4-agent ds4_weight_server CUDA_ARCH="sm_121"
+make[1]: Entering directory '/home/raulwesche/bench-recipes/ds4-v0.5.2'
+make[1]: 'ds4' is up to date.
+make[1]: 'ds4-server' is up to date.
+make[1]: 'ds4-bench' is up to date.
+make[1]: 'ds4-eval' is up to date.
+make[1]: 'ds4-agent' is up to date.
+make[1]: 'ds4_weight_server' is up to date.
+make[1]: Leaving directory '/home/raulwesche/bench-recipes/ds4-v0.5.2'
+[32mOK:[0m Built: /home/raulwesche/bench-recipes/ds4-v0.5.2/{ds4,ds4-server,ds4-bench}
+[32mOK:[0m Already have DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf (86720111488 bytes)
+[02:42:53] MTP: nothing to download — the 0731 base has no MTP head (module replaced upstream by the DSpark stages).
+[32mOK:[0m Already have DSpark-drafter-Q2K-Q8-0731.gguf (6971241504 bytes)
+[02:42:53] Smoke test: 'capital of France' prompt ...
+ds4: boot prewarm done (512 tokens, 2 chunks) in 2.6s
+ds4: context buffers 432.00 MiB (ctx=4096, backend=cuda, prefill_chunk=4096, raw_kv_rows=4096, compressed_kv_rows=1026)
+ds4: session graph allocated lazily (ctx=4096 prefill_cap=4096)
+ds4: fused MoE prefill on the materialized tier (inc-9 F7 shared-schedule; direct rc=-95)
+ds4: M2-Inc1 fused HC stage active (coop 48-blk, in_dim 16384)
+ds4: M2-Inc1b HC-stage q8 activation fold active (pair decode)
+ds4: q8 pair decode using aligned Q8_0 artifacts (M1-Inc4)
+ds4: hc_expand decode using aligned Q8_0 artifacts (M1-Inc4)
+ds4: M2-Inc3 fused router active (coop 128-blk)
+ds4: MoE decode using aligned fused gate+up+swiglu (M1-Inc2)
+ds4: M2 Q2K aligned moe-down active
+ds4: M2-Inc5 fused compressor pair+store active (coop 128-blk)
+1.ds4: M2-Inc2a q8_1 activation fold active (mmvq decode)
+  The user asks for the capital of France and wants the answer in one sentence.
+2.  The capital of France is Paris.
+3.  Construct a single sentence answer: "The capital of France is Paris."
+
+Final answer is concise and directly answers the prompt.
+The capital of France is Paris.
+ds4: prefill: 36.22 t/s, generation: 21.57 t/s
+[32mOK:[0m Smoke test PASSED — model produced 'Paris'.
+[32mOK:[0m Installed ds4-serve to /home/raulwesche/.local/bin/ds4-serve (full stack by default; just pass -c/--host/--port).
+[33mWARN:[0m /home/raulwesche/.local/bin is not on PATH — add it to use 'ds4-serve' directly.
+Accepted known Entrpi no-start exit 1 after verified artifacts.
+bash: line 6: $4: unbound variable

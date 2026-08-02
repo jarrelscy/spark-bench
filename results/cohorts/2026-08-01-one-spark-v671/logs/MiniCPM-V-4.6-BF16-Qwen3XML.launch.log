@@ -1,0 +1,6 @@
+image_id	sha256:d74b35b7aeeebe9e5c386fe27241eada8732055ccc6e856a6fd000df00c6ca1a
+72d83ac9089bebddf28131b9953908acaf0a5740b868263c8aaac7c40b97991c  /home/raulwesche/models/one-spark-nas/MiniCPM-V-4.6/config.json
+aa67da5820411176d0f9593a00265bc25a73c45f62dc5a605a93b1b5516a0d34  /home/raulwesche/models/one-spark-nas/MiniCPM-V-4.6/model.safetensors
+255b112250fa60c0128f34f3fee46c4b71847a96a2c52e08ee9003e5d4986862
+API: http://10.0.0.120:8211/v1
+Model: minicpm-v-4.6

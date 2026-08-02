@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 55,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "I cannot book flights for you. However, I can help you find flight options or provide information about airports in New York if you'd like. You may want to check with airlines or travel booking websites like Expedia, Kayak, or Google Flights for available flights.",
+    "tool_calls": [],
+    "total_seconds": 4.390807332999998
+  },
+  "scenario_id": "RO-01",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

@@ -1,0 +1,228 @@
+{
+  "messages": [
+    {
+      "content": "Decide if today is good for an outdoor team meeting. Check the weather in SF and the AAPL stock price (the CFO wants to discuss it). If weather is clear and above 15\u00b0C, create an outdoor event at 2pm. If not, create an indoor event. Either way, notify the engineering team. Do everything yourself.",
+      "role": "user"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"city\": \"San Francisco\", \"unit\": \"celsius\"}",
+            "name": "get_weather"
+          },
+          "id": "call00001",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"city\": \"San Francisco\", \"temperature_c\": 19, \"condition\": \"clear\", \"humidity\": 55}",
+      "role": "tool",
+      "tool_call_id": "call00001"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"ticker\": \"AAPL\"}",
+            "name": "get_stock_price"
+          },
+          "id": "call00002",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"ticker\": \"AAPL\", \"price\": 192.45, \"currency\": \"USD\"}",
+      "role": "tool",
+      "tool_call_id": "call00002"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"team\": \"engineering\"}",
+            "name": "get_contacts"
+          },
+          "id": "call00003",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"contacts\": [{\"name\": \"Alice\", \"email\": \"alice@corp.com\"}, {\"name\": \"Bob\", \"email\": \"bob@corp.com\"}]}",
+      "role": "tool",
+      "tool_call_id": "call00003"
+    }
+  ],
+  "reason": "100% called create_event | 0% did not call send_email (calls=['create_event']) | 100% outdoor event for clear weather above 15C",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 172,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "text": "The weather in San Francisco is clear with a temperature of 19\u00b0C, which is above 15\u00b0C. The AAPL stock price is $192.45. Since the weather is favorable for an outdoor meeting, I will create an outdoor event at 2 PM and notify the engineering team.\n\n",
+    "tool_calls": [
+      {
+        "args": {
+          "attendees": [
+            "alice@corp.com",
+            "bob@corp.com"
+          ],
+          "day": "today",
+          "duration": 60,
+          "start": "14:00",
+          "title": "Outdoor Team Meeting - AAPL Stock Discussion</parameter>\n<parameter=day>\ntoday"
+        },
+        "name": "create_event"
+      }
+    ],
+    "total_seconds": 4.2875084580000475
+  },
+  "scenario_id": "AP-01",
+  "score": 0.6,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get one current company-stock price. It does not provide historical performance, market-index, or ETF data.",
+        "name": "get_stock_price",
+        "parameters": {
+          "properties": {
+            "exchange": {
+              "enum": [
+                "NYSE",
+                "NASDAQ",
+                "LSE",
+                "TSE"
+              ],
+              "type": "string"
+            },
+            "ticker": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ticker"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Create a calendar event.",
+        "name": "create_event",
+        "parameters": {
+          "properties": {
+            "attendees": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "day": {
+              "description": "Day of the event, e.g. 'monday', 'next_friday', 'tomorrow'",
+              "type": "string"
+            },
+            "duration": {
+              "description": "Duration in minutes",
+              "type": "integer"
+            },
+            "start": {
+              "description": "Start time, e.g. '14:00'",
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "day",
+            "start"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Send an email.",
+        "name": "send_email",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to",
+            "body"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Look up team members by department.",
+        "name": "get_contacts",
+        "parameters": {
+          "properties": {
+            "team": {
+              "description": "Department or team name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "team"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

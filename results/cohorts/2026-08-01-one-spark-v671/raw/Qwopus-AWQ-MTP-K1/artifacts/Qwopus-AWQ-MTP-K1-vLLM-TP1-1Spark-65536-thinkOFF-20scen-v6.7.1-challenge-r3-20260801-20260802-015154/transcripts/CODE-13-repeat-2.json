@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python class `APIClient` that wraps a simple HTTP API. Requirements:\n1. Constructor takes `base_url` and `timeout=10`.\n2. Method `get(path)` makes a GET request to `base_url + path` using only `urllib.request` (no `requests` library).\n3. On HTTP 429 (rate limit), retry up to 3 times with exponential backoff (0.5s, 1s, 2s). Raise `RateLimitError` if still failing.\n4. On HTTP 5xx, retry once after 1s. Raise `ServerError` if still failing.\n5. On HTTP 4xx (except 429), raise `ClientError` immediately.\n6. On network errors (URLError), retry once after 1s. Raise `ConnectionError` if still failing.\n7. `get()` returns the response body as a string.\nDefine all custom exceptions as subclasses of Exception.\nOutput only the code. Do NOT make real network calls.",
+      "role": "user"
+    }
+  ],
+  "reason": "7/7 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass, t6:pass, t7:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 682,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport urllib.request\nimport urllib.error\nimport time\n\nclass RateLimitError(Exception):\n    pass\n\nclass ServerError(Exception):\n    pass\n\nclass ClientError(Exception):\n    pass\n\nclass ConnectionError(Exception):\n    pass\n\nclass APIClient:\n    def __init__(self, base_url, timeout=10):\n        self.base_url = base_url\n        self.timeout = timeout\n\n    def get(self, path):\n        url = self.base_url + path\n        # Try for 429: up to 3 retries with exponential backoff (0.5, 1, 2)\n        # Try for 5xx: 1 retry after 1s\n        # Try for network errors: 1 retry after 1s\n        # 4xx (except 429): raise immediately\n\n        # We need to handle different retry strategies. Let's structure it carefully.\n        # For 429: max 3 retries (so total 4 attempts: initial + 3 retries)\n        # For 5xx: max 1 retry (so total 2 attempts)\n        # For network errors: max 1 retry (so total 2 attempts)\n\n        # We'll track attempts separately for each error type.\n        attempts_429 = 0\n        attempts_5xx = 0\n        attempts_network = 0\n\n        while True:\n            try:\n                req = urllib.request.Request(url)\n                response = urllib.request.urlopen(req, timeout=self.timeout)\n                # Read the response body\n                body = response.read().decode('utf-8')\n                return body\n            except urllib.error.HTTPError as e:\n                code = e.code\n                if code == 429:\n                    attempts_429 += 1\n                    if attempts_429 <= 3:\n                        # Exponential backoff: 0.5, 1, 2\n                        wait_time = 0.5 * (2 ** (attempts_429 - 1))\n                        time.sleep(wait_time)\n                        continue\n                    else:\n                        raise RateLimitError(f\"Rate limited after {attempts_429} retries\")\n                elif 500 <= code < 600:\n                    attempts_5xx += 1\n                    if attempts_5xx <= 1:\n                        time.sleep(1)\n                        continue\n                    else:\n                        raise ServerError(f\"Server error {code} after retry\")\n                elif 400 <= code < 500:\n                    # 4xx except 429, raise immediately\n                    raise ClientError(f\"Client error {code}\")\n                else:\n                    # Other HTTP errors, treat as unexpected\n                    raise ClientError(f\"HTTP error {code}\")\n            except urllib.error.URLError as e:\n                attempts_network += 1\n                if attempts_network <= 1:\n                    time.sleep(1)\n                    continue\n                else:\n                    raise ConnectionError(f\"Connection error after retry: {e}\")\n            except Exception as e:\n                # Other unexpected errors\n                raise\n```",
+    "tool_calls": [],
+    "total_seconds": 44.681372291000116
+  },
+  "scenario_id": "CODE-13",
+  "score": 1.0,
+  "tools": null
+}

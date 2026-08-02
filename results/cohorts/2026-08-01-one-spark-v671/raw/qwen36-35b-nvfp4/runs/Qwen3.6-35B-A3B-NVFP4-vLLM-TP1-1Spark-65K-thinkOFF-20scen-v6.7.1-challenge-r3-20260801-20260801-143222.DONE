@@ -1,0 +1,1 @@
+{"run_id": "Qwen3.6-35B-A3B-NVFP4-vLLM-TP1-1Spark-65K-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-143222", "pid": 65307, "started": "2026-08-01T14:33:27", "last_beat": "2026-08-01T14:47:22", "scenarios_done": 20, "finished": "2026-08-01T14:47:22", "summary": "truescore=73.1 quarantine=clean"}

@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python class `APIClient` that wraps a simple HTTP API. Requirements:\n1. Constructor takes `base_url` and `timeout=10`.\n2. Method `get(path)` makes a GET request to `base_url + path` using only `urllib.request` (no `requests` library).\n3. On HTTP 429 (rate limit), retry up to 3 times with exponential backoff (0.5s, 1s, 2s). Raise `RateLimitError` if still failing.\n4. On HTTP 5xx, retry once after 1s. Raise `ServerError` if still failing.\n5. On HTTP 4xx (except 429), raise `ClientError` immediately.\n6. On network errors (URLError), retry once after 1s. Raise `ConnectionError` if still failing.\n7. `get()` returns the response body as a string.\nDefine all custom exceptions as subclasses of Exception.\nOutput only the code. Do NOT make real network calls.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/7 tests: t1:pass, t2:pass, t3:error('>=' not supported between instances of 'MagicMock' and 'int'), t4:pass, t5:fail(calls=3, sleeps=[0.5, 1.0]), t6:fail(calls=1, sleeps=[]), t7:fail(calls=1, sleeps=[])",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 465,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport urllib.request\nimport urllib.error\nimport time\n\nclass RateLimitError(Exception):\n    pass\n\nclass ServerError(Exception):\n    pass\n\nclass ClientError(Exception):\n    pass\n\nclass ConnectionError(Exception):\n    pass\n\nclass APIClient:\n    def __init__(self, base_url, timeout=10):\n        self.base_url = base_url\n        self.timeout = timeout\n\n    def get(self, path):\n        url = self.base_url + path\n        \n        # Retry for rate limiting (429)\n        for attempt in range(3):\n            try:\n                response = self._make_request(url)\n                return response\n            except RateLimitError:\n                if attempt == 2:\n                    raise\n                time.sleep(0.5 * (2 ** attempt))\n        \n        # Retry for server errors (5xx)\n        try:\n            response = self._make_request(url)\n            return response\n        except ServerError:\n            time.sleep(1)\n            response = self._make_request(url)\n            return response\n        \n        # Retry for network errors\n        try:\n            response = self._make_request(url)\n            return response\n        except ConnectionError:\n            time.sleep(1)\n            response = self._make_request(url)\n            return response\n\n    def _make_request(self, url):\n        try:\n            with urllib.request.urlopen(url, timeout=self.timeout) as response:\n                status = response.getcode()\n                if status == 429:\n                    raise RateLimitError(\"Rate limit exceeded\")\n                elif status >= 500:\n                    raise ServerError(f\"Server error: {status}\")\n                elif status >= 400:\n                    raise ClientError(f\"Client error: {status}\")\n                return response.read().decode('utf-8')\n        except urllib.error.HTTPError as e:\n            status = e.code\n            if status == 429:\n                raise RateLimitError(\"Rate limit exceeded\")\n            elif status >= 500:\n                raise ServerError(f\"Server error: {status}\")\n            elif status >= 400:\n                raise ClientError(f\"Client error: {status}\")\n        except urllib.error.URLError as e:\n            raise ConnectionError(f\"Network error: {e.reason}\")\n```",
+    "tool_calls": [],
+    "total_seconds": 25.91391987499992
+  },
+  "scenario_id": "CODE-13",
+  "score": 0.42857142857142855,
+  "tools": null
+}

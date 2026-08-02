@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/5 tests: t1:pass, t2:fail(got [(1, 'a')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 397,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    # Convert each stream to an iterator\n    iterators = [iter(s) for s in streams]\n    \n    # For each active iterator, track its current (key, value)\n    # We use a list of (key, value, iterator) for active entries\n    active = []\n    \n    # Initialize all iterators\n    for i, it in enumerate(iterators):\n        try:\n            kv = next(it)\n            active.append((kv[0], kv[1], it))\n        except StopIteration:\n            pass\n    \n    while active:\n        # Find the minimum key among active entries\n        min_key = min(a[0] for a in active)\n        \n        # Collect all entries with that min key, and advance those iterators\n        # We want the LAST value for each key across all streams\n        # Since we process in order of streams (active list order), the last one in the list wins\n        # But we need to be careful: we should advance all iterators that have min_key,\n        # and pick the last value among them.\n        \n        # Gather all entries with min_key\n        candidates = [a for a in active if a[0] == min_key]\n        \n        # The last candidate in the list gives us the value to yield\n        last_candidate = candidates[-1]\n        yield (last_candidate[0], last_candidate[1])\n        \n        # Advance all iterators that had min_key\n        for a in candidates:\n            try:\n                kv = next(a[2])\n                active.append((kv[0], kv[1], a[2]))\n            except StopIteration:\n                pass\n        \n        # Remove all entries that had min_key from active\n        active = [a for a in active if a[0] != min_key]\n```",
+    "tool_calls": [],
+    "total_seconds": 10.500000666999995
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.8,
+  "tools": null
+}

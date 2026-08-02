@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spark-bench report: Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449</title>
+<style>
+:root { color-scheme: dark; --bg:#101113; --panel:#191b1f; --panel2:#20242b; --text:#f4f1e8; --muted:#aeb4bc; --line:rgba(255,255,255,.11); --green:#35d07f; --cyan:#5dc8ff; --amber:#f5b84b; --red:#ff6b6b; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.wrap { max-width:1180px; margin:0 auto; padding:26px 20px 44px; }
+header { display:grid; grid-template-columns:1.1fr .9fr; gap:16px; align-items:stretch; margin-bottom:16px; }
+.hero,.panel,.card { background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 18px 60px rgba(0,0,0,.25); }
+.hero { padding:22px; }
+h1 { margin:6px 0 10px; font-size:clamp(26px,5vw,46px); line-height:1; letter-spacing:0; overflow-wrap:anywhere; }
+h2 { margin:0 0 14px; font-size:18px; letter-spacing:0; }
+h3 { margin:18px 0 8px; font-size:15px; }
+.muted,.meta,.card span,.barrow span { color:var(--muted); }
+.meta { display:grid; gap:5px; font-size:13px; }
+.cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.card { padding:14px; min-height:74px; }
+.card span { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.card strong { display:block; margin-top:7px; font-size:25px; line-height:1.1; overflow-wrap:anywhere; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.panel { padding:18px; margin-bottom:16px; overflow:hidden; }
+.barrow { display:grid; grid-template-columns:minmax(190px,1fr) 64px; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.barrow:last-child { border-bottom:0; }
+.barrow strong { display:block; overflow-wrap:anywhere; }
+.barrow span { display:block; font-size:12px; overflow-wrap:anywhere; }
+.barrow b { text-align:right; font-variant-numeric:tabular-nums; }
+.bar { grid-column:1 / -1; height:10px; background:rgba(255,255,255,.09); border-radius:999px; overflow:hidden; }
+.bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green)); border-radius:999px; animation:grow .9s cubic-bezier(.2,.8,.2,1) forwards; }
+.bar.warn i { background:linear-gradient(90deg,var(--red),var(--amber)); }
+@keyframes grow { from { width:0; } }
+table { width:100%; border-collapse:collapse; background:var(--panel2); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:10px 0 18px; }
+th,td { padding:8px 9px; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; font-size:13px; vertical-align:top; }
+th { color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-size:11px; }
+tr:last-child td { border-bottom:0; }
+code { background:#262a31; padding:1px 4px; border-radius:4px; }
+pre { white-space:pre-wrap; background:#0c0d10; border:1px solid var(--line); border-radius:8px; padding:14px; overflow:auto; }
+a { color:#8bd9ff; }
+details summary { cursor:pointer; color:#8bd9ff; margin:8px 0; }
+@media (max-width:900px) { header,.grid { grid-template-columns:1fr; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:560px) { .cards { grid-template-columns:1fr; } .wrap { padding:16px 12px 32px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <section class="hero">
+      <div class="muted">spark-bench HTML report</div>
+      <h1>Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449</h1>
+      <div class="meta">
+        <div><strong>label:</strong> Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801</div>
+        <div><strong>model:</strong> laguna-s-21-nvfp4</div>
+        <div><strong>endpoint:</strong> http://10.0.0.183:8211/v1</div>
+        <div><strong>notes:</strong> Single DGX Spark. Pinned vLLM 0.24.0 Aeon image. laguna-s-21-nvfp4. 32768-token serving context. Speculative decode: off.</div>
+      </div>
+    </section>
+    <section class="cards"><div class="card"><span>Run kind</span><strong>benchmark</strong></div><div class="card"><span>Rows</span><strong>5</strong></div><div class="card"><span>Topology</span><strong>single-spark</strong></div><div class="card"><span>Parallelism</span><strong>TP1</strong></div><div class="card"><span>Spec decode</span><strong>off</strong></div></section>
+  </header>
+  <section class="grid">
+    <section class="panel"><h2>Score Components / Key Metrics</h2><p class="muted">No numeric metrics recorded.</p></section>
+    <section class="panel"><h2>Domain Breakdown</h2><p class="muted">No eval domain rows for this run.</p></section>
+  </section>
+  <section class="panel"><h2>Per-Scenario Results</h2><p class="muted">No per-scenario eval rows for this run.</p></section>
+  <section class="panel"><h2>Rendered Summary</h2></section>
+  <section class="panel"><h2>All Recorded Rows</h2><table><thead><tr><th>tier</th><th>workload</th><th>metric</th><th>value</th><th>unit</th><th>context</th><th>batch</th><th>notes</th></tr></thead><tbody><tr><td>eval</td><td>provenance</td><td>golden_gate</td><td>PASS</td><td></td><td></td><td></td><td>golden gate PASSED: 12/12 cases</td></tr><tr><td>eval</td><td>provenance</td><td>grader_git</td><td>11d21bf</td><td></td><td></td><td></td><td></td></tr><tr><td>eval</td><td>provenance</td><td>served_model</td><td>laguna-s-21-nvfp4</td><td></td><td></td><td></td><td></td></tr><tr><td>eval</td><td>provenance</td><td>preflight_tool_probe</td><td>FAIL</td><td></td><td></td><td></td><td>The user is asking for the current weather in Paris, France. I have access to the `get_weather` tool</td></tr><tr><td>eval</td><td>provenance</td><td>aborted</td><td>preflight_dead_tool_parser</td><td></td><td></td><td></td><td>endpoint never emitted structured tool_calls on an explicit tool prompt (2 attempts) — check --tool-call-parser matches </td></tr></tbody></table></section>
+  <section class="panel">
+    <h2>Raw Artifacts</h2>
+    <details><summary>Raw markdown summary</summary><pre></pre></details>
+    <details><summary>Raw JSON rows</summary><pre>{
+  &quot;run_id&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449&quot;,
+  &quot;rows&quot;: [
+    {
+      &quot;run_id&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449&quot;,
+      &quot;timestamp&quot;: &quot;2026-08-02T04:05:35&quot;,
+      &quot;tier&quot;: &quot;eval&quot;,
+      &quot;model&quot;: &quot;laguna-s-21-nvfp4&quot;,
+      &quot;label&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8211/v1&quot;,
+      &quot;topology&quot;: &quot;single-spark&quot;,
+      &quot;parallelism&quot;: &quot;TP1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;off&quot;,
+      &quot;workload&quot;: &quot;provenance&quot;,
+      &quot;metric&quot;: &quot;golden_gate&quot;,
+      &quot;value&quot;: &quot;PASS&quot;,
+      &quot;unit&quot;: &quot;&quot;,
+      &quot;notes&quot;: &quot;golden gate PASSED: 12/12 cases&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449&quot;,
+      &quot;timestamp&quot;: &quot;2026-08-02T04:05:35&quot;,
+      &quot;tier&quot;: &quot;eval&quot;,
+      &quot;model&quot;: &quot;laguna-s-21-nvfp4&quot;,
+      &quot;label&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8211/v1&quot;,
+      &quot;topology&quot;: &quot;single-spark&quot;,
+      &quot;parallelism&quot;: &quot;TP1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;off&quot;,
+      &quot;workload&quot;: &quot;provenance&quot;,
+      &quot;metric&quot;: &quot;grader_git&quot;,
+      &quot;value&quot;: &quot;11d21bf&quot;,
+      &quot;unit&quot;: &quot;&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449&quot;,
+      &quot;timestamp&quot;: &quot;2026-08-02T04:05:35&quot;,
+      &quot;tier&quot;: &quot;eval&quot;,
+      &quot;model&quot;: &quot;laguna-s-21-nvfp4&quot;,
+      &quot;label&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8211/v1&quot;,
+      &quot;topology&quot;: &quot;single-spark&quot;,
+      &quot;parallelism&quot;: &quot;TP1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;off&quot;,
+      &quot;workload&quot;: &quot;provenance&quot;,
+      &quot;metric&quot;: &quot;served_model&quot;,
+      &quot;value&quot;: &quot;laguna-s-21-nvfp4&quot;,
+      &quot;unit&quot;: &quot;&quot;,
+      &quot;notes&quot;: &quot;&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449&quot;,
+      &quot;timestamp&quot;: &quot;2026-08-02T04:05:45&quot;,
+      &quot;tier&quot;: &quot;eval&quot;,
+      &quot;model&quot;: &quot;laguna-s-21-nvfp4&quot;,
+      &quot;label&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8211/v1&quot;,
+      &quot;topology&quot;: &quot;single-spark&quot;,
+      &quot;parallelism&quot;: &quot;TP1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;off&quot;,
+      &quot;workload&quot;: &quot;provenance&quot;,
+      &quot;metric&quot;: &quot;preflight_tool_probe&quot;,
+      &quot;value&quot;: &quot;FAIL&quot;,
+      &quot;unit&quot;: &quot;&quot;,
+      &quot;notes&quot;: &quot;The user is asking for the current weather in Paris, France. I have access to the `get_weather` tool&quot;
+    },
+    {
+      &quot;run_id&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-040449&quot;,
+      &quot;timestamp&quot;: &quot;2026-08-02T04:05:45&quot;,
+      &quot;tier&quot;: &quot;eval&quot;,
+      &quot;model&quot;: &quot;laguna-s-21-nvfp4&quot;,
+      &quot;label&quot;: &quot;Laguna-S-21-NVFP4-Poolside-vLLM-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801&quot;,
+      &quot;endpoint&quot;: &quot;http://10.0.0.183:8211/v1&quot;,
+      &quot;topology&quot;: &quot;single-spark&quot;,
+      &quot;parallelism&quot;: &quot;TP1&quot;,
+      &quot;context&quot;: &quot;&quot;,
+      &quot;batch&quot;: &quot;&quot;,
+      &quot;spec_decode&quot;: &quot;off&quot;,
+      &quot;workload&quot;: &quot;provenance&quot;,
+      &quot;metric&quot;: &quot;aborted&quot;,
+      &quot;value&quot;: &quot;preflight_dead_tool_parser&quot;,
+      &quot;unit&quot;: &quot;&quot;,
+      &quot;notes&quot;: &quot;endpoint never emitted structured tool_calls on an explicit tool prompt (2 attempts) \u2014 check --tool-call-parser matches &quot;
+    }
+  ]
+}</pre></details>
+  </section>
+</main>
+</body>
+</html>

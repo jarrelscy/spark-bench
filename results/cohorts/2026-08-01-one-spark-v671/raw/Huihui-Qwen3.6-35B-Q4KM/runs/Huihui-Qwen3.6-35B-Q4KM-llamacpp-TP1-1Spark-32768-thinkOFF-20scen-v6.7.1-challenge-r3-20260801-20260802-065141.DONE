@@ -1,0 +1,1 @@
+{"run_id": "Huihui-Qwen3.6-35B-Q4KM-llamacpp-TP1-1Spark-32768-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260802-065141", "pid": 51589, "started": "2026-08-02T06:52:28", "last_beat": "2026-08-02T07:03:39", "scenarios_done": 20, "finished": "2026-08-02T07:03:39", "summary": "truescore=77.2 quarantine=clean"}

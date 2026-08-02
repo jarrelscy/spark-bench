@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/5 tests: t1:fail(got [(1, 'a'), (3, 'd'), (2, 'c')]), t2:pass, t3:pass, t4:fail(got [(1, 'a'), (5, 'e'), (10, 'j'), (2, 'b')]), t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 57,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "\n```python\ndef merge_sorted_streams(*streams):\n    merged = {}\n    for stream in streams:\n        for key, value in stream:\n            merged[key] = value\n    for key, value in merged.items():\n        yield (key, value)\n```",
+    "tool_calls": [],
+    "total_seconds": 0.8947773749999897
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.6,
+  "tools": null
+}

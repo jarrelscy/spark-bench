@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Low-Poly Humanoid Treadmill</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #1a1a1a;
+      font-family: sans-serif;
+    }
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+    }
+    #info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 15px;
+      border-radius: 8px;
+      pointer-events: none;
+      font-size: 14px;
+    }
+    #info span {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    Cycle: <span id="cycle-text">STANDING</span><br>
+    Time: <span id="time-text">0.0s</span>
+  </div>
+  <div id="canvas-container"></div>
+
+  <script type="module">
+    import * as THREE from './three.module.js';
+
+    // --- Scene Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a1a);
+    scene.fog = new THREE.Fog(0x1a1a1a, 10, 50);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 3, 12); // Side-on view
+    camera.lookAt(0, 1.5, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // --- Lighting ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 7);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    // --- Ground (Treadmill Belt) ---
+    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x333333,
+      roughness: 0.8
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.01;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Treadmill Belt Lines
+    const beltGroup = new THREE.Group();
+    const beltLineGeo = new THREE.BoxGeometry(0.2, 0.05, 2);
+    const beltLineMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    
+    for (let i = -8; i <= 8; i++) {
+      const line = new THREE.Mesh(beltLineGeo, beltLineMat);
+      line.position.set(i * 1.5, 0.02, 0);
+      beltGroup.add(line);
+    }
+    scene.add(beltGroup);
+
+    // --- Humanoid Figure ---
+    const humanoidGroup = new THREE.Group();
+    scene.add(humanoidGroup);
+
+    // Materials
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50, roughness: 0.6 });
+    const limbMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.6 });
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xFFCC80, roughness: 0.6 });
+
+    // Torso
+    const torsoGeo = new THREE.BoxGeometry(1, 1.5, 0.6);
+    const torso = new THREE.Mesh(torsoGeo, bodyMat);
+    torso.position.y = 2.25;
+    torso.castShadow = true;
+    humanoidGroup.add(torso);
+
+    // Head
+    const headGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 3.3;
+    head.castShadow = true;
+    humanoidGroup.add(head);
+
+    // Arms
+    const armGeo = new THREE.BoxGeometry(0.3, 1.2, 0.3);
+    const leftArm = new THREE.Mesh(armGeo, limbMat);
+    leftArm.position.set(-0.7, 2.5, 0);
+    leftArm.castShadow = true;
+    humanoidGroup.add(leftArm);
+
+    const rightArm = new THREE.Mesh(armGeo, limbMat);
+    rightArm.position.set(0.7, 2.5, 0);
+    rightArm.castShadow = true;
+    humanoidGroup.add(rightArm);
+
+    // Legs
+    const legGeo = new THREE.BoxGeometry(0.4, 1.5, 0.4);
+    const leftLeg = new THREE.Mesh(legGeo, limbMat);
+    leftLeg.position.set(-0.3, 0.75, 0);
+    leftLeg.castShadow = true;
+    humanoidGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, limbMat);
+    rightLeg.position.set(0.3, 0.75, 0);
+    rightLeg.castShadow = true;
+    humanoidGroup.add(rightLeg);
+
+    // --- Animation Parameters ---
+    const CYCLE_DURATION = 10; // seconds
+    const STANDING_DURATION = 2;
+    const WALKING_DURATION = 3;
+    const RUNNING_DURATION = 3;
+
+    let elapsedTime = 0;
+    const cycleText = document.getElementById('cycle-text');
+    const timeText = document.getElementById('time-text');
+
+    function getPhaseAndProgress(time) {
+      const t = time % CYCLE_DURATION;
+      
+      if (t < STANDING_DURATION) {
+        return { phase: 'STANDING', progress: t / STANDING_DURATION, time: t };
+      } else if (t < STANDING_DURATION + WALKING_DURATION) {
+        const walkTime = t - STANDING_DURATION;
+        return { phase: 'WALKING', progress: walkTime / WALKING_DURATION, time: walkTime };
+      } else {
+        const runTime = t - STANDING_DURATION - WALKING_DURATION;
+        return { phase: 'RUNNING', progress: runTime / RUNNING_DURATION, time: runTime };
+      }
+    }
+
+    function updateHumanoid(phase, progress, time) {
+      // Reset to standing pose
+      torso.rotation.x = 0;
+      head.position.y = 3.3;
+      head.rotation.x = 0;
+      
+      // Arm and leg swing parameters
+      let armSwing = 0;
+      let legSwing = 0;
+      let armSpeed = 0;
+      let legSpeed = 0;
+      let forwardLean = 0;
+      let bodyBounce = 0;
+      let beltSpeed = 0;
+
+      if (phase === 'STANDING') {
+        // Subtle idle breathing
+        const breathe = Math.sin(time * 2) * 0.05;
+        torso.position.y = 2.25 + breathe;
+        head.position.y = 3.3 + breathe;
+        
+        leftArm.rotation.x = 0;
+        rightArm.rotation.x = 0;
+        leftLeg.rotation.x = 0;
+        rightLeg.rotation.x = 0;
+        
+        beltSpeed = 0;
+        
+      } else if (phase === 'WALKING') {
+        // Walking animation
+        armSpeed = 3;
+        legSpeed = 3;
+        armSwing = 0.4;
+        legSwing = 0.5;
+        forwardLean = 0.15;
+        bodyBounce = 0.15;
+        beltSpeed = 0.5;
+        
+        // Apply walking pose
+        torso.rotation.x = forwardLean;
+        torso.position.y = 2.25 + Math.abs(Math.sin(time * legSpeed)) * bodyBounce;
+        head.position.y = 3.3 + Math.abs(Math.sin(time * legSpeed)) * bodyBounce;
+        
+        // Arms swing opposite to legs
+        leftArm.rotation.x = Math.sin(time * armSpeed) * armSwing;
+        rightArm.rotation.x = -Math.sin(time * armSpeed) * armSwing;
+        
+        // Legs
+        leftLeg.rotation.x = -Math.sin(time * legSpeed) * legSwing;
+        rightLeg.rotation.x = Math.sin(time * legSpeed) * legSwing;
+        
+      } else if (phase === 'RUNNING') {
+        // Running animation
+        armSpeed = 5;
+        legSpeed = 5;
+        armSwing = 0.8;
+        legSwing = 0.9;
+        forwardLean = 0.35;
+        bodyBounce = 0.3;
+        beltSpeed = 1.2;
+        
+        // Apply running pose
+        torso.rotation.x = forwardLean;
+        torso.position.y = 2.25 + Math.abs(Math.sin(time * legSpeed)) * bodyBounce;
+        head.position.y = 3.3 + Math.abs(Math.sin(time * legSpeed)) * bodyBounce;
+        
+        // Arms swing opposite to legs with larger amplitude
+        leftArm.rotation.x = Math.sin(time * armSpeed) * armSwing;
+        rightArm.rotation.x = -Math.sin(time * armSpeed) * armSwing;
+        
+        // Legs with larger swing
+        leftLeg.rotation.x = -Math.sin(time * legSpeed) * legSwing;
+        rightLeg.rotation.x = Math.sin(time * legSpeed) * legSwing;
+      }
+
+      // Update belt movement
+      beltGroup.position.z = (beltGroup.position.z + beltSpeed * 0.02) % 1.5;
+      
+      // Update UI
+      cycleText.textContent = phase;
+      cycleText.style.color = phase === 'STANDING' ? '#4CAF50' : phase === 'WALKING' ? '#2196F3' : '#FF9800';
+      timeText.textContent = (time % CYCLE_DURATION).toFixed(1) + 's';
+    }
+
+    // --- Animation Loop ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const delta = clock.getDelta();
+      elapsedTime += delta;
+      
+      const { phase, progress, time } = getPhaseAndProgress(elapsedTime);
+      updateHumanoid(phase, progress, time);
+      
+      renderer.render(scene, camera);
+    }
+
+    // --- Handle Window Resize ---
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Start animation
+    animate();
+  </script>
+</body>
+</html>

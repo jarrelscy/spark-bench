@@ -1,0 +1,8 @@
+image_id	sha256:72aa2a2b6e70edb98ca0d5998943779226dafac6a944caef6ea1b8199b9516af
+12ec1b4b4cb7d2598d8c3116cb56dec5891e469bff7ab0f1eee0925dca5556ef  /home/raulwesche/models/leanstral-nvfp4/config.json
+bd474f9c2768c76b9174e662c9c8a937a83c1db29f6f8008b674541f7f99cba6  /home/raulwesche/models/leanstral-nvfp4/model-00001-of-00002.safetensors
+5a189427780483b9afc37fd43d1bec0354b98b62f959552fca551d1b485b22e4  /home/raulwesche/models/leanstral-nvfp4/model-00002-of-00002.safetensors
+bd8e99322e43bcf4839379921966b4bfc4cefedf32544c6446ef1b1ac80bc430  /home/raulwesche/models/leanstral-nvfp4/model.safetensors.index.json
+db893db6475c0d455419731713a2c8146a2b88e75cb3f36b95156ef0b03ec084
+API: http://10.0.0.183:8211/v1
+Model: leanstral-nvfp4

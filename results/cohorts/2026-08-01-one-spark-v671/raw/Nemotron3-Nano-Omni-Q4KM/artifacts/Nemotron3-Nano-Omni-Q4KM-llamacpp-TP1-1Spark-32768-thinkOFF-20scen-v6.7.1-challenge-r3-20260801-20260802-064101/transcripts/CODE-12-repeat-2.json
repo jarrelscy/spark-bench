@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "This counter has a race condition. Fix it using exactly one per-instance threading.Lock created in __init__. Protect increment, decrement, and value using `with self.<lock_attribute>:` and that same lock. Do not use a global lock or rely on the GIL.\n\n```python\nimport threading\n\nclass SafeCounter:\n    def __init__(self):\n        self._value = 0\n    def increment(self, n=1):\n        self._value += n  # BUG: not atomic\n    def decrement(self, n=1):\n        self._value -= n  # BUG: not atomic\n    def value(self):\n        return self._value\n```\nFix the race condition. The class must be importable and work with concurrent threads. Output only the fixed code.",
+      "role": "user"
+    }
+  ],
+  "reason": "source contract: one per-instance Lock protects all methods | 4/4 tests: t1:pass, t2:pass, t3:pass, t4:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 98,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport threading\n\nclass SafeCounter:\n    def __init__(self):\n        self._value = 0\n        self._lock = threading.Lock()\n\n    def increment(self, n=1):\n        with self._lock:\n            self._value += n\n\n    def decrement(self, n=1):\n        with self._lock:\n            self._value -= n\n\n    def value(self):\n        with self._lock:\n            return self._value\n```",
+    "tool_calls": [],
+    "total_seconds": 1.666362958000036
+  },
+  "scenario_id": "CODE-12",
+  "score": 1.0,
+  "tools": null
+}

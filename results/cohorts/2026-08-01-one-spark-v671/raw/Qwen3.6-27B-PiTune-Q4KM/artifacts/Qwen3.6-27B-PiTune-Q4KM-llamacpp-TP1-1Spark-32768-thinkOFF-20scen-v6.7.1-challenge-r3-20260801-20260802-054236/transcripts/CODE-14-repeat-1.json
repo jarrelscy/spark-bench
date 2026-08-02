@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/5 tests: t1:fail(got [(1, 'a'), (2, 'c'), (3, 'd'), (3, 'b')]), t2:fail(got [(1, 'a'), (1, 'b'), (2, 'c')]), t3:pass, t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 266,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    iterators = [iter(stream) for stream in streams]\n    current = []\n    for i, it in enumerate(iterators):\n        try:\n            current.append((it.__next__(), i))\n        except StopIteration:\n            current.append(None)\n\n    while any(item is not None for item in current):\n        min_key = None\n        min_index = None\n        for i, item in enumerate(current):\n            if item is not None:\n                key = item[0][0]\n                if min_key is None or key < min_key or (key == min_key and i > min_index):\n                    min_key = key\n                    min_index = i\n\n        if min_index is None:\n            break\n\n        key, value = current[min_index][0]\n        current[min_index] = None\n\n        try:\n            next_item = iterators[min_index].__next__()\n            if next_item[0] == key:\n                current[min_index] = (next_item, min_index)\n            else:\n                current[min_index] = (next_item, min_index)\n        except StopIteration:\n            pass\n\n        yield (key, value)\n```",
+    "tool_calls": [],
+    "total_seconds": 22.515528041999914
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.6,
+  "tools": null
+}

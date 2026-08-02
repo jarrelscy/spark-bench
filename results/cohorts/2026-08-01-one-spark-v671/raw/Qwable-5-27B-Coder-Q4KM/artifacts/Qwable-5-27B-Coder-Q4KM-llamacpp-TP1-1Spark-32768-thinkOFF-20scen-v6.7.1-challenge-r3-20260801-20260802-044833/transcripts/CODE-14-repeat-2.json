@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 685,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    \"\"\"\n    Merge multiple sorted streams of (key, value) tuples.\n    Keys are comparable integers. Streams are sorted by key.\n    If the same key appears in multiple streams, the last stream's value wins.\n    If the same key appears multiple times within a stream, the last occurrence wins.\n    \"\"\"\n    # Create iterators for each stream\n    iterators = [iter(s) for s in streams]\n    \n    # For each iterator, get the first item (if any)\n    # We'll maintain a list of (key, value, stream_index) for the current head of each stream\n    # But we need to handle the priority: later streams override earlier ones for same key\n    \n    # Strategy: Use a heap-like approach but with custom comparison.\n    # Since later streams have higher priority for same key, we can use negative stream index as tiebreaker.\n    # Actually, let's think more carefully.\n    \n    # We need to merge sorted streams. The standard merge uses a min-heap on keys.\n    # When keys are equal, we need to pick the one from the later stream (higher index).\n    # So in the heap, for equal keys, we want the larger stream index to come out first? \n    # No wait - we want to process all entries, and for duplicate keys, the last one seen wins.\n    # So we should process in key order, and when keys are equal, process them in stream order \n    # (earlier stream first, later stream last) so that the later stream's value overwrites.\n    \n    # Let's use a heap where entries are (key, stream_index, value).\n    # For equal keys, we want smaller stream_index to come out first (so later streams overwrite).\n    # So the heap ordering should be: primary key ascending, secondary stream_index ascending.\n    \n    import heapq\n    \n    # Initialize heap with first element from each non-empty stream\n    heap = []\n    for idx, it in enumerate(iterators):\n        try:\n            key, value = next(it)\n            # Store (key, stream_index, value, iterator)\n            heapq.heappush(heap, (key, idx, value, it))\n        except StopIteration:\n            pass\n    \n    last_key = None\n    last_value = None\n    \n    while heap:\n        key, stream_idx, value, it = heapq.heappop(heap)\n        \n        # Push next element from the same stream if available\n        try:\n            next_key, next_value = next(it)\n            heapq.heappush(heap, (next_key, stream_idx, next_value, it))\n        except StopIteration:\n            pass\n        \n        # If this key is different from the last emitted key, emit the last one\n        if last_key is not None and key != last_key:\n            yield (last_key, last_value)\n        \n        # Update last_key and last_value (later entries with same key overwrite)\n        last_key = key\n        last_value = value\n    \n    # Emit the last accumulated entry\n    if last_key is not None:\n        yield (last_key, last_value)\n```",
+    "tool_calls": [],
+    "total_seconds": 58.185678499999995
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

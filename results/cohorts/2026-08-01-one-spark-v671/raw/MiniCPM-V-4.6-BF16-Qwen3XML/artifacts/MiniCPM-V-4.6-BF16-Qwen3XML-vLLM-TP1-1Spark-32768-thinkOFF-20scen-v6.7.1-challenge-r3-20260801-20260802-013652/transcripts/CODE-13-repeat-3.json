@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python class `APIClient` that wraps a simple HTTP API. Requirements:\n1. Constructor takes `base_url` and `timeout=10`.\n2. Method `get(path)` makes a GET request to `base_url + path` using only `urllib.request` (no `requests` library).\n3. On HTTP 429 (rate limit), retry up to 3 times with exponential backoff (0.5s, 1s, 2s). Raise `RateLimitError` if still failing.\n4. On HTTP 5xx, retry once after 1s. Raise `ServerError` if still failing.\n5. On HTTP 4xx (except 429), raise `ClientError` immediately.\n6. On network errors (URLError), retry once after 1s. Raise `ConnectionError` if still failing.\n7. `get()` returns the response body as a string.\nDefine all custom exceptions as subclasses of Exception.\nOutput only the code. Do NOT make real network calls.",
+      "role": "user"
+    }
+  ],
+  "reason": "execution failed: SyntaxError: invalid syntax (tmpyal_qcda.py, line 31)",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 443,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\nimport time\nimport urllib.request\nfrom urllib.error import URLError, HTTPError\n\nclass ClientError(Exception):\n    pass\n\nclass RateLimitError(Exception):\n    pass\n\nclass ServerError(Exception):\n    pass\n\nclass ConnectionError(Exception):\n    pass\n\nclass APIClient:\n    def __init__(self, base_url, timeout=10):\n        self.base_url = base_url\n        self.timeout = timeout\n\n    def get(self, path):\n        try:\n            req = urllib.request.Request(self.base_url + path, timeout=self.timeout)\n            response = urllib.request.urlopen(req)\n            return response.read().decode('utf-8')\n        except HTTPError as e:\n            if e.code == 429:\n                self._retry_rate_limit()\n            elif e.code == 5xx:\n                self._retry_server_error()\n            else:\n                raise ClientError(\"HTTP error occurred: \" + str(e))\n        except URLError as e:\n            self._retry_connection_error()\n            raise ConnectionError(\"Connection error occurred: \" + str(e))\n        except Exception as e:\n            raise ClientError(\"An error occurred: \" + str(e))\n\n    def _retry_rate_limit(self):\n        retries = 0\n        while retries < 3:\n            try:\n                return\n            except HTTPError as e:\n                if e.code == 429:\n                    raise RateLimitError(\"Rate limit exceeded after retries\")\n                time.sleep(0.5)\n            retries += 1\n            time.sleep(1)\n\n    def _retry_server_error(self):\n        retries = 0\n        while retries < 1:\n            try:\n                return\n            except ServerError:\n                time.sleep(1)\n            retries += 1\n\n    def _retry_connection_error(self):\n        retries = 0\n        while retries < 1:\n            try:\n                return\n            except URLError:\n                time.sleep(1)\n            retries += 1\n```",
+    "tool_calls": [],
+    "total_seconds": 3.950375790999999
+  },
+  "scenario_id": "CODE-13",
+  "score": 0.0,
+  "tools": null
+}

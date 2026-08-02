@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/5 tests: t1:fail(got [(1, 'a'), (2, 'c'), (3, 'b'), (3, 'd')]), t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 288,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    import heapq\n\n    # Iterator that yields (key, value) pairs from a single stream,\n    # keeping only the last occurrence of each key.\n    def last_occurrence(stream):\n        last = {}\n        for k, v in stream:\n            last[k] = v\n        # stream is already sorted by key, so we can iterate in order\n        for k in sorted(last):\n            yield (k, last[k])\n\n    # Wrap each input stream with the last\u2011occurrence filter.\n    wrapped = [last_occurrence(s) for s in streams]\n\n    # Build a min\u2011heap of the current items from each iterator.\n    heap = []\n    for idx, it in enumerate(wrapped):\n        try:\n            k, v = next(it)\n            heapq.heappush(heap, (k, v, idx))\n        except StopIteration:\n            pass  # empty stream\n\n    while heap:\n        k, v, src = heapq.heappop(heap)\n        yield (k, v)\n\n        # Pull the next item from the same source iterator.\n        try:\n            nk, nv = next(wrapped[src])\n            heapq.heappush(heap, (nk, nv, src))\n        except StopIteration:\n            pass\n```",
+    "tool_calls": [],
+    "total_seconds": 4.531528167000033
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.8,
+  "tools": null
+}

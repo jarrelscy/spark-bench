@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 144,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "I'd be happy to help you book a flight, but I don't have access to a flight booking tool. I can only check the current weather for cities.\n\nTo book your flight to New York for tomorrow morning, you'll need to:\n\n1. Use a flight booking service like:\n   - Airlines directly (Delta, American, United, JetBlue, etc.)\n   - Travel websites (Expedia, Kayak, Google Flights, etc.)\n   - Travel agents\n\n2. Provide me with your departure city if you'd like me to check the weather in New York to help you decide what to pack!\n\nWould you like me to check the current weather in New York?",
+    "tool_calls": [],
+    "total_seconds": 1.8716071250000041
+  },
+  "scenario_id": "RO-01",
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

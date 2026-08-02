@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "1/5 tests: t1:error(merge_key() missing 1 required positional argument: 'stream'), t2:error(merge_key() missing 1 required positional argument: 'stream'), t3:error(merge_key() missing 1 required positional argument: 'stream'), t4:error(merge_key() missing 1 required positional argument: 'stream'), t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 119,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    def merge_key(key, stream):\n        for k, _ in stream:\n            if k > key:\n                return (key, stream)\n        return (key, stream)\n    \n    result = []\n    for stream in streams:\n        for key, value in stream:\n            if not result or merge_key(key, stream) != result[-1]:\n                result.append((key, value))\n    return (tuple(sorted(result, key=merge_key)) if result else ())\n```",
+    "tool_calls": [],
+    "total_seconds": 1.0742532079999592
+  },
+  "scenario_id": "CODE-14",
+  "score": 0.2,
+  "tools": null
+}

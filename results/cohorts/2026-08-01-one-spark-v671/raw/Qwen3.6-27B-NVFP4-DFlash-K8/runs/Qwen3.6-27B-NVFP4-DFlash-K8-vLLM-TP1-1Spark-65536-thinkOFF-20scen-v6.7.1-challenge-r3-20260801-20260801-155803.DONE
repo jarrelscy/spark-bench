@@ -1,0 +1,1 @@
+{"run_id": "Qwen3.6-27B-NVFP4-DFlash-K8-vLLM-TP1-1Spark-65536-thinkOFF-20scen-v6.7.1-challenge-r3-20260801-20260801-155803", "pid": 70487, "started": "2026-08-01T15:59:40", "last_beat": "2026-08-01T16:26:42", "scenarios_done": 20, "finished": "2026-08-01T16:26:42", "summary": "truescore=79.5 quarantine=clean"}

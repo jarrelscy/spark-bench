@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 3,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 418,
+    "finish": "stop",
+    "reasoning": "",
+    "text": "```python\ndef merge_sorted_streams(*streams):\n    import heapq\n    \n    # Initialize heap with (key, value, stream_index, occurrence)\n    heap = []\n    iterators = [iter(s) for s in streams]\n    \n    # Prime the heap with first element from each non-empty stream\n    for idx, it in enumerate(iterators):\n        try:\n            key, value = next(it)\n            heapq.heappush(heap, (key, value, idx, 0))\n        except StopIteration:\n            pass\n    \n    # Track the last seen value for each key\n    last_seen = {}\n    \n    while heap:\n        key, value, stream_idx, occurrence = heapq.heappop(heap)\n        \n        # If this is the last occurrence for this key (we'll check later),\n        # we need to track it. Since we process in order, we can just\n        # update last_seen and yield when we know it's the final value.\n        last_seen[key] = value\n        \n        # Push next element from the same stream\n        try:\n            next_key, next_value = next(iterators[stream_idx])\n            heapq.heappush(heap, (next_key, next_value, stream_idx, occurrence + 1))\n        except StopIteration:\n            pass\n        \n        # Check if this is the last occurrence for this key\n        # We need to look ahead: if the next item in heap has a different key,\n        # then this key is done.\n        if not heap or heap[0][0] != key:\n            # Yield the last seen value for this key\n            yield (key, last_seen[key])\n            # Remove from last_seen to save memory\n            last_seen.pop(key, None)\n    \n    # Handle any remaining keys that were never finalized\n    # (shouldn't happen with the above logic, but just in case)\n    for key in sorted(last_seen):\n        yield (key, last_seen[key])\n```",
+    "tool_calls": [],
+    "total_seconds": 21.51246595900011
+  },
+  "scenario_id": "CODE-14",
+  "score": 1.0,
+  "tools": null
+}

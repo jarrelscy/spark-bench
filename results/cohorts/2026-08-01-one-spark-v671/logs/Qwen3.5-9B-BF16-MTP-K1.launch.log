@@ -1,0 +1,10 @@
+image_id	sha256:d74b35b7aeeebe9e5c386fe27241eada8732055ccc6e856a6fd000df00c6ca1a
+d0883072e01861ed0b2d47be3c16c36a8e81c224c7ffaa310c6558fb3f932b05  /home/raulwesche/models/one-spark-nas/Qwen3.5-9B/config.json
+db6f444b43d318c92f360a13a25561a6a65b10c0631b8ed305a426dbaa6c380e  /home/raulwesche/models/one-spark-nas/Qwen3.5-9B/model.safetensors-00001-of-00004.safetensors
+31c7d7e2dd5d207840b31cc59083c8f4c4718959149e0358c0364052bb9a0330  /home/raulwesche/models/one-spark-nas/Qwen3.5-9B/model.safetensors-00002-of-00004.safetensors
+7ec36ba3a4176a44c3c0876ad80c56a2f70c84bf008d82e9501df642f17dadec  /home/raulwesche/models/one-spark-nas/Qwen3.5-9B/model.safetensors-00003-of-00004.safetensors
+b62b0c4cd7e44edee103ee8f4fe225f246d5e768e07bfd5f25b63a8aa1fdd0c6  /home/raulwesche/models/one-spark-nas/Qwen3.5-9B/model.safetensors-00004-of-00004.safetensors
+26d3539b516be613f39563617cb9d33b3f83d401298125be392c80cefb8f7fe5  /home/raulwesche/models/one-spark-nas/Qwen3.5-9B/model.safetensors.index.json
+6c5e35dd475fd10bab3661f5a634d2695208c6ae149b017b1a2421d7fb193c88
+API: http://10.0.0.120:8211/v1
+Model: qwen3.5-9b-mtp-k1
