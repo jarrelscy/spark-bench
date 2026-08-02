@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import html
+import json
 import re
+import shutil
 from datetime import date
 from pathlib import Path
 
@@ -75,6 +78,33 @@ def score_class(score: float) -> str:
     return "low"
 
 
+def source_dir_of(row: dict[str, str]) -> str:
+    return Path(row["csv"]).parent.name
+
+
+def visual_slug(row: dict[str, str]) -> str:
+    source = re.sub(r"[^a-z0-9]+", "-", source_dir_of(row).lower()).strip("-")
+    return f"{int(row['rank']):02d}-{source}"
+
+
+def add_visual_scores(records: list[dict[str, str]], cohort_root: Path) -> None:
+    for row in records:
+        csv_path = cohort_root / "raw" / source_dir_of(row) / "spark_bench.csv"
+        scores = {}
+        with csv_path.open(newline="", encoding="utf-8") as handle:
+            for metric in csv.DictReader(handle):
+                if (
+                    metric["run_id"] == row["run_id"]
+                    and metric["workload"] in ("VIS-04", "VIS-05")
+                    and metric["metric"] == "score"
+                ):
+                    scores[metric["workload"]] = round(float(metric["value"]) * 100, 1)
+        if set(scores) != {"VIS-04", "VIS-05"}:
+            raise SystemExit(f"missing visual scores for qualified run: {row['run_id']}")
+        row["_vis04_score"] = str(scores["VIS-04"])
+        row["_vis05_score"] = str(scores["VIS-05"])
+
+
 def render_rows(records: list[dict[str, str]]) -> str:
     rows = []
     cohort_url = (
@@ -88,14 +118,14 @@ def render_rows(records: list[dict[str, str]]) -> str:
         engine = engine_of(label)
         context = context_of(label)
         spec = display_spec(row["spec_decode"])
-        source_dir = Path(row["csv"]).parent.name
+        source_dir = source_dir_of(row)
         report = f"{cohort_url}/{source_dir}/runs/{row['run_id']}.html"
         search = html.escape(f"{model} {engine} {spec}".lower(), quote=True)
         rows.append(
             f'''<tr data-engine="{html.escape(engine, quote=True)}" data-search="{search}">
   <td class="rank">{row['rank']}</td>
   <td class="model"><a href="{html.escape(report, quote=True)}">{html.escape(model)}</a>
-    <span>{html.escape(engine)} · {html.escape(context)} context · {html.escape(spec)}</span></td>
+    <span>{html.escape(engine)} · {html.escape(context)} context · {html.escape(spec)} · <button class="show-visual" data-visual="{int(row['rank']) - 1}">View 3D</button></span></td>
   <td><strong class="score {score_class(score)}">{score:.1f}</strong><i class="bar"><b style="width:{score:.1f}%"></b></i></td>
   <td>{float(row['quality']):.1f}</td>
   <td>{float(row['calibration']):.1f}</td>
@@ -104,6 +134,81 @@ def render_rows(records: list[dict[str, str]]) -> str:
 </tr>'''
         )
     return "\n".join(rows)
+
+
+def visual_records(records: list[dict[str, str]]) -> list[dict[str, object]]:
+    visuals = []
+    for row in records:
+        label = row["label"]
+        model = MODEL_NAMES.get(row["model"], row["model"].replace("-", " ").title())
+        slug = visual_slug(row)
+        visuals.append(
+            {
+                "rank": int(row["rank"]),
+                "model": model,
+                "detail": f"{engine_of(label)} · {context_of(label)} context · {display_spec(row['spec_decode'])}",
+                "score": round(float(row["score"]), 1),
+                "raceScore": float(row["_vis04_score"]),
+                "locomotionScore": float(row["_vis05_score"]),
+                "race": f"visuals/v671/{slug}-vis-04.html",
+                "locomotion": f"visuals/v671/{slug}-vis-05.html",
+            }
+        )
+    return visuals
+
+
+def stage_visuals(
+    records: list[dict[str, str]], cohort_root: Path, output_dir: Path
+) -> None:
+    raw_root = cohort_root / "raw"
+    three_js = Path(__file__).resolve().parents[1] / "assets" / "three.module.js"
+    if not three_js.is_file():
+        raise SystemExit(f"missing pinned Three.js asset: {three_js}")
+
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
+    output_dir.mkdir(parents=True)
+    shutil.copy2(three_js, output_dir / "three.module.js")
+
+    manifest = {
+        "benchmark": "SparkBench v6.7.1 challenge",
+        "three_js_revision": "r160",
+        "three_js_sha256": hashlib.sha256(three_js.read_bytes()).hexdigest(),
+        "deployments": [],
+    }
+    for row, visual in zip(records, visual_records(records), strict=True):
+        artifact_dir = raw_root / source_dir_of(row) / "artifacts" / row["run_id"]
+        copied = {}
+        for scenario, source_name, output_key in (
+            ("VIS-04", "VIS-04.html", "race"),
+            ("VIS-05", "VIS-05.html", "locomotion"),
+        ):
+            source = artifact_dir / source_name
+            if not source.is_file():
+                raise SystemExit(f"missing qualified visual artifact: {source}")
+            destination = output_dir / Path(str(visual[output_key])).name
+            shutil.copy2(source, destination)
+            copied[scenario] = {
+                "file": destination.name,
+                "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+            }
+        manifest["deployments"].append(
+            {
+                "rank": visual["rank"],
+                "model": visual["model"],
+                "configuration": visual["detail"],
+                "score": visual["score"],
+                "visual_scores": {
+                    "VIS-04": visual["raceScore"],
+                    "VIS-05": visual["locomotionScore"],
+                },
+                "run_id": row["run_id"],
+                "artifacts": copied,
+            }
+        )
+    (output_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def render(records: list[dict[str, str]]) -> str:
@@ -131,8 +236,9 @@ main{padding:24px 0 48px}.intro{display:flex;justify-content:space-between;align
 .controls{display:flex;gap:10px;align-items:center;margin:18px 0 12px;flex-wrap:wrap}.search{flex:1;min-width:220px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:9px 11px;font:inherit}.search:focus{outline:2px solid var(--cyan);outline-offset:1px}
 .segments{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}.segments button{border:0;border-right:1px solid var(--line);background:var(--panel);color:var(--mut);padding:9px 12px;font:600 13px system-ui;cursor:pointer}.segments button:last-child{border-right:0}.segments button.active{background:var(--cyan);color:#071114}.count{color:var(--mut);font-size:12px;min-width:92px;text-align:right}
 .table-wrap{overflow:auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:850px}th{text-align:left;color:var(--mut);font-size:11px;font-weight:700;padding:10px;border-bottom:1px solid var(--line);background:#0e1117;position:sticky;top:0}td{padding:11px 10px;border-bottom:1px solid #1f232c;font-variant-numeric:tabular-nums}tbody tr:hover{background:#10141b}.rank{color:var(--mut);width:42px}.model{min-width:310px}.model a{display:block;font-weight:720;text-decoration:none}.model a:hover{color:var(--cyan)}.model span{display:block;color:var(--mut);font-size:11px;margin-top:2px}.score{font-size:17px}.score.top{color:var(--green)}.score.mid{color:var(--amber)}.score.low{color:var(--red)}.bar{display:block;width:74px;height:3px;background:#252b35;margin-top:4px}.bar b{display:block;height:100%;background:var(--cyan)}
+.show-visual{border:0;background:none;color:var(--cyan);font:inherit;padding:0;cursor:pointer;text-decoration:underline}.visuals{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}.visual-head{display:flex;justify-content:space-between;align-items:end;gap:20px}.visual-head h2{font-size:20px;margin:0 0 5px}.visual-head p{color:var(--mut);margin:0;max-width:720px}.visual-select{min-width:310px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:9px 11px;font:inherit}.visual-meta{color:var(--mut);font-size:12px;margin:10px 0}.visual-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.viewer{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#080a0e}.viewer header{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 11px;border-bottom:1px solid var(--line);background:var(--panel)}.viewer h3{font-size:13px;margin:0}.viewer header div{display:flex;align-items:center;gap:10px}.viewer header span{color:var(--mut);font-size:11px}.viewer a{color:var(--cyan);font-size:12px}.viewer iframe{display:block;width:100%;aspect-ratio:16/10;border:0;background:#000}
 .method{margin-top:26px;padding-top:22px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:28px}.method h2{font-size:17px;margin:0 0 8px}.method p,.method li{color:var(--mut)}.method ul{margin:8px 0 0;padding-left:18px}.method code{color:var(--fg)}footer{border-top:1px solid var(--line);padding:18px 0;color:var(--mut);font-size:12px}
-@media(max-width:720px){.mast .wrap{align-items:flex-start;flex-direction:column;padding-top:18px;padding-bottom:18px}.brand img{display:none}.links{width:100%}.links a{flex:1;text-align:center}.summary{grid-template-columns:1fr 1fr}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.intro{display:block}.segments{width:100%;overflow:auto}.segments button{flex:1}.count{text-align:left}.method{grid-template-columns:1fr}}
+@media(max-width:720px){.mast .wrap{align-items:flex-start;flex-direction:column;padding-top:18px;padding-bottom:18px}.brand img{display:none}.links{width:100%}.links a{flex:1;text-align:center}.summary{grid-template-columns:1fr 1fr}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.intro{display:block}.segments{width:100%;overflow:auto}.segments button{flex:1}.count{text-align:left}.visual-head{display:block}.visual-select{width:100%;margin-top:12px}.visual-grid,.method{grid-template-columns:1fr}.viewer iframe{aspect-ratio:4/3}}
 </style>
 </head>
 <body>
@@ -143,6 +249,7 @@ main{padding:24px 0 48px}.intro{display:flex;justify-content:space-between;align
 <div class="table-wrap"><table><thead><tr><th>#</th><th>Deployment</th><th>TrueScore</th><th>Quality</th><th>Calibration</th><th>Reliability</th><th>Median latency</th></tr></thead><tbody>
 __ROWS__
 </tbody></table></div>
+<section class="visuals" id="visuals"><div class="visual-head"><div><h2>Model-generated 3D tests</h2><p>Compare the exact qualified artifacts behind the visual scores. Each deployment generated both animations from the same prompts; only the selected pair is loaded.</p></div><select id="visual-select" class="visual-select" aria-label="Choose deployment visual"></select></div><p id="visual-meta" class="visual-meta"></p><div class="visual-grid"><article class="viewer"><header><h3>VIS-04 · Overtake race</h3><div><span id="race-score"></span><a id="race-open" target="_blank" rel="noopener">Open</a></div></header><iframe id="race-frame" title="Model-generated red and blue car race" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe></article><article class="viewer"><header><h3>VIS-05 · Walk / run cycle</h3><div><span id="locomotion-score"></span><a id="locomotion-open" target="_blank" rel="noopener">Open</a></div></header><iframe id="locomotion-frame" title="Model-generated humanoid locomotion cycle" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe></article></div></section>
 <section class="method"><div><h2>Qualification contract</h2><ul><li>12/12 golden gate and tool-call preflight</li><li>Three repeats at temperature 0.3</li><li>Thinking off where supported</li><li>Zero transport errors and complete artifacts</li><li>Clean quarantine status</li></ul></div><div><h2>Reading the score</h2><p>TrueScore is quality-dominant: quality 55%, calibration 25%, reliability 15%, and speed 5%. These are deployment results, so engine, quantization, context, and speculative mode are part of each measured configuration.</p><p>Two quarantined and nine aborted attempts remain in the public evidence archive, but are not ranked here.</p></div></section>
 </main>
 <footer><div class="wrap">SparkBench v6.7.1 challenge cohort · 20 scenarios across 10 domains · updated __UPDATED__ · <a href="https://github.com/Weschera/spark-bench">source and full history</a></div></footer>
@@ -150,15 +257,28 @@ __ROWS__
 const rows=[...document.querySelectorAll('tbody tr')],search=document.querySelector('#search'),count=document.querySelector('#count'),buttons=[...document.querySelectorAll('[data-filter]')];let engine='all';
 function apply(){const q=search.value.trim().toLowerCase();let n=0;rows.forEach(r=>{const show=(engine==='all'||r.dataset.engine===engine)&&(!q||r.dataset.search.includes(q));r.hidden=!show;if(show)n++});count.textContent=n+' shown'}
 search.addEventListener('input',apply);buttons.forEach(b=>b.addEventListener('click',()=>{buttons.forEach(x=>x.classList.remove('active'));b.classList.add('active');engine=b.dataset.filter;apply()}));
+const visuals=__VISUALS__,visualSelect=document.querySelector('#visual-select'),visualMeta=document.querySelector('#visual-meta'),raceFrame=document.querySelector('#race-frame'),locomotionFrame=document.querySelector('#locomotion-frame'),raceOpen=document.querySelector('#race-open'),locomotionOpen=document.querySelector('#locomotion-open'),raceScore=document.querySelector('#race-score'),locomotionScore=document.querySelector('#locomotion-score');
+visuals.forEach((v,i)=>{const option=document.createElement('option');option.value=i;option.textContent='#'+v.rank+' · '+v.model+' · '+v.detail;visualSelect.append(option)});
+function showVisual(index,scroll=false){const v=visuals[index];visualSelect.value=index;visualMeta.textContent='#'+v.rank+' · TrueScore '+v.score.toFixed(1)+' · '+v.detail;raceScore.textContent='Artifact score '+v.raceScore.toFixed(1);locomotionScore.textContent='Artifact score '+v.locomotionScore.toFixed(1);raceFrame.src=v.race;locomotionFrame.src=v.locomotion;raceOpen.href=v.race;locomotionOpen.href=v.locomotion;if(scroll)document.querySelector('#visuals').scrollIntoView({behavior:'smooth',block:'start'})}
+visualSelect.addEventListener('change',()=>showVisual(Number(visualSelect.value)));document.querySelectorAll('.show-visual').forEach(button=>button.addEventListener('click',()=>showVisual(Number(button.dataset.visual),true)));showVisual(0);
 </script>
 </body></html>'''
-    return template.replace("__ROWS__", render_rows(records)).replace("__UPDATED__", date.today().isoformat())
+    return (
+        template.replace("__ROWS__", render_rows(records))
+        .replace("__VISUALS__", json.dumps(visual_records(records), separators=(",", ":")))
+        .replace("__UPDATED__", date.today().isoformat())
+    )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("qualified_tsv", type=Path)
     parser.add_argument("output_html", type=Path)
+    parser.add_argument(
+        "--visual-output-dir",
+        type=Path,
+        help="copy qualified VIS-04/VIS-05 artifacts and pinned Three.js here",
+    )
     args = parser.parse_args()
     with args.qualified_tsv.open(newline="", encoding="utf-8") as handle:
         records = list(csv.DictReader(handle, delimiter="\t"))
@@ -167,6 +287,9 @@ def main() -> int:
     ranks = [int(row["rank"]) for row in records]
     if ranks != list(range(1, len(records) + 1)):
         raise SystemExit("input ranks are not contiguous")
+    add_visual_scores(records, args.qualified_tsv.parent)
+    if args.visual_output_dir:
+        stage_visuals(records, args.qualified_tsv.parent, args.visual_output_dir)
     args.output_html.parent.mkdir(parents=True, exist_ok=True)
     args.output_html.write_text(render(records), encoding="utf-8")
     print(f"wrote {args.output_html}: {len(records)} qualified rows")
