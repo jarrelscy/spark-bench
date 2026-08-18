@@ -1,0 +1,13 @@
+domain,qwen3.8-27b,deepseek-v4-flash,winner
+robustness,100.00,70.69,Qwen3.8-27B
+safety,97.30,96.85,Qwen3.8-27B
+agentic,94.06,96.30,DeepSeek-V4-Flash
+classification,100.00,100.00,Tie
+code,80.90,94.59,DeepSeek-V4-Flash
+composition,100.00,100.00,Tie
+instruction,87.42,95.79,DeepSeek-V4-Flash
+long_context,55.88,55.88,Tie
+planning,95.49,96.85,DeepSeek-V4-Flash
+structured,96.14,97.56,DeepSeek-V4-Flash
+tool_use,77.45,84.63,DeepSeek-V4-Flash
+visual,81.23,84.62,DeepSeek-V4-Flash
