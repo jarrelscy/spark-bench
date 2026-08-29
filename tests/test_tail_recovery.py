@@ -13,6 +13,15 @@ class TailRecoveryTests(unittest.TestCase):
         self.assertFalse(sb._is_single_char_runaway("!" * 4095, 4096))
         self.assertFalse(sb._is_single_char_runaway("const x = 1;\n" * 400, 4096))
 
+    def test_repeated_phrase_runaway_detector(self):
+        sentence = "The event exists but is not returned. Trying again. "
+        self.assertTrue(sb._is_repeated_phrase_runaway(sentence * 300, 8192))
+        normal = "\n".join(
+            f"step {i}: verify item {i * 7919 % 104729} and record result {i * i}"
+            for i in range(500)
+        )
+        self.assertFalse(sb._is_repeated_phrase_runaway(normal, 8192))
+
     def test_run_suite_can_write_only_absolute_repeat_two(self):
         calls = []
 

@@ -34,7 +34,7 @@ Examples:
       --model deepseek-v4-flash --topology direct-200g --parallelism PP2 \
       --contexts 4096,32768 --concurrency 1,8
 """
-import argparse, csv, json, os, re, statistics, subprocess, sys, threading, time, urllib.request, uuid
+import argparse, csv, json, os, re, statistics, subprocess, sys, threading, time, urllib.request, uuid, zlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Optional
@@ -120,6 +120,16 @@ def _is_single_char_runaway(text_tail, window_chars):
     return len(set(text_tail[-window_chars:])) == 1
 
 
+def _is_repeated_phrase_runaway(text_tail, window_chars, max_compressed_ratio=0.08):
+    """Detect an extremely repetitive phrase loop in a complete rolling window."""
+    if window_chars <= 0 or len(text_tail) < window_chars:
+        return False
+    sample = text_tail[-window_chars:].encode("utf-8", "replace")
+    if not sample:
+        return False
+    return len(zlib.compress(sample, 9)) / len(sample) <= max_compressed_ratio
+
+
 def _abort_sglang_request(endpoint, rid):
     """Best-effort abort for an SGLang request with a caller-supplied rid."""
     base = endpoint.rstrip("/")
@@ -174,8 +184,10 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
     # not cap normal output: only a full window of one identical visible
     # character triggers an abort and a model-failure finish reason.
     _runaway_window = int(os.environ.get("SPARK_BENCH_RUNAWAY_CHAR_WINDOW", "0") or 0)
+    _phrase_window = int(os.environ.get("SPARK_BENCH_RUNAWAY_PHRASE_WINDOW", "0") or 0)
+    _abort_backend = os.environ.get("SPARK_BENCH_RUNAWAY_ABORT_BACKEND", "sglang")
     _request_rid = None
-    if _runaway_window > 0:
+    if (_runaway_window > 0 or _phrase_window > 0) and _abort_backend == "sglang":
         _request_rid = str(body.get("rid") or uuid.uuid4().hex)
         body["rid"] = _request_rid
     # ---------------------------------------------------------------------------
@@ -230,19 +242,30 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
                         ttft = time.perf_counter() - t0
                     content = delta["content"]
                     text_parts.append(content)
-                    if _runaway_window > 0:
-                        runaway_tail = (runaway_tail + content)[-_runaway_window:]
+                    if _runaway_window > 0 or _phrase_window > 0:
+                        tail_window = max(_runaway_window, _phrase_window)
+                        runaway_tail = (runaway_tail + content)[-tail_window:]
+                        runaway_kind = None
+                        runaway_window = None
                         if _is_single_char_runaway(runaway_tail, _runaway_window):
+                            runaway_kind = "single_character"
+                            runaway_window = _runaway_window
+                        elif _is_repeated_phrase_runaway(runaway_tail, _phrase_window):
+                            runaway_kind = "repeated_phrase"
+                            runaway_window = _phrase_window
+                        if runaway_kind:
                             runaway = {
-                                "kind": "single_character",
+                                "kind": runaway_kind,
                                 "character": runaway_tail[-1],
-                                "window_chars": _runaway_window,
+                                "window_chars": runaway_window,
                                 "observed_text_chars": sum(len(x) for x in text_parts),
                                 "request_rid": _request_rid,
+                                "abort_backend": _abort_backend,
                             }
                             finish = "runaway"
-                            runaway["abort_sent"] = _abort_sglang_request(
-                                endpoint, _request_rid)
+                            runaway["abort_sent"] = (
+                                _abort_sglang_request(endpoint, _request_rid)
+                                if _abort_backend == "sglang" else False)
                             stop_stream = True
                             break
                 if delta.get("tool_calls"):
