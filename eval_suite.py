@@ -4343,7 +4343,9 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                             "completion_tokens": a_trace.get("completion_tokens"),
                             "runaway": a_trace.get("runaway"),
                             "agentic_trace": a_trace}
-                    toks.append(resp.get("completion_tokens") or _est_tokens(a_text))
+                    native_completion_tokens = resp.get("completion_tokens")
+                    toks.append(native_completion_tokens if native_completion_tokens is not None
+                                else _est_tokens(a_text))
                 else:
                     resp = chat_fn(sc["messages"], mt, temp, sc.get("tools"),
                                    dict(extra_base))

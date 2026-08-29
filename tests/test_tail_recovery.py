@@ -50,6 +50,28 @@ class TailRecoveryTests(unittest.TestCase):
                 "v6.7.1-full-subset-uncapped",
             )
 
+    def test_runaway_without_native_usage_is_not_reported_as_estimated_tokens(self):
+        def chat_fn(messages, max_tokens, temperature, tools, extra):
+            return {
+                "text": "!" * 4096,
+                "reasoning": "",
+                "tool_calls": [],
+                "finish": "runaway",
+                "completion_tokens": 0,
+                "total": 2.0,
+                "runaway": {"kind": "single_character", "window_chars": 4096},
+            }
+
+        result = ev.run_suite(
+            chat_fn,
+            repeats=2,
+            scenario_ids={"AG-11"},
+            repeat_indices={2},
+            thinking="off",
+            uncapped=True,
+        )
+        self.assertEqual(result["scenarios"][0]["output_tokens"], 0)
+
     def test_agentic_transcript_preserves_real_length_finish(self):
         def chat_fn(messages, max_tokens, temperature, tools, extra):
             return {
