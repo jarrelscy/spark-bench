@@ -254,6 +254,69 @@ def merge_sorted_streams(*streams):
 
 
 class TranscriptPersistenceTests(unittest.TestCase):
+    def test_uncapped_run_suite_omits_request_cap_for_regular_scenarios(self):
+        item = {
+            "id": "TRACE-UNCAPPED", "domain": "instruction", "group": "capability",
+            "tier": "hard", "difficulty": 1.0, "max_tokens": 20,
+            "messages": [{"role": "user", "content": "Reply PONG"}],
+            "grade": eval_suite.expect_text_equals("PONG"),
+        }
+        seen = []
+
+        def chat_fn(_messages, max_tokens, *_args, **_kwargs):
+            seen.append(max_tokens)
+            return response(text="PONG")
+
+        with patch.object(eval_suite, "SCENARIOS", [item]):
+            result = eval_suite.run_suite(chat_fn, repeats=1, uncapped=True)
+
+        self.assertEqual(seen, [None])
+        self.assertEqual(result["meta"]["request_policy"], "uncapped")
+        self.assertEqual(result["trial_stats"]["methodology"],
+                         "v6.7.1-full-uncapped")
+
+    def test_thinking_on_does_not_inject_provider_specific_reasoning_field(self):
+        item = {
+            "id": "TRACE-THINKING", "domain": "instruction", "group": "capability",
+            "tier": "hard", "difficulty": 1.0, "max_tokens": 20,
+            "messages": [{"role": "user", "content": "Reply PONG"}],
+            "grade": eval_suite.expect_text_equals("PONG"),
+        }
+        seen = []
+
+        def chat_fn(_messages, _max_tokens, _temperature, _tools, extra):
+            seen.append(extra)
+            return response(text="PONG")
+
+        with patch.object(eval_suite, "SCENARIOS", [item]):
+            eval_suite.run_suite(chat_fn, repeats=1, thinking="on", uncapped=True)
+
+        self.assertTrue(seen[0]["chat_template_kwargs"]["enable_thinking"])
+        self.assertNotIn("reasoning", seen[0])
+
+    def test_uncapped_run_suite_omits_request_cap_for_agentic_turns(self):
+        item = {
+            "id": "TRACE-AG", "domain": "agentic", "group": "capability",
+            "tier": "expert", "difficulty": 1.0, "max_tokens": 20,
+            "max_turns": 2, "agentic": True,
+            "messages": [{"role": "user", "content": "Check weather, then stop."}],
+            "tools": [eval_suite.T_WEATHER], "grade": None,
+        }
+        replies = iter([
+            response(calls=[{"name": "get_weather", "args": {"city": "Tokyo"}}]),
+            response(text="Tokyo is clear."),
+        ])
+        seen = []
+
+        def chat_fn(_messages, max_tokens, *_args, **_kwargs):
+            seen.append(max_tokens)
+            return next(replies)
+
+        with patch.object(eval_suite, "SCENARIOS", [item]):
+            eval_suite.run_suite(chat_fn, repeats=1, uncapped=True)
+
+        self.assertEqual(seen, [None, None])
+
     def test_run_suite_saves_each_repeat_response_and_grade(self):
         item = {
             "id": "TRACE-01", "domain": "instruction", "group": "capability",

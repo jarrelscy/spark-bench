@@ -37,6 +37,7 @@ Examples:
 import argparse, csv, json, os, re, statistics, subprocess, sys, threading, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from typing import Optional
 from html_report import infer_run_kind, write_run_report
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -113,11 +114,15 @@ class Ctx:
 # OpenAI-compatible streaming client
 # --------------------------------------------------------------------------- #
 def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
-                tools=None, timeout=600, extra=None):
+                tools=None, timeout: Optional[float] = 600, extra=None):
     """One streaming chat completion. Returns dict with timing + usage + text."""
     body = {"model": model, "messages": messages, "temperature": temperature,
-            "max_tokens": max_tokens, "stream": True,
-            "stream_options": {"include_usage": True}}
+            "stream": True, "stream_options": {"include_usage": True}}
+    # Reasoning models consume max_tokens across hidden reasoning + visible answer.
+    # None means intentionally omit the field and let the endpoint use its full
+    # remaining context window; numeric values preserve the historical contract.
+    if max_tokens is not None:
+        body["max_tokens"] = max_tokens
     if tools:
         body["tools"] = tools
         body["tool_choice"] = "auto"
@@ -722,12 +727,14 @@ def preflight_endpoint(ctx, args):
             "thinking_mode": "enabled" if args.thinking == "on" else "disabled",
         }}
     calls, last = [], None
+    probe_max_tokens = None if args.uncapped else 512
+    probe_timeout = None if args.timeout <= 0 else min(args.timeout, 180)
     for attempt in (1, 2):
         try:
             last = chat_stream(args.endpoint, args.model,
                                [{"role": "user", "content": TOOL_PROMPT}],
-                               max_tokens=512, temperature=0.0,
-                               tools=WEATHER_TOOL, timeout=min(args.timeout, 180),
+                               max_tokens=probe_max_tokens, temperature=0.0,
+                               tools=WEATHER_TOOL, timeout=probe_timeout,
                                extra=probe_extra)
             calls = ev.assemble_tool_calls(last)
         except Exception as e:
@@ -880,15 +887,22 @@ def run_eval(ctx, args):
     marker.start()
 
     ctx.mdln(f"# Deep Eval ({ctx.run_id})\n")
+    request_policy = "uncapped" if args.uncapped else "scenario-capped"
+    request_timeout = None if args.timeout <= 0 else args.timeout
     ctx.mdln(f"- model `{ctx.model}` @ `{ctx.endpoint}`  thinking `{args.thinking}` "
-             f"repeats `{args.repeats}` temp `{args.temperature}`\n")
+             f"repeats `{args.repeats}` temp `{args.temperature}` "
+             f"request policy `{request_policy}` timeout "
+             f"`{'none' if request_timeout is None else request_timeout}`\n")
+    ctx.add("eval", "provenance", "request_policy", request_policy, "")
+    ctx.add("eval", "provenance", "request_timeout",
+            "none" if request_timeout is None else request_timeout, "s")
     ctx.mdln(f"- grader `{grader_git}` · golden gate {gate_note} · "
              f"preflight {'skipped' if args.skip_preflight else 'passed'}\n")
 
     def chat_fn(messages, max_tokens, temperature, tools, extra):
         return chat_stream(ctx.endpoint, ctx.model, messages, max_tokens,
                            temperature=temperature, tools=tools,
-                           timeout=args.timeout, extra=extra)
+                           timeout=request_timeout, extra=extra)
 
     weights = {}
     for kv in (args.weights or "").split(","):
@@ -909,7 +923,8 @@ def run_eval(ctx, args):
     res = ev.run_suite(chat_fn, repeats=args.repeats, temperature=args.temperature,
                        domains=(args.domains.split(",") if args.domains else None),
                        tiers=tiers, scenario_ids=scenario_ids,
-                       thinking=args.thinking, timeout=args.timeout,
+                       thinking=args.thinking, timeout=request_timeout,
+                       uncapped=args.uncapped,
                        weights=weights or None, artifact_dir=artifact_dir,
                        progress=progress)
     ov = res["overall"]
@@ -1119,6 +1134,9 @@ def main():
     se.add_argument("--temperature", type=float, default=0.3)
     se.add_argument("--thinking", choices=["auto", "on", "off"], default="auto",
                     help="inject chat_template_kwargs.enable_thinking")
+    se.add_argument("--uncapped", action="store_true",
+                    help="omit max_tokens on every eval and agentic request so "
+                         "reasoning models may use the endpoint's full remaining context")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
                     "adversarial+visual, challenge = v6.7.1 diagnostic subset, "

@@ -3894,7 +3894,7 @@ def _sim_tool(name, args, env):
 
 
 def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
-                  capture_trace=False):
+                  capture_trace=False, uncapped=False):
     """Run a multi-turn scenario, optionally returning its auditable trace."""
     env = _make_env()
     # v6.4: scenarios may patch the env (e.g. failure_plan for error injection)
@@ -3911,7 +3911,7 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
     messages = [system_prompt] + list(sc["messages"])
     tools = sc.get("tools")
     max_turns = sc.get("max_turns", 20)
-    mt = sc.get("max_tokens", 1000)
+    mt = None if uncapped else sc.get("max_tokens", 1000)
     total_latency = 0.0
     total_text = []
     tool_call_log = []
@@ -4273,7 +4273,7 @@ def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget
 def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
               scenario_ids=None,
               thinking="auto", timeout=300, max_tokens_scale=1.0,
-              weights=None, artifact_dir=None, progress=None):
+              weights=None, artifact_dir=None, progress=None, uncapped=False):
     """chat_fn(messages, max_tokens, temperature, tools, extra) -> resp dict.
     tiers: subset of {'base','hard','expert'} (None = all). scenario_ids:
     optional exact scenario subset. artifact_dir: where to save generated
@@ -4287,9 +4287,9 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
             "enable_thinking": thinking == "on",
             "thinking_mode": "enabled" if thinking == "on" else "disabled",
         }
-        # OpenRouter reasoning support — works alongside chat_template_kwargs
-        if thinking == "on":
-            extra_base["reasoning"] = {"effort": "high"}
+        # Do not inject a provider-specific reasoning field here. Local engines
+        # use chat_template_kwargs, while providers that require reasoning.effort
+        # can opt in through SPARK_BENCH_REASONING_EFFORT in chat_stream().
     selected_ids = frozenset(scenario_ids) if scenario_ids is not None else None
     pool = [s for s in SCENARIOS
             if (not domains or s["domain"] in domains)
@@ -4300,7 +4300,10 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     for sc in pool:
         reps = sc.get("repeats", repeats)
         temp = sc.get("temperature", temperature)
-        mt = int(sc["max_tokens"] * max_tokens_scale)
+        # Scenario max_tokens remains the expected answer-size contract. With
+        # uncapped=True it must not also cap hidden reasoning, so the transport
+        # omits max_tokens and the endpoint uses its remaining context window.
+        mt = None if uncapped else int(sc["max_tokens"] * max_tokens_scale)
         subs, lats, ratios, toks = [], [], [], []
         transcript_paths = []
         last_reason = ""
@@ -4310,7 +4313,8 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                 if sc.get("agentic"):
                     # Multi-turn agentic scenario — route through agentic harness
                     a_score, a_reason, a_lat, a_text, a_ratio, a_trace = _run_agentic(
-                        sc, chat_fn, extra_base, temp, timeout, capture_trace=True)
+                        sc, chat_fn, extra_base, temp, timeout, capture_trace=True,
+                        uncapped=uncapped)
                     score = a_score
                     reason = a_reason
                     lats.append(a_lat)
@@ -4330,7 +4334,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                     toks.append(resp.get("completion_tokens") or a)
             except Exception as e:
                 score, reason, resp = 0.0, f"error: {type(e).__name__}: {str(e)[:40]}", None
-                lats.append(timeout)
+                lats.append(timeout or 0.0)
                 ratios.append(0.0)
                 toks.append(0)
             subs.append(score)
@@ -4482,6 +4486,8 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     methodology = (CHALLENGE_METHODOLOGY_VERSION
                    if selected_ids == CHALLENGE_SCENARIO_IDS
                    else METHODOLOGY_VERSION)
+    if uncapped:
+        methodology += "-uncapped"
     trial_stats = dict(
         repeats=repeats,
         methodology=methodology,
@@ -4500,7 +4506,8 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                    rating=rating(truescore))
     meta = dict(repeats=repeats, temperature=temperature, thinking=thinking,
                 tiers=tiers, scenario_ids=sorted(selected_ids) if selected_ids else None,
-                weights=weights)
+                weights=weights,
+                request_policy="uncapped" if uncapped else "scenario-capped")
     return dict(scenarios=sc_results, domains=domains_out, overall=overall,
                 artifacts=artifacts, meta=meta, trial_stats=trial_stats)
 
