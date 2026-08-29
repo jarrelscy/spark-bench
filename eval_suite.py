@@ -3916,12 +3916,18 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
     total_text = []
     tool_call_log = []
     turn_records = []
+    completion_tokens = 0
+    terminal_finish = None
+    terminal_runaway = None
 
     for turn in range(max_turns):
         resp = chat_fn(messages, mt, temperature, tools, dict(extra_base))
         total_latency += resp.get("total", 0.0)
         text = resp.get("text", "") or ""
         total_text.append(text)
+        terminal_finish = resp.get("finish")
+        terminal_runaway = resp.get("runaway")
+        completion_tokens += resp.get("completion_tokens") or 0
         tool_calls = assemble_tool_calls(resp) if resp.get("tool_calls") else []
         turn_records.append({
             "turn": turn + 1,
@@ -3931,7 +3937,11 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
             "finish": resp.get("finish"),
             "completion_tokens": resp.get("completion_tokens"),
             "total_seconds": resp.get("total"),
+            "runaway": resp.get("runaway"),
         })
+
+        if terminal_finish in ("length", "runaway"):
+            break
 
         if not tool_calls:
             # Model stopped calling tools — either done or gave up
@@ -3955,10 +3965,14 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
     # Grade based on task completion
     score, reason = _grade_agentic(sc["id"], env, tool_call_log, total_text, turn + 1,
                                    turn_budget=sc.get("turn_budget", 15))
+    if terminal_finish in ("length", "runaway"):
+        reason += f" | model_failure:{terminal_finish}"
     token_ratio = 1.0  # agentic scenarios don't have reasoning tokens
     full_text = "\n".join(total_text)
     trace = {"messages": messages, "turns": turn_records,
-             "tool_calls": tool_call_log}
+             "tool_calls": tool_call_log, "finish": terminal_finish,
+             "completion_tokens": completion_tokens,
+             "runaway": terminal_runaway}
     result = (score, reason, total_latency, full_text, token_ratio)
     return result + (trace,) if capture_trace else result
 
@@ -4271,12 +4285,13 @@ def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget
 
 
 def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
-              scenario_ids=None,
+              scenario_ids=None, repeat_indices=None,
               thinking="auto", timeout=300, max_tokens_scale=1.0,
               weights=None, artifact_dir=None, progress=None, uncapped=False):
     """chat_fn(messages, max_tokens, temperature, tools, extra) -> resp dict.
     tiers: subset of {'base','hard','expert'} (None = all). scenario_ids:
-    optional exact scenario subset. artifact_dir: where to save generated
+    optional exact scenario subset. repeat_indices: optional exact 1-based
+    repeat numbers (filenames retain their absolute indices). artifact_dir: where to save generated
     artifacts (e.g. visual HTML). Returns {scenarios, domains, overall,
     artifacts, meta}."""
     import os
@@ -4299,6 +4314,10 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     artifacts = []
     for sc in pool:
         reps = sc.get("repeats", repeats)
+        repeat_numbers = (sorted(set(repeat_indices)) if repeat_indices is not None
+                          else list(range(1, reps + 1)))
+        if not repeat_numbers or any(i < 1 or i > reps for i in repeat_numbers):
+            raise ValueError(f"invalid repeat_indices {repeat_numbers} for {sc['id']} with {reps} repeats")
         temp = sc.get("temperature", temperature)
         # Scenario max_tokens remains the expected answer-size contract. With
         # uncapped=True it must not also cap hidden reasoning, so the transport
@@ -4308,7 +4327,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
         transcript_paths = []
         last_reason = ""
         best = (-1.0, None)  # (score, resp) for artifact saving
-        for repeat_index in range(reps):
+        for repeat_number in repeat_numbers:
             try:
                 if sc.get("agentic"):
                     # Multi-turn agentic scenario — route through agentic harness
@@ -4320,9 +4339,11 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                     lats.append(a_lat)
                     ratios.append(a_ratio)
                     resp = {"text": a_text, "tool_calls": [], "total": a_lat,
-                            "reasoning": "", "finish": "stop",
+                            "reasoning": "", "finish": a_trace.get("finish") or "stop",
+                            "completion_tokens": a_trace.get("completion_tokens"),
+                            "runaway": a_trace.get("runaway"),
                             "agentic_trace": a_trace}
-                    toks.append(_est_tokens(a_text))
+                    toks.append(resp.get("completion_tokens") or _est_tokens(a_text))
                 else:
                     resp = chat_fn(sc["messages"], mt, temp, sc.get("tools"),
                                    dict(extra_base))
@@ -4345,7 +4366,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                 transcript_dir = os.path.join(artifact_dir, "transcripts")
                 os.makedirs(transcript_dir, exist_ok=True)
                 transcript_path = os.path.join(
-                    transcript_dir, f"{sc['id']}-repeat-{repeat_index + 1}.json")
+                    transcript_dir, f"{sc['id']}-repeat-{repeat_number}.json")
                 response_record = None
                 if resp is not None:
                     response_record = {
@@ -4356,11 +4377,12 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                         "completion_tokens": resp.get("completion_tokens"),
                         "total_seconds": resp.get("total"),
                         "agentic_trace": resp.get("agentic_trace"),
+                        "runaway": resp.get("runaway"),
                     }
                 with open(transcript_path, "w") as fh:
                     json.dump({
                         "scenario_id": sc["id"],
-                        "repeat": repeat_index + 1,
+                        "repeat": repeat_number,
                         "messages": sc["messages"],
                         "tools": sc.get("tools"),
                         "response": response_record,
@@ -4379,16 +4401,17 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
             artifacts.append(dict(id=sc["id"], domain=sc["domain"], path=art_path,
                                   score=best[0]))
         mean_score = statistics.mean(subs)
-        consistency = 1.0 if reps < 2 else max(0.0, 1 - 2 * statistics.pstdev(subs))
+        reps_run = len(subs)
+        consistency = 1.0 if reps_run < 2 else max(0.0, 1 - 2 * statistics.pstdev(subs))
         # Trial statistics
         pass_count = sum(1 for s in subs if s >= 0.5)  # "pass" = score >= 50%
         stddev = statistics.pstdev(subs) if reps >= 2 else 0.0
         rec = dict(id=sc["id"], domain=sc["domain"], group=sc["group"],
                    tier=sc.get("tier", "base"), difficulty=sc["difficulty"],
-                   score=mean_score, consistency=consistency, reps=reps,
+                   score=mean_score, consistency=consistency, reps=reps_run,
                    subs=subs,  # per-repeat scores for trial stats
                    stddev=stddev,
-                   pass_rate=pass_count / reps,
+                   pass_rate=pass_count / reps_run,
                    latency=statistics.median(lats) if lats else 0.0,
                    eff=statistics.mean(ratios) if ratios else 1.0,
                    output_tokens=sum(toks),
@@ -4483,9 +4506,12 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
               f"(transport/timeout, not model quality) — TrueScore is not meaningful.",
               file=_sys.stderr)
 
-    methodology = (CHALLENGE_METHODOLOGY_VERSION
-                   if selected_ids == CHALLENGE_SCENARIO_IDS
-                   else METHODOLOGY_VERSION)
+    if selected_ids == CHALLENGE_SCENARIO_IDS:
+        methodology = CHALLENGE_METHODOLOGY_VERSION
+    elif selected_ids is not None:
+        methodology = METHODOLOGY_VERSION + "-subset"
+    else:
+        methodology = METHODOLOGY_VERSION
     if uncapped:
         methodology += "-uncapped"
     trial_stats = dict(

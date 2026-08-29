@@ -34,7 +34,7 @@ Examples:
       --model deepseek-v4-flash --topology direct-200g --parallelism PP2 \
       --contexts 4096,32768 --concurrency 1,8
 """
-import argparse, csv, json, os, re, statistics, subprocess, sys, threading, time, urllib.request
+import argparse, csv, json, os, re, statistics, subprocess, sys, threading, time, urllib.request, uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Optional
@@ -113,6 +113,29 @@ class Ctx:
 # --------------------------------------------------------------------------- #
 # OpenAI-compatible streaming client
 # --------------------------------------------------------------------------- #
+def _is_single_char_runaway(text_tail, window_chars):
+    """Return True when the complete rolling window is one repeated character."""
+    if window_chars <= 0 or len(text_tail) < window_chars:
+        return False
+    return len(set(text_tail[-window_chars:])) == 1
+
+
+def _abort_sglang_request(endpoint, rid):
+    """Best-effort abort for an SGLang request with a caller-supplied rid."""
+    base = endpoint.rstrip("/")
+    if base.endswith("/v1"):
+        base = base[:-3]
+    payload = json.dumps({"rid": rid, "abort_all": False}).encode()
+    req = urllib.request.Request(
+        base + "/abort_request", data=payload,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=5):
+            return True
+    except Exception:
+        return False
+
+
 def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
                 tools=None, timeout: Optional[float] = 600, extra=None):
     """One streaming chat completion. Returns dict with timing + usage + text."""
@@ -147,6 +170,14 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
     _extra_body = os.environ.get("SPARK_BENCH_EXTRA_BODY")
     if _extra_body:
         body.update(json.loads(_extra_body))
+    # Opt-in SGLang safety valve for proven low-entropy model failures. It does
+    # not cap normal output: only a full window of one identical visible
+    # character triggers an abort and a model-failure finish reason.
+    _runaway_window = int(os.environ.get("SPARK_BENCH_RUNAWAY_CHAR_WINDOW", "0") or 0)
+    _request_rid = None
+    if _runaway_window > 0:
+        _request_rid = str(body.get("rid") or uuid.uuid4().hex)
+        body["rid"] = _request_rid
     # ---------------------------------------------------------------------------
     _api_key = (os.environ.get("SPARK_BENCH_API_KEY")
                 or os.environ.get("OPENROUTER_API_KEY")
@@ -167,6 +198,9 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
     tool_calls = []
     usage = {}
     finish = None
+    runaway = None
+    runaway_tail = ""
+    stop_stream = False
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         for raw in resp:
             line = raw.decode("utf-8", "replace").strip()
@@ -194,18 +228,41 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
                 if delta.get("content"):
                     if ttft is None:
                         ttft = time.perf_counter() - t0
-                    text_parts.append(delta["content"])
+                    content = delta["content"]
+                    text_parts.append(content)
+                    if _runaway_window > 0:
+                        runaway_tail = (runaway_tail + content)[-_runaway_window:]
+                        if _is_single_char_runaway(runaway_tail, _runaway_window):
+                            runaway = {
+                                "kind": "single_character",
+                                "character": runaway_tail[-1],
+                                "window_chars": _runaway_window,
+                                "observed_text_chars": sum(len(x) for x in text_parts),
+                                "request_rid": _request_rid,
+                            }
+                            finish = "runaway"
+                            runaway["abort_sent"] = _abort_sglang_request(
+                                endpoint, _request_rid)
+                            stop_stream = True
+                            break
                 if delta.get("tool_calls"):
                     if ttft is None:
                         ttft = time.perf_counter() - t0
                     tool_calls.extend(delta["tool_calls"])
                 if ch.get("finish_reason"):
                     finish = ch["finish_reason"]
+            if stop_stream:
+                break
     total = time.perf_counter() - t0
     comp = usage.get("completion_tokens")
     prompt_toks = usage.get("prompt_tokens")
     text = "".join(text_parts)
-    if comp is None:  # llama.cpp sometimes omits usage on tool calls
+    if comp is None and runaway is not None:
+        # A deliberately aborted stream has no final native usage packet. Keep
+        # the token count unavailable instead of calling a character estimate
+        # a token count.
+        comp = 0
+    elif comp is None:  # llama.cpp sometimes omits usage on tool calls
         comp = max(1, len(text) // 4)
     decode_t = max(total - (ttft or total), 1e-6)
     # --- raw request/response provenance dump (env-gated; Fable review 2026-07-03)
@@ -219,6 +276,7 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
                     "ts": time.time(), "endpoint": url, "request": body,
                     "text": text, "reasoning": "".join(reasoning_parts),
                     "tool_calls": tool_calls, "finish": finish, "usage": usage,
+                    "runaway": runaway,
                     "ttft": ttft, "total": total}, ensure_ascii=False) + "\n")
         except OSError:
             pass  # provenance must never break a run
@@ -234,6 +292,8 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
         "reasoning": "".join(reasoning_parts),
         "tool_calls": tool_calls,
         "finish": finish,
+        "runaway": runaway,
+        "request_rid": _request_rid,
     }
 
 
@@ -919,10 +979,17 @@ def run_eval(ctx, args):
     challenge = args.tier == "challenge"
     tiers = None if args.tier in ("all", "challenge") else [args.tier]
     scenario_ids = ev.CHALLENGE_SCENARIO_IDS if challenge else None
+    if args.scenario_ids:
+        if challenge:
+            raise ValueError("--scenario-ids cannot be combined with --tier challenge")
+        scenario_ids = {x.strip() for x in args.scenario_ids.split(",") if x.strip()}
+    repeat_indices = ({int(x) for x in args.repeat_indices.split(",") if x.strip()}
+                      if args.repeat_indices else None)
     artifact_dir = os.path.join(args.out_dir, "artifacts", ctx.run_id)
     res = ev.run_suite(chat_fn, repeats=args.repeats, temperature=args.temperature,
                        domains=(args.domains.split(",") if args.domains else None),
                        tiers=tiers, scenario_ids=scenario_ids,
+                       repeat_indices=repeat_indices,
                        thinking=args.thinking, timeout=request_timeout,
                        uncapped=args.uncapped,
                        weights=weights or None, artifact_dir=artifact_dir,
@@ -1143,6 +1210,10 @@ def main():
                     "all = complete v6.7.1 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
+    se.add_argument("--scenario-ids", default="",
+                    help="exact comma-separated scenario subset, e.g. AG-11,AG-12")
+    se.add_argument("--repeat-indices", default="",
+                    help="exact 1-based repeat numbers to run and preserve in filenames")
     se.add_argument("--weights", default="",
                     help="override composite weights e.g. quality=0.5,responsiveness=0.1")
     se.add_argument("--skip-throughput", action="store_true",
