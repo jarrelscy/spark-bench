@@ -1,0 +1,72 @@
+{
+  "glm_causal_boundary": "The collapses were intermittent under the DFlash2 deployment. High draft acceptance accelerated an observed loop, but no DFlash2-off A/B was run, so DFlash2 is not claimed as the root cause.",
+  "glm_observed_tail_patterns": {
+    "AG-04-repeat-1.json": "repeated narration about checking remaining days",
+    "AG-05-repeat-1.json": "repeated narration about creating an event and emailing executives",
+    "AG-08-repeat-1.json": "repeated narration about recreating an event after a calendar sync check",
+    "CODE-09-repeat-1.json": "repeated Python retry-function code blocks"
+  },
+  "glm_validated_model_failures": [
+    {
+      "finish": "length",
+      "native_completion_tokens": 261115,
+      "original_score": 0.14285714285714285,
+      "source_preserved": true,
+      "transcript": "AG-04-repeat-1.json",
+      "validated_score": 0.0
+    },
+    {
+      "finish": "length",
+      "native_completion_tokens": 260904,
+      "original_score": 0.6666666666666666,
+      "source_preserved": true,
+      "transcript": "AG-05-repeat-1.json",
+      "validated_score": 0.0
+    },
+    {
+      "finish": "length",
+      "native_completion_tokens": 260598,
+      "original_score": 1.0,
+      "source_preserved": true,
+      "transcript": "AG-08-repeat-1.json",
+      "validated_score": 0.0
+    },
+    {
+      "finish": "length",
+      "native_completion_tokens": 262038,
+      "original_score": 1.0,
+      "source_preserved": true,
+      "transcript": "CODE-09-repeat-1.json",
+      "validated_score": 0.0
+    }
+  ],
+  "qwen_nextn_excluded_deployment": {
+    "causal_boundary": "The A/B isolates the observed AG-11 failure to the NEXTN serving path for this deployment; it does not prove every NEXTN configuration fails.",
+    "guarded_reproduction": {
+      "finish": "runaway",
+      "score": 0.0,
+      "unique_visible_characters": 1,
+      "visible_characters": 4096,
+      "wall_seconds": 238.945353458
+    },
+    "original_failure": {
+      "finish": "length",
+      "native_completion_tokens": 253500,
+      "score": 0.0,
+      "unique_visible_characters": 1,
+      "visible_characters": 253500,
+      "wall_seconds": 14698.769635208002
+    },
+    "reason": "reproducible single-character generation collapse on AG-11",
+    "spec_off_control": {
+      "checks_passed": "5/5",
+      "finish": "stop",
+      "native_completion_tokens": 451,
+      "score": 1.0,
+      "wall_seconds": 22.874534958000005
+    },
+    "status": "invalid_excluded"
+  },
+  "schema_version": 1,
+  "score_policy": "native finish length or detected runaway output receives score zero"
+}

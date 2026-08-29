@@ -1,0 +1,13 @@
+domain,group,qwen_quality,glm_quality,quality_winner,qwen_reliability,glm_reliability
+agentic,capability,98.0906,85.7605,Qwen,98.3333,75.0000
+classification,capability,100.0000,100.0000,Tie,100.0000,100.0000
+code,capability,87.0604,82.7473,Qwen,97.1429,88.5714
+composition,capability,75.5319,100.0000,GLM,50.0000,100.0000
+instruction,capability,96.9848,90.0909,Qwen,95.0000,98.8889
+long_context,capability,55.8824,100.0000,GLM,100.0000,100.0000
+planning,capability,86.4567,97.6378,GLM,100.0000,95.0000
+robustness,calibration,93.3962,51.6981,Qwen,87.5000,75.0000
+safety,calibration,73.0621,90.2119,GLM,84.7273,98.6364
+structured,capability,100.0000,85.4610,Qwen,100.0000,80.0000
+tool_use,capability,76.9966,87.0805,GLM,97.5000,91.6667
+visual,capability,89.7160,84.2517,Qwen,88.8667,72.3292

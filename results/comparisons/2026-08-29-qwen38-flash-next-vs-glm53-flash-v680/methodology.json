@@ -1,0 +1,53 @@
+{
+  "agentic_scenarios": 12,
+  "degeneration_contract": {
+    "blanket_output_cap": false,
+    "offline_repetition_audit": true,
+    "repeated_phrase_window_chars": 8192,
+    "single_character_window_chars": 4096
+  },
+  "deployments": {
+    "glm": {
+      "checkpoint_format": "NVFP4",
+      "context_tokens": 262144,
+      "kv_cache": "FP8 E4M3",
+      "runtime": "custom vLLM",
+      "speculative_decoding": "DFlash2 K7"
+    },
+    "qwen": {
+      "checkpoint_format": "NVFP4",
+      "context_tokens": 262144,
+      "mamba_state": "BF16",
+      "runtime": "SGLang",
+      "speculative_decoding": "disabled"
+    }
+  },
+  "domains": 12,
+  "hardware": "two NVIDIA DGX Spark systems per deployment, tensor parallel 2 over RoCE",
+  "integrity": {
+    "endpoint_identity_preflight_passed": true,
+    "golden_gate_cases": 12,
+    "golden_gate_passed": true,
+    "recovered_slots_keep_exact_scenario_and_repeat_identity": true,
+    "source_outputs_immutable": true,
+    "tool_call_preflight_passed": true,
+    "transport_error_rate_percent": 0.0
+  },
+  "repeats": 2,
+  "request_contract": {
+    "client_max_tokens": null,
+    "length_or_runaway_score": 0.0,
+    "model_request_timeout": null,
+    "native_finish_reason_required": true,
+    "server_context_ceiling_tokens": 262144
+  },
+  "scenario_bank_inherited_from": "v6.7.1",
+  "scenarios": 76,
+  "seed": null,
+  "temperature": 0.3,
+  "thinking": {
+    "glm": "forced off with separately preserved custom template because the bundled template did not honor the native switch",
+    "qwen": "native disabled template controls"
+  },
+  "version": "v6.8.0-full-uncapped"
+}

@@ -762,7 +762,7 @@ def _grader_provenance(ctx, allow_dirty=False):
     return h
 
 
-def _get_model_ids(endpoint, timeout=10):
+def _get_model_records(endpoint, timeout=10):
     url = endpoint.rstrip("/") + "/models"
     key = (os.environ.get("SPARK_BENCH_API_KEY")
            or os.environ.get("OPENROUTER_API_KEY")
@@ -770,7 +770,26 @@ def _get_model_ids(endpoint, timeout=10):
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         data = json.loads(r.read().decode())
-    return [m.get("id", "") for m in data.get("data", [])]
+    return data.get("data", [])
+
+
+def _get_model_ids(endpoint, timeout=10):
+    return [m.get("id", "") for m in _get_model_records(endpoint, timeout)]
+
+
+def _configure_runaway_guard(args, owner=None):
+    """Enable the v6.8 uncapped degeneration guard and select abort mode."""
+    if not args.uncapped:
+        return "disabled"
+    if args.runaway_char_window <= 0 or args.runaway_phrase_window <= 0:
+        raise ValueError("v6.8 uncapped guard windows must both be positive")
+    backend = args.runaway_abort_backend
+    if backend == "auto":
+        backend = "sglang" if "sglang" in str(owner or "").lower() else "disconnect"
+    os.environ["SPARK_BENCH_RUNAWAY_CHAR_WINDOW"] = str(args.runaway_char_window)
+    os.environ["SPARK_BENCH_RUNAWAY_PHRASE_WINDOW"] = str(args.runaway_phrase_window)
+    os.environ["SPARK_BENCH_RUNAWAY_ABORT_BACKEND"] = backend
+    return backend
 
 
 def preflight_endpoint(ctx, args):
@@ -779,8 +798,10 @@ def preflight_endpoint(ctx, args):
     would measure the serving config, not the model — the v5 disaster."""
     print("\n[gate] preflight: endpoint identity + tool-call parse probe")
     # -- (a) model identity ------------------------------------------------- #
+    model_records = []
     try:
-        ids = _get_model_ids(args.endpoint)
+        model_records = _get_model_records(args.endpoint)
+        ids = [m.get("id", "") for m in model_records]
     except Exception as e:
         ids = None
         detail = f"{type(e).__name__}: {str(e)[:60]}"
@@ -798,6 +819,10 @@ def preflight_endpoint(ctx, args):
             _abort_run(ctx, "preflight_wrong_model",
                        f"requested '{args.model}' but endpoint serves: {ids}")
         print(f"  [ok ] endpoint serves requested model: {match[0]}")
+        matched_record = next((m for m in model_records if m.get("id") == match[0]), {})
+        _configure_runaway_guard(args, owner=matched_record.get("owned_by"))
+    if ids is None:
+        _configure_runaway_guard(args, owner=None)
     # -- (b) tool-call parse probe ------------------------------------------ #
     import eval_suite as ev
     # probe must run under the SAME thinking mode as the eval it gates —
@@ -962,6 +987,7 @@ def run_eval(ctx, args):
     if not args.skip_preflight:
         preflight_endpoint(ctx, args)
     else:
+        _configure_runaway_guard(args, owner=None)
         ctx.add("eval", "provenance", "preflight_tool_probe",
                 "SKIPPED (--skip-preflight)", "")
 
@@ -979,6 +1005,13 @@ def run_eval(ctx, args):
     ctx.add("eval", "provenance", "request_policy", request_policy, "")
     ctx.add("eval", "provenance", "request_timeout",
             "none" if request_timeout is None else request_timeout, "s")
+    if args.uncapped:
+        ctx.add("eval", "provenance", "runaway_char_window",
+                args.runaway_char_window, "characters")
+        ctx.add("eval", "provenance", "runaway_phrase_window",
+                args.runaway_phrase_window, "characters")
+        ctx.add("eval", "provenance", "runaway_abort_backend",
+                os.environ.get("SPARK_BENCH_RUNAWAY_ABORT_BACKEND", "unknown"), "")
     ctx.mdln(f"- grader `{grader_git}` · golden gate {gate_note} · "
              f"preflight {'skipped' if args.skip_preflight else 'passed'}\n")
 
@@ -1227,10 +1260,17 @@ def main():
     se.add_argument("--uncapped", action="store_true",
                     help="omit max_tokens on every eval and agentic request so "
                          "reasoning models may use the endpoint's full remaining context")
+    se.add_argument("--runaway-char-window", type=int, default=4096,
+                    help="v6.8 uncapped guard: identical-character window (default 4096)")
+    se.add_argument("--runaway-phrase-window", type=int, default=8192,
+                    help="v6.8 uncapped guard: repeated-phrase window (default 8192)")
+    se.add_argument("--runaway-abort-backend",
+                    choices=("auto", "sglang", "disconnect"), default="auto",
+                    help="abort mode; auto uses /models owned_by metadata")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
-                    "adversarial+visual, challenge = v6.7.1 diagnostic subset, "
-                    "all = complete v6.7.1 suite")
+                    "adversarial+visual, challenge = v6.8.0 diagnostic subset, "
+                    "all = complete v6.8.0 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--scenario-ids", default="",

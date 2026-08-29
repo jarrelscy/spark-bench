@@ -1,0 +1,64 @@
+{
+  "caveat": "The Qwen result uses speculative decoding disabled. The GLM result uses DFlash2 K7 and a disclosed forced-no-thinking template. This is not a universal base-model ranking.",
+  "comparison_type": "deployment_comparison",
+  "deltas_qwen_minus_glm": {
+    "calibration": -5.571509009009006,
+    "capability_score": 3.0944254358011563,
+    "efficiency": 0.0,
+    "median_scenario_latency_seconds": -1.6885238540002092,
+    "operational_score": 3.4549357882719107,
+    "quality": 3.0944254358011563,
+    "reliability": 5.796388957526844,
+    "responsiveness": 4.935622554674168,
+    "truescore": 1.3512618704810109
+  },
+  "deployments": {
+    "glm-5.3-flash-dflash2-k7": {
+      "calibration": 81.59628378378378,
+      "capability_score": 87.40759283485957,
+      "efficiency": 100.0,
+      "error_rate_percent": 0.0,
+      "median_scenario_latency_seconds": 7.0154670312504095,
+      "operational_score": 81.82216536847342,
+      "pass_at_1_percent": 93.4,
+      "pass_at_k_percent": 82.9,
+      "quality": 87.40759283485957,
+      "reliability": 87.34712956099168,
+      "reliability_gap_percent": 10.5,
+      "responsiveness": 74.03166481210486,
+      "total_output_tokens": 1207779,
+      "truescore": 85.66642470769112,
+      "valid": true
+    },
+    "qwen3.8-flash-next-spec-off": {
+      "calibration": 76.02477477477477,
+      "capability_score": 90.50201827066073,
+      "efficiency": 100.0,
+      "error_rate_percent": 0.0,
+      "median_scenario_latency_seconds": 5.3269431772502,
+      "operational_score": 85.27710115674533,
+      "pass_at_1_percent": 94.7,
+      "pass_at_k_percent": 89.5,
+      "quality": 90.50201827066073,
+      "reliability": 93.14351851851852,
+      "reliability_gap_percent": 5.3,
+      "responsiveness": 78.96728736677903,
+      "total_output_tokens": 111726,
+      "truescore": 87.01768657817213,
+      "valid": true
+    }
+  },
+  "methodology": "v6.8.0-full-uncapped",
+  "qualification": {
+    "client_max_tokens": null,
+    "model_request_timeout": null,
+    "repeats": 2,
+    "scenarios": 76,
+    "temperature": 0.3,
+    "thinking": "disabled",
+    "transcripts_per_deployment": 152,
+    "transport_error_rate_percent": 0.0
+  },
+  "schema_version": 1,
+  "winner": "qwen3.8-flash-next-spec-off"
+}

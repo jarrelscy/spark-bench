@@ -45,6 +45,8 @@ CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
 CALIBRATION_DOMAINS = {"safety", "robustness"}
 METHODOLOGY_VERSION = "v6.7.1-full"
 CHALLENGE_METHODOLOGY_VERSION = "v6.7.1-challenge"
+UNCAPPED_METHODOLOGY_VERSION = "v6.8.0-full-uncapped"
+UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.0-challenge-uncapped"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
 
 # Selected from the first controlled three-model v6.6 cohort. Each case
@@ -3966,7 +3968,9 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
     score, reason = _grade_agentic(sc["id"], env, tool_call_log, total_text, turn + 1,
                                    turn_budget=sc.get("turn_budget", 15))
     if terminal_finish in ("length", "runaway"):
-        reason += f" | model_failure:{terminal_finish}"
+        score = 0.0
+        reason = (f"model_failure:{terminal_finish}; native terminal finish is not "
+                  f"a clean completion. Legacy rubric detail: {reason}")
     token_ratio = 1.0  # agentic scenarios don't have reasoning tokens
     full_text = "\n".join(total_text)
     trace = {"messages": messages, "turns": turn_records,
@@ -4350,6 +4354,10 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                     resp = chat_fn(sc["messages"], mt, temp, sc.get("tools"),
                                    dict(extra_base))
                     score, reason = sc["grade"](resp)
+                    if resp.get("finish") in ("length", "runaway"):
+                        score = 0.0
+                        reason = (f"model_failure:{resp.get('finish')}; native terminal "
+                                  "finish is not a clean completion")
                     lats.append(resp.get("total", 0.0))
                     a = _est_tokens(resp.get("text"))
                     r = _est_tokens(resp.get("reasoning"))
@@ -4508,14 +4516,18 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
               f"(transport/timeout, not model quality) — TrueScore is not meaningful.",
               file=_sys.stderr)
 
-    if selected_ids == CHALLENGE_SCENARIO_IDS:
+    if uncapped and selected_ids == CHALLENGE_SCENARIO_IDS:
+        methodology = UNCAPPED_CHALLENGE_METHODOLOGY_VERSION
+    elif uncapped and selected_ids is not None:
+        methodology = "v6.8.0-full-subset-uncapped"
+    elif uncapped:
+        methodology = UNCAPPED_METHODOLOGY_VERSION
+    elif selected_ids == CHALLENGE_SCENARIO_IDS:
         methodology = CHALLENGE_METHODOLOGY_VERSION
     elif selected_ids is not None:
         methodology = METHODOLOGY_VERSION + "-subset"
     else:
         methodology = METHODOLOGY_VERSION
-    if uncapped:
-        methodology += "-uncapped"
     trial_stats = dict(
         repeats=repeats,
         methodology=methodology,

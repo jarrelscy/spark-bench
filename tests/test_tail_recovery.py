@@ -1,13 +1,42 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 import eval_suite as ev
 import spark_bench as sb
 
 
 class TailRecoveryTests(unittest.TestCase):
+    def test_uncapped_guard_auto_detects_sglang(self):
+        args = SimpleNamespace(
+            uncapped=True,
+            runaway_char_window=4096,
+            runaway_phrase_window=8192,
+            runaway_abort_backend="auto",
+        )
+        with mock.patch.dict(os.environ, {}, clear=True):
+            backend = sb._configure_runaway_guard(args, owner="sglang")
+            self.assertEqual(backend, "sglang")
+            self.assertEqual(os.environ["SPARK_BENCH_RUNAWAY_CHAR_WINDOW"], "4096")
+            self.assertEqual(os.environ["SPARK_BENCH_RUNAWAY_PHRASE_WINDOW"], "8192")
+            self.assertEqual(os.environ["SPARK_BENCH_RUNAWAY_ABORT_BACKEND"], "sglang")
+
+    def test_uncapped_guard_uses_disconnect_for_vllm(self):
+        args = SimpleNamespace(
+            uncapped=True,
+            runaway_char_window=4096,
+            runaway_phrase_window=8192,
+            runaway_abort_backend="auto",
+        )
+        with mock.patch.dict(os.environ, {}, clear=True):
+            backend = sb._configure_runaway_guard(args, owner="vllm")
+            self.assertEqual(backend, "disconnect")
+            self.assertEqual(os.environ["SPARK_BENCH_RUNAWAY_ABORT_BACKEND"], "disconnect")
+
     def test_single_character_runaway_detector(self):
         self.assertTrue(sb._is_single_char_runaway("!" * 4096, 4096))
         self.assertFalse(sb._is_single_char_runaway("!" * 4095, 4096))
@@ -56,7 +85,7 @@ class TailRecoveryTests(unittest.TestCase):
             self.assertEqual(result["scenarios"][0]["reps"], 1)
             self.assertEqual(
                 result["trial_stats"]["methodology"],
-                "v6.7.1-full-subset-uncapped",
+                "v6.8.0-full-subset-uncapped",
             )
 
     def test_runaway_without_native_usage_is_not_reported_as_estimated_tokens(self):
@@ -105,9 +134,49 @@ class TailRecoveryTests(unittest.TestCase):
             record = json.loads(
                 (Path(td) / "transcripts" / "AG-11-repeat-1.json").read_text()
             )
+            self.assertEqual(record["score"], 0.0)
             self.assertEqual(record["response"]["finish"], "length")
             self.assertEqual(record["response"]["completion_tokens"], 32)
             self.assertIn("model_failure:length", record["reason"])
+
+    def test_capped_legacy_run_keeps_v671_methodology(self):
+        def chat_fn(messages, max_tokens, temperature, tools, extra):
+            return {
+                "text": "PONG", "reasoning": "", "tool_calls": [],
+                "finish": "stop", "completion_tokens": 2, "total": 0.1,
+            }
+
+        result = ev.run_suite(
+            chat_fn,
+            repeats=2,
+            scenario_ids={"IF-01"},
+            repeat_indices={1},
+            thinking="off",
+            uncapped=False,
+        )
+        self.assertEqual(
+            result["trial_stats"]["methodology"],
+            "v6.7.1-full-subset",
+        )
+
+    def test_nonagentic_length_finish_is_model_failure_zero(self):
+        def chat_fn(messages, max_tokens, temperature, tools, extra):
+            return {
+                "text": "PONG", "reasoning": "", "tool_calls": [],
+                "finish": "length", "completion_tokens": 262038, "total": 10.0,
+            }
+
+        result = ev.run_suite(
+            chat_fn,
+            repeats=2,
+            scenario_ids={"IF-01"},
+            repeat_indices={1},
+            thinking="off",
+            uncapped=True,
+        )
+        row = result["scenarios"][0]
+        self.assertEqual(row["score"], 0.0)
+        self.assertTrue(row["reason"].startswith("model_failure:length"))
 
 
 if __name__ == "__main__":

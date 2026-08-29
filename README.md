@@ -2,7 +2,7 @@
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-**Current methodology: v6.7.1 · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
+**Current methodology: v6.8.0 Uncapped · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
 
 | | |
 |---|---|
@@ -18,6 +18,14 @@ A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 G
 ---
 
 ## Leaderboard
+
+### Latest v6.8.0 uncapped comparison
+
+**Qwen3.8-Flash-Next spec-off scored 87.02 vs GLM-5.3-Flash DFlash2 K7 at
+85.67** across the full 76-scenario, two-repeat contract. The audited package,
+including all per-repeat scores, corrected context-length failures, transcript
+hashes, and the excluded Qwen NEXTN A/B, is at
+[`results/comparisons/2026-08-29-qwen38-flash-next-vs-glm53-flash-v680`](results/comparisons/2026-08-29-qwen38-flash-next-vs-glm53-flash-v680/README.md).
 
 **The live leaderboard** ([wesche.com/dgx](https://wesche.com/dgx)) shows only
 the 29 qualified runs from the current one-Spark `v6.7.1-challenge` cohort.
@@ -85,9 +93,28 @@ For current v6.x / NVFP4 / MTP / DFlash / multi-engine numbers, use the live boa
 
 ---
 
-## Methodology lineage (v5c → v6.7.1)
+## Methodology lineage (v5c → v6.8.0)
 
 Building in public means admitting mistakes and correcting them:
+
+### v6.8.0 Uncapped
+
+- **No client completion cap.** `max_tokens` is omitted so reasoning and the
+  final answer share only the server's advertised context ceiling.
+- **No model-request timeout.** Full qualification runs use `--timeout 0`;
+  infrastructure watchdogs remain separate from model scoring.
+- **Native terminal validation.** `finish_reason=length` and detected runaway
+  output are model failures worth zero, even if an earlier tool action or code
+  fragment happened to satisfy part of a rubric.
+- **Targeted degeneration guards.** Repeated-character and highly compressible
+  repeated-phrase loops can be aborted without imposing a blanket output cap.
+- **Exact tail recovery.** Scenario and repeat selectors allow interrupted runs
+  to recover missing slots while preserving original evidence and run identity.
+
+The 76-scenario bank and TrueScore weights are inherited unchanged from
+v6.7.1. The generation and validation contract changed materially, so capped
+v6.7.1 scores are not directly comparable to `v6.8.0-*-uncapped` results. See
+[`docs/v680-uncapped.md`](docs/v680-uncapped.md).
 
 ### v5c
 1. **6 agentic scenarios** — multi-turn workflows; models must chain tool calls.
@@ -160,9 +187,9 @@ comparable** to v6.5 scores. Models must be rerun under the new cohort.
 5. **v6.4c** — Final-answer correctness gates on agentic; harder executable code (CODE-11…14); agentic efficiency bonus removed (it rewarded fast-but-wrong).
 6. **Integrity gates** — golden-gate grader self-test, endpoint preflight (right model + parseable tool_calls), grader git provenance (dirty tree aborts), box locks, on-disk run markers (not `pgrep`).
 
-Comparable leaderboard rows should stamp methodology **v6.7.1-full** or
-**v6.7.1-challenge** (and thinking mode, quant, engine, topology on the
-label/notes).
+New uncapped leaderboard rows stamp **v6.8.0-full-uncapped** or
+**v6.8.0-challenge-uncapped**. Capped legacy rows retain **v6.7.1-full** or
+**v6.7.1-challenge** so the comparability boundary remains explicit.
 
 ---
 
@@ -259,7 +286,8 @@ python3 spark_bench.py eval \
   --endpoint http://localhost:8000/v1 \
   --model my-model \
   --thinking off --repeats 2 --temperature 0.3 --tier all \
-  --notes "clean run, single Spark, v6.7.1"
+  --uncapped --timeout 0 \
+  --notes "clean run, single Spark, v6.8.0 uncapped"
 ```
 
 Full eval runs automatically append the serving throughput sweep (`--throughput-contexts 1024,8192,32768`, concurrency `1,2,4,8`, gen tokens `512`). Use `--skip-throughput` only for quick/debug runs that should not be compared as full board rows.
@@ -286,7 +314,7 @@ python3 eval_suite.py --selftest
 | Path | Role |
 |------|------|
 | `spark_bench.py` | CLI harness (tier1/2/3 + `eval`) |
-| `eval_suite.py` | Scenario bank + graders + TrueScore (v6.7.1) |
+| `eval_suite.py` | Scenario bank + graders + TrueScore (v6.8.0 uncapped; capped legacy stamps retained) |
 | `golden_gate.py` | Offline grader self-check |
 | `html_report.py` / `render_leaderboard.py` | Per-run HTML + board render |
 | `visual_pixel_grader.py` | Visual domain grading helper |

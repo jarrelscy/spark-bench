@@ -273,7 +273,7 @@ class TranscriptPersistenceTests(unittest.TestCase):
         self.assertEqual(seen, [None])
         self.assertEqual(result["meta"]["request_policy"], "uncapped")
         self.assertEqual(result["trial_stats"]["methodology"],
-                         "v6.7.1-full-uncapped")
+                         "v6.8.0-full-uncapped")
 
     def test_thinking_on_does_not_inject_provider_specific_reasoning_field(self):
         item = {
