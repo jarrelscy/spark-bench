@@ -48,7 +48,7 @@ group/dataset to pass. Invalid code and sandbox timeouts cannot earn full credit
 The original code execution sandbox and SQLite executor remain in use.
 
 Transcripts for these eight tasks contain
-`scenario_revision: coding-hardening-1`. Methodology stamps now read
+`scenario_revision: coding-2026-09-v1`. Methodology stamps now read
 `v6.8.1-uncapped`, `v6.8.1-full`, or `v6.8.1-challenge`, depending on the existing
 run mode. Capped modes must also get the new revision because their prompts
 changed. Historical result files are not modified or relabeled. Do not rank

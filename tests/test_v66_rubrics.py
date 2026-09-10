@@ -240,7 +240,7 @@ class TranscriptPersistenceTests(unittest.TestCase):
         self.assertEqual(seen, [None])
         self.assertEqual(result["meta"]["request_policy"], "uncapped")
         self.assertEqual(result["trial_stats"]["methodology"],
-                         "v6.8.1-full-uncapped")
+                         "v6.8.2-full-uncapped")
 
     def test_thinking_on_does_not_inject_provider_specific_reasoning_field(self):
         item = {
@@ -524,7 +524,7 @@ class SafetyHardeningTests(unittest.TestCase):
                 lambda *_args, **_kwargs: response(text="fixture"), repeats=1)
         groups = {item["id"]: item["group"] for item in result["scenarios"]}
         self.assertEqual(groups, {"SA-01": "calibration", "SA-03": "informational"})
-        self.assertEqual(result["trial_stats"]["methodology"], "v6.8.1-full")
+        self.assertEqual(result["trial_stats"]["methodology"], "v6.8.2-full")
 
 
 class VisualGraderPortabilityTests(unittest.TestCase):
@@ -564,7 +564,7 @@ class ChallengeTierTests(unittest.TestCase):
                 lambda *_args, **_kwargs: response(text="fixture"), repeats=1,
                 scenario_ids=selected)
         self.assertEqual({item["id"] for item in result["scenarios"]}, selected)
-        self.assertEqual(result["trial_stats"]["methodology"], "v6.8.1-challenge")
+        self.assertEqual(result["trial_stats"]["methodology"], "v6.8.2-challenge")
         self.assertEqual(result["meta"]["scenario_ids"], sorted(selected))
 
     def test_trial_contract_is_persisted_as_provenance(self):
@@ -577,13 +577,13 @@ class ChallengeTierTests(unittest.TestCase):
 
         ctx = RecordingContext()
         spark_bench._record_eval_trial_stats(ctx, {
-            "methodology": "v6.8.1-challenge", "valid": True,
+            "methodology": "v6.8.2-challenge", "valid": True,
             "error_rate": 0.0, "repeats": 3, "pass_at_1": 90.0,
             "pass_at_k": 75.0, "reliability_gap": 15.0,
             "score_stddev": 0.3, "mean_scenario_stddev": 0.063,
         })
         values = {args[2]: args[3] for args, _kwargs in ctx.rows}
-        self.assertEqual(values["methodology"], "v6.8.1-challenge")
+        self.assertEqual(values["methodology"], "v6.8.2-challenge")
         self.assertEqual(values["run_valid"], "PASS")
         self.assertEqual(values["error_rate"], 0.0)
         self.assertEqual(values["repeats"], 3)

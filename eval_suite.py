@@ -43,10 +43,10 @@ CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "planning", "composition", "classification",
                       "code", "agentic"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
-METHODOLOGY_VERSION = "v6.8.1-full"
-CHALLENGE_METHODOLOGY_VERSION = "v6.8.1-challenge"
-UNCAPPED_METHODOLOGY_VERSION = "v6.8.1-full-uncapped"
-UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.1-challenge-uncapped"
+METHODOLOGY_VERSION = "v6.8.2-full"
+CHALLENGE_METHODOLOGY_VERSION = "v6.8.2-challenge"
+UNCAPPED_METHODOLOGY_VERSION = "v6.8.2-full-uncapped"
+UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.2-challenge-uncapped"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
 
 # Selected from the first controlled three-model v6.6 cohort. Each case
@@ -2112,34 +2112,19 @@ _UPGRADED_CODE_GRADERS = {
     **_sql_code_graders(expect_sql_code),
 }
 
+import agentic_hardening as _agentic_problems
+from agentic_outcome_grading import assess as _assess_agentic_outcome
+
 SCENARIOS = [
     # ---- tool_use (capability) -------------------------------------------- #
-    dict(id="AG-01", domain="agentic", group="capability", tier="hard", difficulty=3.5,
-         max_tokens=800, agentic=True,
-         tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("You are a logistics coordinator. I need you to plan a multi-city "
-                       "business trip for next week. Here are the requirements:\n"
-                       "1. Check the weather forecast for New York, London, and Tokyo.\n"
-                       "2. If any city has below-freezing temperatures, add a note to pack warm clothing.\n"
-                       "3. Find the first available 2-hour slot on my calendar between Monday and Wednesday next week.\n"
-                       "4. Create a calendar event called 'NYC Meeting' in that slot.\n"
-                       "5. Email john.doe@corp.com with the subject 'Trip Confirmed' and include the meeting time and weather summary.\n"
-                       "6. Then check if Thursday has any conflicts — if it does, email john.doe@corp.com to reschedule.\n"
-                       "Complete all steps. Report what you did at the end."),
-         grade=None),
-    dict(id="AG-02", domain="agentic", group="capability", tier="hard", difficulty=3.6,
-         max_tokens=800, agentic=True,
-         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("You are managing a product launch. Here's the situation:\n"
-                       "We're launching 'Phoenix v2' next Friday. I need you to coordinate:\n"
-                       "1. Check my calendar for next Friday — is there a 1-hour slot free for a launch meeting? If not, find the next available slot.\n"
-                       "2. Create a calendar event for the launch meeting.\n"
-                       "3. Email the engineering team (eng-team@corp.com) with the meeting details and ask them to prepare the deployment checklist.\n"
-                       "4. Email marketing (marketing@corp.com) telling them the launch is confirmed and to prepare social media posts.\n"
-                       "5. Then check Monday's calendar — if there are more than 3 meetings already, email eng-team@corp.com to move our standup to Tuesday.\n"
-                       "6. Report back: list every action you took and any conflicts you found.\n"
-                       "Be thorough — don't skip any step."),
-         grade=None),
+    dict(id="AG-01", domain="agentic", group="capability", tier="hard", difficulty=3.5, max_tokens=800, agentic=True,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-01'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-01']), grade=None),
+    dict(id="AG-02", domain="agentic", group="capability", tier="hard", difficulty=3.6, max_tokens=800, agentic=True,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-02'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-02']), grade=None),
     # TU-03 removed (too easy — every model scored 1.0, trivial weather call)
     dict(id="AG-03", domain="agentic", group="capability", tier="hard", difficulty=3.8,
          max_tokens=1000, agentic=True,
@@ -3596,49 +3581,18 @@ V64_SCENARIOS = [
                        "new ticket's id.\n"
                        "4. Final summary of what you found and filed."),
          grade=None),
-    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=3.5,
-         max_tokens=1000, agentic=True, max_turns=34, turn_budget=28,
-         env_patch={"failure_plan": {"create_event": [1], "send_email": [2]}},
-         tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("Severe weather response drill. Services are flaky — RETRY any call that returns a "
-                       "transient error. Steps IN ORDER:\n"
-                       "1-2. Check weather in Denver and Boulder.\n"
-                       "3-4. Check my calendar for monday and tuesday.\n"
-                       "5. Create 'Storm Contingency Briefing' on tuesday 09:00, 60 min.\n"
-                       "6-8. Email facilities@corp.com, manager@corp.com and staff@corp.com — subject 'Storm "
-                       "contingency', each body must state both cities' temperatures.\n"
-                       "9. Check next_monday's calendar.\n"
-                       "10. Create 'Storm Retro' on next_monday 11:00, 45 min.\n"
-                       "11. Email manager@corp.com subject 'Storm retro invite' with the retro day/time.\n"
-                       "12. Final report: both temperatures, every event created, every email sent, and every "
-                       "failure you recovered from."),
-         grade=None),
-    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=3.0,
-         max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
-         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("Below is a long ops briefing. Buried somewhere in it are: (a) a war-room booking code, "
-                       "(b) the REQUIRED day for the incident postmortem, and (c) the escalation contact. "
-                       "Find all three, then:\n"
-                       "1. Create a calendar event titled 'Postmortem <booking code>' on the required day, "
-                       "10:00, 60 min.\n"
-                       "2. Email the escalation contact, subject 'Postmortem scheduled' — include the booking "
-                       "code and the day.\n"
-                       "3. One-paragraph summary naming all three facts.\n\n"
-                       "--- BRIEFING START ---\n" + _AG11_BRIEFING + "\n--- BRIEFING END ---"),
-         grade=None),
-    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=3.2,
-         max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
-         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("Below is a long planning document. It contains a SUPERSEDED draft budget and, later, a "
-                       "FINAL approved budget with a finance sign-off code and a confirmation contact. Use ONLY "
-                       "the final approved values:\n"
-                       "1. Email the confirmation contact, subject 'Budget Confirmed' — state the final approved "
-                       "amount and cite the sign-off code.\n"
-                       "2. Create a calendar event 'Offsite Budget Review <sign-off code>' on next_tuesday "
-                       "14:00, 60 min.\n"
-                       "3. One-paragraph summary: final amount, code, and why the other figure was wrong.\n\n"
-                       "--- DOCUMENT START ---\n" + _AG12_BRIEFING + "\n--- DOCUMENT END ---"),
-         grade=None),
+    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=3.5, max_tokens=1000, agentic=True, max_turns=34, turn_budget=28,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-10'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-10']), grade=None),
+    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=3.0, max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-11'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-11']), grade=None),
+    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=3.2, max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-12'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-12']), grade=None),
 ]
 
 SCENARIOS = SCENARIOS + V64_SCENARIOS
@@ -3698,6 +3652,8 @@ def _make_env():
 
 def _sim_tool(name, args, env):
     """Simulate a tool call and return a result string."""
+    if "problem_world" in env:
+        return _agentic_problems.simulate(env["problem_world"], name, args)
     name = name.lower().strip()
     args = args or {}
 
@@ -3811,6 +3767,11 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
                     "Call tools one at a time, wait for the result, then continue. "
                     "When all steps are done, provide a final summary of everything you did.")
     }
+    if sc["id"] in _agentic_problems.IDS:
+        env["problem_world"] = _agentic_problems.make_world(
+            sc["id"], variant=sc.get("agentic_variant", 0),
+            user_currency=sc.get("agentic_user_currency", "GBP"))
+        system_prompt["content"] = _agentic_problems.SYSTEM
     messages = [system_prompt] + list(sc["messages"])
     tools = sc.get("tools")
     max_turns = sc.get("max_turns", 20)
@@ -3878,12 +3839,29 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
              "tool_calls": tool_call_log, "finish": terminal_finish,
              "completion_tokens": completion_tokens,
              "runaway": terminal_runaway}
+    if "problem_world" in env:
+        env.setdefault("outcome", {"strict_success": False, "checks": {},
+                                   "error": "grader did not return an outcome receipt"})
+        if terminal_finish != "stop":
+            score = 0.0
+            reason = "stateful agent did not produce a clean final stop; " + reason
+            env["outcome"]["strict_success"] = False
+            env["outcome"]["terminal_failure"] = terminal_finish
+        trace["environment"] = json.loads(json.dumps(env["problem_world"]))
+        trace["outcome"] = json.loads(json.dumps(env["outcome"]))
     result = (score, reason, total_latency, full_text, token_ratio)
     return result + (trace,) if capture_trace else result
 
 
 def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget=15):
     """Grade an agentic scenario based on tool calls made and task completion."""
+    if scenario_id in _agentic_problems.IDS:
+        world = env.get("problem_world")
+        if world is None:
+            return 0.0, "missing authoritative problem environment"
+        score, reason, receipt = _assess_agentic_outcome(world, text_chunks)
+        env["outcome"] = receipt
+        return score, reason
     # Build a map of what was called
     tools_called = [t["tool"].lower() for t in tool_log]
     emails = env["emails_sent"]
@@ -4421,7 +4399,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     if uncapped and selected_ids == CHALLENGE_SCENARIO_IDS:
         methodology = UNCAPPED_CHALLENGE_METHODOLOGY_VERSION
     elif uncapped and selected_ids is not None:
-        methodology = "v6.8.1-full-subset-uncapped"
+        methodology = "v6.8.2-full-subset-uncapped"
     elif uncapped:
         methodology = UNCAPPED_METHODOLOGY_VERSION
     elif selected_ids == CHALLENGE_SCENARIO_IDS:

@@ -2,14 +2,18 @@
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-**Current methodology: v6.8.1 Uncapped · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
+**Current methodology: v6.8.2 Uncapped · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
 
-**v6.8.1 refresh:** eight existing coding tasks now test harder executable edge
-cases, with reference and deliberately broken solutions checking the graders.
-Same suite and command; the other 68 scenarios are unchanged.
-[Changes, validation, and comparability notes](docs/coding-hardening-v6.8.1.md).
-No fresh model comparison has been run on this revision yet; results below
-retain their original methodology labels.
+**v6.8.2 refresh:** five existing agentic tasks now require problem resolution:
+ambiguous records, pagination, changing approvals, unknown write outcomes, and
+missing information. Grading checks exact final state, unwanted intermediate
+writes, grounded dependencies, read-back verification, and truthful receipts.
+[Agentic changes, validation, and comparability](docs/agentic-hardening-v6.8.2.md).
+
+The [v6.8.1 eight-task coding refresh](docs/coding-hardening-v6.8.1.md) is retained.
+Same suite and command; the other 71 scenario definitions are unchanged from
+v6.8.1. No fresh model comparison has been run on v6.8.2 yet; historical results
+below retain their original methodology labels.
 
 | | |
 |---|---|

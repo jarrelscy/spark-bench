@@ -638,7 +638,14 @@ def _build_haystack(approx_tokens, passcode, depth=0.5):
 #   5. run marker   — .STARTED heartbeat file so watchers verify from disk,
 #                     never from pgrep
 # --------------------------------------------------------------------------- #
-GRADER_FILES = ["eval_suite.py", "spark_bench.py", "golden_gate.py"]
+GRADER_FILES = [
+    "eval_suite.py", "spark_bench.py", "golden_gate.py",
+    "code_python_hardening.py", "code_sql_hardening.py",
+    "agentic_hardening.py", "agentic_outcome_grading.py",
+    "visual_pixel_grader.py", "visual_3d_grader.py",
+    "tests/code_hardening_oracles.py", "tests/test_code_sql_hardening.py",
+    "tests/agentic_hardening_oracles.py",
+]
 
 # A flat perfect domain is only non-blocking when the current suite ran the
 # complete, known scenario set and its domain-specific evidence proves that
@@ -1269,8 +1276,8 @@ def main():
                     help="abort mode; auto uses /models owned_by metadata")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
-                    "adversarial+visual, challenge = v6.8.1 diagnostic subset, "
-                    "all = complete v6.8.1 suite")
+                    "adversarial+visual, challenge = v6.8.2 diagnostic subset, "
+                    "all = complete v6.8.2 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--scenario-ids", default="",
