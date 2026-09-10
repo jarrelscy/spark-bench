@@ -43,10 +43,10 @@ CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "planning", "composition", "classification",
                       "code", "agentic"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
-METHODOLOGY_VERSION = "v6.8.2-full"
-CHALLENGE_METHODOLOGY_VERSION = "v6.8.2-challenge"
-UNCAPPED_METHODOLOGY_VERSION = "v6.8.2-full-uncapped"
-UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.2-challenge-uncapped"
+METHODOLOGY_VERSION = "v6.8.3-full"
+CHALLENGE_METHODOLOGY_VERSION = "v6.8.3-challenge"
+UNCAPPED_METHODOLOGY_VERSION = "v6.8.3-full-uncapped"
+UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.3-challenge-uncapped"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
 
 # Selected from the first controlled three-model v6.6 cohort. Each case
@@ -2113,6 +2113,7 @@ _UPGRADED_CODE_GRADERS = {
 }
 
 import agentic_hardening as _agentic_problems
+import long_context_hardening as _long_context_problem
 from agentic_outcome_grading import assess as _assess_agentic_outcome
 
 SCENARIOS = [
@@ -2239,10 +2240,10 @@ SCENARIOS = [
     # ---- long context (capability) ---------------------------------------- #
     # LC-01 and LC-02 removed (too easy — every model scored 1.0, needles at 10%/50%)
     dict(id="LC-03", domain="long_context", group="capability", difficulty=1.4,
-         max_tokens=200, messages=_msg(_haystack("VESPER-3318", 0.92) +
-                                       "\n\nWhat is the secret passcode? Reply with "
-                                       "ONLY the passcode."),
-         grade=expect_answer(["VESPER-3318"])),
+         max_tokens=1600, scenario_revision=_long_context_problem.REVISION,
+         context_requirement_tokens=_long_context_problem.CONTEXT_REQUIREMENT_TOKENS,
+         messages=_msg(_long_context_problem.PROMPT),
+         grade=_long_context_problem.grade),
 
     # ---- code (capability, executable) ------------------------------------ #
     # CODE-01: CSV parser with type inference (int/float/bool/null)
@@ -4272,6 +4273,8 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                     json.dump({
                         "scenario_id": sc["id"],
                         "scenario_revision": sc.get("scenario_revision"),
+                        **({"context_requirement_tokens": sc["context_requirement_tokens"]}
+                           if "context_requirement_tokens" in sc else {}),
                         "repeat": repeat_number,
                         "messages": sc["messages"],
                         "tools": sc.get("tools"),
@@ -4399,7 +4402,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     if uncapped and selected_ids == CHALLENGE_SCENARIO_IDS:
         methodology = UNCAPPED_CHALLENGE_METHODOLOGY_VERSION
     elif uncapped and selected_ids is not None:
-        methodology = "v6.8.2-full-subset-uncapped"
+        methodology = "v6.8.3-full-subset-uncapped"
     elif uncapped:
         methodology = UNCAPPED_METHODOLOGY_VERSION
     elif selected_ids == CHALLENGE_SCENARIO_IDS:

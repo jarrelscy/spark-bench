@@ -270,6 +270,14 @@ def run_gate(verbose=True):
         s, r = grader({'text': broken})
         case(f'{sid} rejects {name}', float(s < 1.0), 1.0, r)
 
+    # LC-03: independently written references + semantic/format defects.
+    from tests.long_context_oracles import REFERENCE as lc_reference, defective_answers
+    s, r = _sc('LC-03')['grade']({'text': lc_reference})
+    case('LC-03 cited reconciliation reference', s, 1.0, r)
+    for name, text in defective_answers().items():
+        s, r = _sc('LC-03')['grade']({'text': text})
+        case(f'LC-03 rejects {name} below pass threshold', float(s < .5), 1.0, r)
+
     # ---- layer 4: v6.5 render-based visual graders (range asserts) ----
     if verbose:
         print("golden gate — layer 4: v6.5 render graders on canned fixtures")

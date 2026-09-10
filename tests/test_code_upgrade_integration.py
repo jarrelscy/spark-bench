@@ -39,7 +39,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(len(calls),16)
             self.assertEqual({s['id'] for s in result['scenarios']},IDS)
             self.assertTrue(all(s['score']==1 for s in result['scenarios']))
-            self.assertEqual(result['trial_stats']['methodology'],'v6.8.2-full-subset-uncapped')
+            self.assertEqual(result['trial_stats']['methodology'],'v6.8.3-full-subset-uncapped')
             transcripts = [json.loads(p.read_text()) for p in Path(directory).glob('transcripts/*.json')]
             self.assertEqual({(t['scenario_id'], t['repeat']) for t in transcripts},
                              {(sid,rep) for sid in IDS for rep in (1,2)})

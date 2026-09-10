@@ -642,6 +642,7 @@ GRADER_FILES = [
     "eval_suite.py", "spark_bench.py", "golden_gate.py",
     "code_python_hardening.py", "code_sql_hardening.py",
     "agentic_hardening.py", "agentic_outcome_grading.py",
+    "long_context_hardening.py", "tests/long_context_oracles.py",
     "visual_pixel_grader.py", "visual_3d_grader.py",
     "tests/code_hardening_oracles.py", "tests/test_code_sql_hardening.py",
     "tests/agentic_hardening_oracles.py",
@@ -1276,8 +1277,8 @@ def main():
                     help="abort mode; auto uses /models owned_by metadata")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
-                    "adversarial+visual, challenge = v6.8.2 diagnostic subset, "
-                    "all = complete v6.8.2 suite")
+                    "adversarial+visual, challenge = v6.8.3 diagnostic subset, "
+                    "all = complete v6.8.3 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--scenario-ids", default="",

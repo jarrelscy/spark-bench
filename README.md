@@ -2,17 +2,17 @@
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-**Current methodology: v6.8.2 Uncapped · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
+**Current methodology: v6.8.3 Uncapped · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
 
-**v6.8.2 refresh:** five existing agentic tasks now require problem resolution:
-ambiguous records, pagination, changing approvals, unknown write outcomes, and
-missing information. Grading checks exact final state, unwanted intermediate
-writes, grounded dependencies, read-back verification, and truthful receipts.
-[Agentic changes, validation, and comparability](docs/agentic-hardening-v6.8.2.md).
+**v6.8.3 refresh:** LC-03 now requires cross-document reconciliation rather than
+finding a passcode: exact-identity joins, effective dates, revoked approvals,
+conflicting revisions, missing evidence, and supporting passage citations.
+[Long-context changes, input requirement, and validation](docs/long-context-hardening-v6.8.3.md).
 
-The [v6.8.1 eight-task coding refresh](docs/coding-hardening-v6.8.1.md) is retained.
-Same suite and command; the other 71 scenario definitions are unchanged from
-v6.8.1. No fresh model comparison has been run on v6.8.2 yet; historical results
+The [v6.8.2 five-task agentic refresh](docs/agentic-hardening-v6.8.2.md) and
+[v6.8.1 eight-task coding refresh](docs/coding-hardening-v6.8.1.md) are retained.
+Same suite and command; the other 75 scenario definitions are unchanged from
+v6.8.2. No fresh model comparison has been run on v6.8.3 yet; historical results
 below retain their original methodology labels.
 
 | | |
