@@ -1269,8 +1269,8 @@ def main():
                     help="abort mode; auto uses /models owned_by metadata")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
-                    "adversarial+visual, challenge = v6.8.0 diagnostic subset, "
-                    "all = complete v6.8.0 suite")
+                    "adversarial+visual, challenge = v6.8.1 diagnostic subset, "
+                    "all = complete v6.8.1 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--scenario-ids", default="",

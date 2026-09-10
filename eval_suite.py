@@ -43,10 +43,10 @@ CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "planning", "composition", "classification",
                       "code", "agentic"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
-METHODOLOGY_VERSION = "v6.7.1-full"
-CHALLENGE_METHODOLOGY_VERSION = "v6.7.1-challenge"
-UNCAPPED_METHODOLOGY_VERSION = "v6.8.0-full-uncapped"
-UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.0-challenge-uncapped"
+METHODOLOGY_VERSION = "v6.8.1-full"
+CHALLENGE_METHODOLOGY_VERSION = "v6.8.1-challenge"
+UNCAPPED_METHODOLOGY_VERSION = "v6.8.1-full-uncapped"
+UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.1-challenge-uncapped"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
 
 # Selected from the first controlled three-model v6.6 cohort. Each case
@@ -2103,6 +2103,15 @@ def _test_merge_streams(ns):
     return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
 
 
+# In-place coding refresh: preserve scenario IDs, count, difficulty and weights.
+from code_python_hardening import PROMPTS as _PY_CODE_PROMPTS, build_graders as _python_code_graders
+from code_sql_hardening import PROMPTS as _SQL_CODE_PROMPTS, build_graders as _sql_code_graders
+_UPGRADED_CODE_PROMPTS = {**_PY_CODE_PROMPTS, **_SQL_CODE_PROMPTS}
+_UPGRADED_CODE_GRADERS = {
+    **_python_code_graders(expect_executable_code, _extract_python_code, _safe_counter_lock_contract),
+    **_sql_code_graders(expect_sql_code),
+}
+
 SCENARIOS = [
     # ---- tool_use (capability) -------------------------------------------- #
     dict(id="AG-01", domain="agentic", group="capability", tier="hard", difficulty=3.5,
@@ -2264,29 +2273,10 @@ SCENARIOS = [
          grade=expect_executable_code(test_fn=_test_csv_typed)),
 
     # CODE-02: SQL — 3-table join with HAVING + COALESCE
-    dict(id="CODE-02", domain="code", group="capability", difficulty=1.8,
-         max_tokens=500, messages=_msg(
-             "Given tables: customers(id, name, region), orders(id, customer_id, amount, status), "
-             "refunds(order_id, refund_amount). Write a SQL query to find customers whose "
-             "net revenue (total order amount minus total refunds) is greater than 100. "
-             "Include customers with no refunds (treat as 0). Return customer name and "
-             "net_revenue, ordered by net_revenue descending. Return only the SQL query."),
-         grade=expect_sql_code(
-             schema_sql="""
-                 CREATE TABLE customers (id INTEGER, name TEXT, region TEXT);
-                 CREATE TABLE orders (id INTEGER, customer_id INTEGER, amount REAL, status TEXT);
-                 CREATE TABLE refunds (order_id INTEGER, refund_amount REAL);
-                 INSERT INTO customers VALUES (1,'Alice','East'),(2,'Bob','West'),(3,'Carol','East'),(4,'Dave','South');
-                 INSERT INTO orders VALUES (1,1,200,'completed'),(2,1,50,'completed'),(3,2,300,'completed'),(4,3,80,'completed'),(5,4,40,'completed');
-                 INSERT INTO refunds VALUES (2,50),(3,250);
-             """,
-             test_queries=[
-                ("returns only Alice above 100", lambda rows, c: len(rows) == 1),
-                ("Alice net 200", lambda rows, c: any('Alice' in str(r) and '200' in str(r) for r in rows)),
-                ("Bob excluded (net=50)", lambda rows, c: not any('Bob' in str(r) for r in rows)),
-                ("Carol excluded (net=80)", lambda rows, c: not any('Carol' in str(r) for r in rows)),
-             ]
-         )),
+    dict(id="CODE-02", domain="code", group="capability", difficulty=1.8, max_tokens=500,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-02"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-02"]),
 
     # CODE-03: Token bucket rate limiter (not simple counter)
     dict(id="CODE-03", domain="code", group="capability", difficulty=1.7,
@@ -3432,88 +3422,34 @@ HARD_SCENARIOS = [
 
     # ---- code (hard, executable) ------------------------------------------ #
     # CODE-06: KV cache with TTL + LRU eviction
-    dict(id="CODE-06", domain="code", group="capability", tier="hard",
-         difficulty=2.6, max_tokens=1000, messages=_msg(
-             "Write a Python class `KVCache` with TTL and LRU eviction. "
-             "Constructor: KVCache(capacity, ttl_seconds). "
-             "Methods: get(key) -> value or None, put(key, value), delete(key) -> bool. "
-             "When capacity is exceeded, evict the least recently used item. "
-             "Expired items (by TTL) are treated as missing on get. "
-             "Use the `time` module. Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_kv_cache(ns))),
+    dict(id="CODE-06", domain="code", group="capability", tier="hard", difficulty=2.6, max_tokens=1000,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-06"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-06"]),
 
     # CODE-07: Recursive JSON leaf extraction
-    dict(id="CODE-07", domain="code", group="capability", tier="hard",
-         difficulty=2.4, max_tokens=600, messages=_msg(
-             "Write a Python function `extract_leaves` that takes any JSON-serializable "
-             "value (dict, list, scalar) and returns a flat list of all leaf values "
-             "(scalars only: str, int, float, bool, None). Nested dicts and lists should "
-             "be traversed recursively. If a value is not a container, return [value]. "
-             "Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: (
-            (1.0, "all tests passed") if ns.get("extract_leaves") and all([
-                # Simple dict
-                sorted(ns["extract_leaves"]({"a": 1, "b": 2})) == [1, 2],
-                # Nested dict + list
-                sorted(ns["extract_leaves"]({"x": [1, 2], "y": {"z": 3}})) == [1, 2, 3],
-                # Scalar passthrough
-                ns["extract_leaves"](42) == [42],
-                # Empty containers
-                ns["extract_leaves"]({}) == [],
-                ns["extract_leaves"]([]) == [],
-                # Mixed types
-                "hello" in ns["extract_leaves"]({"a": "hello", "b": True, "c": None}),
-                True in ns["extract_leaves"]({"a": True}),
-                None in ns["extract_leaves"]({"a": None}),
-            ]) else (0.0, "failed tests") if not ns.get("extract_leaves") else (0.5, "partial")
-        ))),
+    dict(id="CODE-07", domain="code", group="capability", tier="hard", difficulty=2.4, max_tokens=600,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-07"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-07"]),
 
     # CODE-08: SQL window function — running total + rank
-    dict(id="CODE-08", domain="code", group="capability", tier="hard",
-         difficulty=2.5, max_tokens=500, messages=_msg(
-             "Given table sales(id, region, month, amount), write a SQL query that "
-             "returns each row with: region, month, amount, "
-             "running_total (cumulative sum of amount per region ordered by month), "
-             "and rank (rank within each region by amount descending). "
-             "Return only the SQL query."),
-         grade=expect_sql_code(
-             schema_sql="""
-                 CREATE TABLE sales (id INTEGER, region TEXT, month INTEGER, amount REAL);
-                 INSERT INTO sales VALUES
-                     (1,'North',1,100),(2,'North',2,200),(3,'North',3,150),
-                     (4,'South',1,300),(5,'South',2,100),(6,'South',3,400);
-             """,
-             test_queries=[
-                 ("returns 6 rows", lambda rows, c: len(rows) == 6),
-                 ("has window function columns", lambda rows, c: len(rows[0]) >= 5),
-                 ("North running total correct",
-                  lambda rows, c: any(
-                      float(r[-2]) == 450 if len(r) >= 5 else False
-                      for r in rows if 'North' in str(r)
-                  )),
-             ]
-         )),
+    dict(id="CODE-08", domain="code", group="capability", tier="hard", difficulty=2.5, max_tokens=500,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-08"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-08"]),
 
     # CODE-09: Retry wrapper with exponential backoff
-    dict(id="CODE-09", domain="code", group="capability", tier="hard",
-         difficulty=2.7, max_tokens=800, messages=_msg(
-             "Write a Python function `retry_with_backoff` that takes a callable `func`, "
-             "`max_retries=3`, `initial_delay=0.1`, and `backoff_factor=2`. "
-             "It calls func(); if it raises an exception, it waits (initial_delay * "
-             "backoff_factor^attempt) seconds and retries. After max_retries failures, "
-             "it re-raises the last exception. If func succeeds, return its result. "
-             "Use the `time` module for sleeping. Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_retry(ns))),
+    dict(id="CODE-09", domain="code", group="capability", tier="hard", difficulty=2.7, max_tokens=800,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-09"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-09"]),
 
     # CODE-10: Mini state machine from transition table
-    dict(id="CODE-10", domain="code", group="capability", tier="hard",
-         difficulty=2.8, max_tokens=1000, messages=_msg(
-             "Write a Python class `StateMachine` that takes a transition table as a "
-             "dict of (state, event) -> new_state, plus an initial state. "
-             "Methods: trigger(event) -> new_state or raises ValueError for unknown "
-             "transition, current() -> current state, can_trigger(event) -> bool. "
-             "Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_state_machine(ns))),
+    dict(id="CODE-10", domain="code", group="capability", tier="hard", difficulty=2.8, max_tokens=1000,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-10"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-10"]),
 
     # ---- v6.4c: harder code scenarios calibrated to SWE-bench difficulty ----
     # Public data: Gemma 4 26B = 52% SWE-bench, Qwen 3.6 27B = 77%. Our v6.4b
@@ -3522,51 +3458,16 @@ HARD_SCENARIOS = [
     # separates 4B-active from 27B-dense models.
 
     # CODE-11: Multi-function refactoring — extract duplicates, preserve behavior
-    dict(id="CODE-11", domain="code", group="capability", tier="hard",
-         difficulty=3.5, max_tokens=1500, messages=_msg(
-             "Refactor this code. The three functions below have duplicated logic. "
-             "Extract a shared helper `_apply_discount(price, discount_type, value)` "
-             "and reimplement all three functions using it. The public API must stay "
-             "identical (same names, same args, same return values for ALL inputs).\n\n"
-             "```python\n"
-             "def percentage_discount(price, percent):\n"
-             "    if price < 0: raise ValueError('negative price')\n"
-             "    return round(price * (1 - percent / 100), 2)\n\n"
-             "def fixed_discount(price, amount):\n"
-             "    if price < 0: raise ValueError('negative price')\n"
-             "    result = price - amount\n"
-             "    return round(max(result, 0), 2)\n\n"
-             "def bogo_discount(price, quantity):\n"
-             "    if price < 0: raise ValueError('negative price')\n"
-             "    if quantity < 1: return 0\n"
-             "    paid = (quantity // 2 + quantity % 2) * price\n"
-             "    return round(paid, 2)\n"
-             "```\n"
-             "Output only the refactored code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_refactor_discounts(ns))),
+    dict(id="CODE-11", domain="code", group="capability", tier="hard", difficulty=3.5, max_tokens=1500,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-11"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-11"]),
 
     # CODE-12: Debug a concurrency bug with a portable synchronization contract
-    dict(id="CODE-12", domain="code", group="capability", tier="hard",
-         difficulty=3.8, max_tokens=1200, messages=_msg(
-             "This counter has a race condition. Fix it using exactly one "
-             "per-instance threading.Lock created in __init__. Protect increment, "
-             "decrement, and value using `with self.<lock_attribute>:` and that "
-             "same lock. Do not use a global lock or rely on the GIL.\n\n"
-             "```python\n"
-             "import threading\n\n"
-             "class SafeCounter:\n"
-             "    def __init__(self):\n"
-             "        self._value = 0\n"
-             "    def increment(self, n=1):\n"
-             "        self._value += n  # BUG: not atomic\n"
-             "    def decrement(self, n=1):\n"
-             "        self._value -= n  # BUG: not atomic\n"
-             "    def value(self):\n"
-             "        return self._value\n"
-             "```\n"
-             "Fix the race condition. The class must be importable and work with "
-             "concurrent threads. Output only the fixed code."),
-         grade=expect_safe_counter()),
+    dict(id="CODE-12", domain="code", group="capability", tier="hard", difficulty=3.8, max_tokens=1200,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-12"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-12"]),
 
     # CODE-13: API client with error handling and retry logic
     dict(id="CODE-13", domain="code", group="capability", tier="hard",
@@ -4392,6 +4293,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                 with open(transcript_path, "w") as fh:
                     json.dump({
                         "scenario_id": sc["id"],
+                        "scenario_revision": sc.get("scenario_revision"),
                         "repeat": repeat_number,
                         "messages": sc["messages"],
                         "tools": sc.get("tools"),
@@ -4519,7 +4421,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     if uncapped and selected_ids == CHALLENGE_SCENARIO_IDS:
         methodology = UNCAPPED_CHALLENGE_METHODOLOGY_VERSION
     elif uncapped and selected_ids is not None:
-        methodology = "v6.8.0-full-subset-uncapped"
+        methodology = "v6.8.1-full-subset-uncapped"
     elif uncapped:
         methodology = UNCAPPED_METHODOLOGY_VERSION
     elif selected_ids == CHALLENGE_SCENARIO_IDS:

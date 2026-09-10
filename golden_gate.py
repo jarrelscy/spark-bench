@@ -263,6 +263,19 @@ def run_gate(verbose=True):
         case(f"harness+grader: dead-parser model on {sid}", s, 0.0, r)
 
 
+    # Coding refresh: every upgraded production grader must accept an oracle
+    # and reject a plausible defect before a model run may produce a score.
+    from tests.code_hardening_oracles import SOLUTIONS as py_oracles, MUTATIONS as py_mutations
+    from tests.test_code_sql_hardening import SOLUTIONS as sql_oracles, MUTATIONS as sql_mutations
+    for sid, source in {**py_oracles, **sql_oracles}.items():
+        grader = _sc(sid)['grade']
+        s, r = grader({'text': source})
+        case(f'{sid} complete reference', s, 1.0, r)
+        name, old, new = {**py_mutations, **sql_mutations}[sid][0]
+        broken = source.replace(old, new)
+        s, r = grader({'text': broken})
+        case(f'{sid} rejects {name}', float(s < 1.0), 1.0, r)
+
     # ---- layer 4: v6.5 render-based visual graders (range asserts) ----
     if verbose:
         print("golden gate — layer 4: v6.5 render graders on canned fixtures")
