@@ -41,9 +41,9 @@ DEFAULT_WEIGHTS = {
 CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "reasoning", "long_context",
                       "planning", "composition", "classification",
-                      "code", "agentic"}
+                      "code", "agentic", "long_gen", "visual"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
-METHODOLOGY_VERSION = "v6.8.3-full"
+METHODOLOGY_VERSION = "v7.0-dev-full"
 CHALLENGE_METHODOLOGY_VERSION = "v6.8.3-challenge"
 UNCAPPED_METHODOLOGY_VERSION = "v6.8.3-full-uncapped"
 UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.3-challenge-uncapped"
@@ -3495,6 +3495,10 @@ HARD_SCENARIOS = [
 ]
 
 SCENARIOS = SCENARIOS + HARD_SCENARIOS
+
+# v7: long-generation domain (8K-25K token outputs, machine graded, cap-hit = 0)
+from long_gen import LONG_GEN_SCENARIOS  # noqa: E402
+SCENARIOS = SCENARIOS + LONG_GEN_SCENARIOS
 
 
 # ── v6.4 expert agentic scenarios ─────────────────────────────────────────── #
