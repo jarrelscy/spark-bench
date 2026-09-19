@@ -46,10 +46,13 @@ def _named_files(text):
     line names a file, e.g. ```python title=models.py, ```python models.py,
     or a line like `### models.py` / `# File: models.py` just above."""
     files = {}
-    for m in re.finditer(r"(?:^|\n)([^\n]{0,120})\n```([^\n]*)\n(.*?)```", text, re.S):
-        pre, info, body = m.group(1), m.group(2), m.group(3)
+    for m in re.finditer(r"```([^\n]*)\n(.*?)```", text, re.S):
+        info, body = m.group(1), m.group(2)
+        # up to 3 non-empty lines above the fence (models often put a blank
+        # line between "### models.py" and the fence)
+        above = [ln for ln in text[:m.start()].splitlines()[-4:] if ln.strip()][-3:]
         cand = None
-        for src in (info, pre):
+        for src in [info] + above[::-1]:
             fm = re.search(r"([A-Za-z0-9_\-]+\.py)\b", src)
             if fm:
                 cand = fm.group(1)
