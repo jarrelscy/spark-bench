@@ -69,7 +69,7 @@ def test_lg_v71_prompts_do_not_leak_hidden_cases():
 
 def test_lg_v71_scenarios_registered():
     by_id = {s["id"]: s for s in lg.LONG_GEN_SCENARIOS}
-    assert by_id["LG-03"]["scenario_revision"] == "lg03-sheet-2026-10-v1"
-    assert by_id["LG-04"]["scenario_revision"] == "lg04-ledger-2026-10-v1"
+    assert by_id["LG-03"]["scenario_revision"] == "lg03-sheet-2026-10-v2"
+    assert by_id["LG-04"]["scenario_revision"] == "lg04-ledger-2026-10-v2"
     assert "class Sheet" in by_id["LG-03"]["messages"][-1]["content"]
     assert "run_trace" in by_id["LG-04"]["messages"][-1]["content"]

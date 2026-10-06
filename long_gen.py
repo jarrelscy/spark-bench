@@ -603,10 +603,10 @@ LONG_GEN_SCENARIOS = [
     dict(id="LG-02", domain="long_gen", group="capability", tier="hard", difficulty=2.8,
          max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="md",
          messages=_msg(LG02_PROMPT), grade=_grade_wrapper(_lg02_grade)),
-    dict(id="LG-03", domain="long_gen", group="capability", tier="hard", difficulty=3.0, scenario_revision="lg03-sheet-2026-10-v1",
+    dict(id="LG-03", domain="long_gen", group="capability", tier="hard", difficulty=3.0, scenario_revision="lg03-sheet-2026-10-v2",
          max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="md",
          messages=_msg(LG03_SHEET_PROMPT), grade=_grade_wrapper(_lg03_grade)),
-    dict(id="LG-04", domain="long_gen", group="capability", tier="hard", difficulty=3.0, scenario_revision="lg04-ledger-2026-10-v1",
+    dict(id="LG-04", domain="long_gen", group="capability", tier="hard", difficulty=3.0, scenario_revision="lg04-ledger-2026-10-v2",
          max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="md",
          messages=_msg(LG04_LEDGER_PROMPT), grade=_grade_wrapper(_lg04_grade)),
 ]

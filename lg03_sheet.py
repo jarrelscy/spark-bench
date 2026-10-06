@@ -9,7 +9,7 @@ Every behaviour the hidden tests check is written in the prompt. The test inputs
 and expected values live only here, not in the prompt.
 """
 
-LG03_PROMPT = r'''Implement a spreadsheet formula engine in Python 3.11, standard library only, as ONE module named sheet.py. Output exactly one fenced python code block containing the complete module. Write all of it; no placeholders.
+LG03_PROMPT = r'''Implement a spreadsheet formula engine in Python 3.11, standard library only, as ONE module named sheet.py. Output exactly one fenced python code block containing the complete module. Write all of it; no placeholders. No tools, files or project exist: answer only in this message.
 
 API
 - class Sheet with methods:

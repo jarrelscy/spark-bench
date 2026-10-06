@@ -4216,11 +4216,17 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
         last_reason = ""
         best = (-1.0, None)  # (score, resp) for artifact saving
         for repeat_number in repeat_numbers:
+            # Engines that seed by prompt hash (TensorFold) return byte-identical
+            # text for every repeat unless each repeat carries its own seed, which
+            # turns N repeats into one draw counted N times. Applies to agentic too.
+            rep_extra = dict(extra_base)
+            if os.environ.get("SPARK_BENCH_SEED_PER_REPEAT"):
+                rep_extra["seed"] = int(os.environ["SPARK_BENCH_SEED_PER_REPEAT"]) + repeat_number
             try:
                 if sc.get("agentic"):
                     # Multi-turn agentic scenario — route through agentic harness
                     a_score, a_reason, a_lat, a_text, a_ratio, a_trace = _run_agentic(
-                        sc, chat_fn, extra_base, temp, timeout, capture_trace=True,
+                        sc, chat_fn, rep_extra, temp, timeout, capture_trace=True,
                         uncapped=uncapped)
                     score = a_score
                     reason = a_reason
@@ -4235,12 +4241,6 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                     toks.append(native_completion_tokens if native_completion_tokens is not None
                                 else _est_tokens(a_text))
                 else:
-                    rep_extra = dict(extra_base)
-                    # Engines that seed by prompt hash (TensorFold) return byte-identical
-                    # text for every repeat unless each repeat carries its own seed, which
-                    # turns N repeats into one draw counted N times.
-                    if os.environ.get("SPARK_BENCH_SEED_PER_REPEAT"):
-                        rep_extra["seed"] = int(os.environ["SPARK_BENCH_SEED_PER_REPEAT"]) + repeat_number
                     resp = chat_fn(sc["messages"], mt, temp, sc.get("tools"),
                                    rep_extra)
                     score, reason = sc["grade"](resp)

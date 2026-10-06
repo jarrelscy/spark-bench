@@ -9,7 +9,7 @@ coupon caps. Every rule tested is in the prompt; traces and answers are grader-s
 """
 import json
 
-LG04_PROMPT = r'''Implement, in Python 3.11 with the standard library only, an order ledger exactly as specified below. Output ONE fenced python code block with the complete module (it will be saved as ledger.py). Write every part completely.
+LG04_PROMPT = r'''Implement, in Python 3.11 with the standard library only, an order ledger exactly as specified below. Output ONE fenced python code block with the complete module (it will be saved as ledger.py). Write every part completely. No tools, files or project exist: answer only in this message.
 
 MONEY
 - All money is integer cents. Inputs give prices as decimal strings like "19.99" (exactly two decimals, may be "0.00"). Convert exactly (no float math).
