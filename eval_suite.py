@@ -4235,8 +4235,14 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                     toks.append(native_completion_tokens if native_completion_tokens is not None
                                 else _est_tokens(a_text))
                 else:
+                    rep_extra = dict(extra_base)
+                    # Engines that seed by prompt hash (TensorFold) return byte-identical
+                    # text for every repeat unless each repeat carries its own seed, which
+                    # turns N repeats into one draw counted N times.
+                    if os.environ.get("SPARK_BENCH_SEED_PER_REPEAT"):
+                        rep_extra["seed"] = int(os.environ["SPARK_BENCH_SEED_PER_REPEAT"]) + repeat_number
                     resp = chat_fn(sc["messages"], mt, temp, sc.get("tools"),
-                                   dict(extra_base))
+                                   rep_extra)
                     score, reason = sc["grade"](resp)
                     if resp.get("finish") in ("length", "runaway"):
                         score = 0.0
