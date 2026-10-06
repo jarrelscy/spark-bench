@@ -162,11 +162,16 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
         if _ctx:
             # Engines like TensorFold apply a 4096 default when max_tokens is omitted,
             # so "uncapped" silently becomes a 4K cap. Send the real remaining window:
-            # context minus a conservative prompt estimate (chars/3) and a margin.
-            _chars = sum(len(json.dumps(m.get("content", ""))) for m in messages)
+            # context minus a conservative prompt estimate and a margin. Count the
+            # WHOLE message list (tool_calls arguments and tool results included):
+            # counting only `content` underestimated agentic turns, so prompt +
+            # max_tokens exceeded the window and the server answered HTTP 400.
+            # chars/2 over-estimates tokens on purpose; losing a few K of a 128K+
+            # window is harmless, a 400 is a scored failure.
+            _chars = len(json.dumps(messages))
             if tools:
                 _chars += len(json.dumps(tools))
-            body["max_tokens"] = max(1024, int(_ctx) - _chars // 3 - 512)
+            body["max_tokens"] = max(1024, int(_ctx) - _chars // 2 - 4096)
     if tools:
         body["tools"] = tools
         body["tool_choice"] = "auto"
