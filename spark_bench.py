@@ -156,6 +156,17 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
     # remaining context window; numeric values preserve the historical contract.
     if max_tokens is not None:
         body["max_tokens"] = max_tokens
+    else:
+        import os as _os
+        _ctx = _os.environ.get("SPARK_BENCH_CONTEXT")
+        if _ctx:
+            # Engines like TensorFold apply a 4096 default when max_tokens is omitted,
+            # so "uncapped" silently becomes a 4K cap. Send the real remaining window:
+            # context minus a conservative prompt estimate (chars/3) and a margin.
+            _chars = sum(len(json.dumps(m.get("content", ""))) for m in messages)
+            if tools:
+                _chars += len(json.dumps(tools))
+            body["max_tokens"] = max(1024, int(_ctx) - _chars // 3 - 512)
     if tools:
         body["tools"] = tools
         body["tool_choice"] = "auto"
