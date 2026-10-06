@@ -44,11 +44,11 @@ def run_trace(spec, events):
 if __name__ == "__main__":
     import json, sys; d = json.load(sys.stdin); print(json.dumps(run_trace(d["order"], d["events"])))
 '''
-sc, why = lg._lg04_grade(resp("Here you go:\n```python\n" + LG04_REF + "\n```\n"))
+sc, why = lg._lg04_legacy_grade(resp("Here you go:\n```python\n" + LG04_REF + "\n```\n"))
 print(f"LG-04 reference   {sc:.2f}  {why}"); assert sc >= 0.95, why
-sc, why = lg._lg04_grade(resp("```python\n" + LG04_REF[:1500], finish="length")); print(f"LG-04 truncated   {sc:.2f}  {why}"); assert sc == 0.0
+sc, why = lg._lg04_legacy_grade(resp("```python\n" + LG04_REF[:1500], finish="length")); print(f"LG-04 truncated   {sc:.2f}  {why}"); assert sc == 0.0
 bad = LG04_REF.replace('o.payment_attempts >= 3', 'o.payment_attempts >= 2').replace('d - o.delivered_day <= 30', 'd - o.delivered_day <= 10')
-sc, why = lg._lg04_grade(resp("```python\n" + bad + "\n```")); print(f"LG-04 buggy       {sc:.2f}  {why}"); assert 0.5 < sc < 0.95
+sc, why = lg._lg04_legacy_grade(resp("```python\n" + bad + "\n```")); print(f"LG-04 buggy       {sc:.2f}  {why}"); assert 0.5 < sc < 0.95
 
 # ---------------- LG-02 reference ----------------
 MODELS = '''
@@ -204,10 +204,10 @@ def body(k):
         base += "\n".join(f"{i}. Failure {i}: endpoint timeout variant {i}. Mitigation: retry with backoff and dead-letter after budget." for i in range(1, 10))
     return base
 obj = {k: {"title": k.title(), "body": body(k), "refs": [r for r in lg.LG03_SECTIONS if r != k][:2]} for k in lg.LG03_SECTIONS}
-sc, why = lg._lg03_grade(resp(json.dumps(obj))); print(f"LG-03 reference   {sc:.2f}  {why}"); assert sc >= 0.9, why
-sc, why = lg._lg03_grade(resp(json.dumps(obj)[:5000], finish="length")); print(f"LG-03 truncated   {sc:.2f}  {why}"); assert sc == 0.0
+sc, why = lg._lg03_legacy_grade(resp(json.dumps(obj))); print(f"LG-03 reference   {sc:.2f}  {why}"); assert sc >= 0.9, why
+sc, why = lg._lg03_legacy_grade(resp(json.dumps(obj)[:5000], finish="length")); print(f"LG-03 truncated   {sc:.2f}  {why}"); assert sc == 0.0
 stub = {k: {"title": k, "body": "TBD", "refs": []} for k in lg.LG03_SECTIONS}
-sc, why = lg._lg03_grade(resp(json.dumps(stub))); print(f"LG-03 stubs       {sc:.2f}  {why}"); assert sc < 0.3
+sc, why = lg._lg03_legacy_grade(resp(json.dumps(stub))); print(f"LG-03 stubs       {sc:.2f}  {why}"); assert sc < 0.3
 
 # ---------------- LG-01 reference (render) ----------------
 LG01_REF = r'''<!DOCTYPE html><html><body style="margin:0"><script type="module">
@@ -238,3 +238,4 @@ sc, why = lg._lg01_grade(resp("```html\n" + LG01_REF + "\n```")); print(f"LG-01 
 sc, why = lg._lg01_grade(resp("```html\n" + LG01_REF[:3000], finish="length")); print(f"LG-01 truncated   {sc:.2f}  {why}"); assert sc == 0.0
 sc, why = lg._lg01_grade(resp("```html\n<html><body><script type='module'>import * as THREE from './three.module.js'; const s=new THREE.Scene();</script></body></html>\n```")); print(f"LG-01 empty scene {sc:.2f}  {why}"); assert sc < 0.4
 print("\nALL LONG_GEN GRADER SELF-TESTS PASSED")
+

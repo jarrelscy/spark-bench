@@ -382,7 +382,7 @@ LG03_PROMPT = (
 )
 
 
-def _lg03_grade(resp):
+def _lg03_legacy_grade(resp):
     t = _truncated(resp)
     if t:
         return 0.0, t
@@ -425,6 +425,28 @@ def _lg03_grade(resp):
     w = [2, 2, 1, 2, 1, 1, 1, 2]
     score = sum(s * wi for (_, s), wi in zip(checks, w)) / sum(w)
     return score, ", ".join(f"{k}={s:.2f}" for k, s in checks)
+
+
+# --------------------------------------------------------------------------- #
+# LG-03 (v7.1) — spreadsheet formula engine, graded by 40 hidden tests in 10
+# feature groups (a group counts only if all its tests pass). Replaces the
+# saturated JSON design spec above (kept as _lg03_legacy_grade for old runs).
+# --------------------------------------------------------------------------- #
+from lg03_sheet import LG03_PROMPT as LG03_SHEET_PROMPT, LG03_TESTS as LG03_SHEET_TESTS
+
+
+def _lg03_grade(resp):
+    t = _truncated(resp)
+    if t:
+        return 0.0, t
+    blocks = _blocks(resp.get("text", "") or "")
+    code = max((b for i, b in blocks if "class Sheet" in b), key=len, default=None)
+    if not code:
+        return 0.0, "no python block with class Sheet"
+    passed, total, detail = _sandboxed_import_and_run({"sheet.py": code}, LG03_SHEET_TESTS, timeout=90)
+    if total == 0:
+        return 0.0, detail
+    return passed / total, f"{passed}/{total} groups; {detail}"
 
 
 # --------------------------------------------------------------------------- #
@@ -501,7 +523,7 @@ def _lg04_cases():
     return cases
 
 
-def _lg04_grade(resp):
+def _lg04_legacy_grade(resp):
     t = _truncated(resp)
     if t:
         return 0.0, t
@@ -552,6 +574,28 @@ def _grade_wrapper(fn):
     return check
 
 
+# --------------------------------------------------------------------------- #
+# LG-04 (v7.1) — order ledger with partial payments, coupon allocation, partial
+# returns and replay; 33 hidden traces in 10 feature groups. The saturated
+# v7.0 state machine is kept above as _lg04_legacy_grade for old runs.
+# --------------------------------------------------------------------------- #
+from lg04_ledger import LG04_PROMPT as LG04_LEDGER_PROMPT, LG04_TESTS as LG04_LEDGER_TESTS
+
+
+def _lg04_grade(resp):
+    t = _truncated(resp)
+    if t:
+        return 0.0, t
+    blocks = _blocks(resp.get("text", "") or "")
+    code = max((b for i, b in blocks if "def run_trace" in b), key=len, default=None)
+    if not code:
+        return 0.0, "no python block with run_trace"
+    passed, total, detail = _sandboxed_import_and_run({"ledger.py": code}, LG04_LEDGER_TESTS, timeout=90)
+    if total == 0:
+        return 0.0, detail
+    return passed / total, f"{passed}/{total} groups; {detail}"
+
+
 LONG_GEN_SCENARIOS = [
     dict(id="LG-01", domain="long_gen", group="capability", tier="hard", difficulty=2.8,
          max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="html",
@@ -559,10 +603,10 @@ LONG_GEN_SCENARIOS = [
     dict(id="LG-02", domain="long_gen", group="capability", tier="hard", difficulty=2.8,
          max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="md",
          messages=_msg(LG02_PROMPT), grade=_grade_wrapper(_lg02_grade)),
-    dict(id="LG-03", domain="long_gen", group="capability", tier="hard", difficulty=2.5,
-         max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="json",
-         messages=_msg(LG03_PROMPT), grade=_grade_wrapper(_lg03_grade)),
-    dict(id="LG-04", domain="long_gen", group="capability", tier="hard", difficulty=2.6,
+    dict(id="LG-03", domain="long_gen", group="capability", tier="hard", difficulty=3.0, scenario_revision="lg03-sheet-2026-10-v1",
          max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="md",
-         messages=_msg(LG04_PROMPT), grade=_grade_wrapper(_lg04_grade)),
+         messages=_msg(LG03_SHEET_PROMPT), grade=_grade_wrapper(_lg03_grade)),
+    dict(id="LG-04", domain="long_gen", group="capability", tier="hard", difficulty=3.0, scenario_revision="lg04-ledger-2026-10-v1",
+         max_tokens=LG_MAX_TOKENS, temperature=LG_TEMPERATURE, artifact_ext="md",
+         messages=_msg(LG04_LEDGER_PROMPT), grade=_grade_wrapper(_lg04_grade)),
 ]
