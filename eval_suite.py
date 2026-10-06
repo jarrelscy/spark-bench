@@ -4207,6 +4207,10 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
         if not repeat_numbers or any(i < 1 or i > reps for i in repeat_numbers):
             raise ValueError(f"invalid repeat_indices {repeat_numbers} for {sc['id']} with {reps} repeats")
         temp = sc.get("temperature", temperature)
+        # Model-recommended sampling runs: one temperature for every scenario,
+        # including the few that pin their own (0.6 on long_gen/visual).
+        if os.environ.get("SPARK_BENCH_FORCE_TEMPERATURE"):
+            temp = float(os.environ["SPARK_BENCH_FORCE_TEMPERATURE"])
         # Scenario max_tokens remains the expected answer-size contract. With
         # uncapped=True it must not also cap hidden reasoning, so the transport
         # omits max_tokens and the endpoint uses its remaining context window.
