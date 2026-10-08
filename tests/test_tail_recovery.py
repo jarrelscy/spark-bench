@@ -85,7 +85,7 @@ class TailRecoveryTests(unittest.TestCase):
             self.assertEqual(result["scenarios"][0]["reps"], 1)
             self.assertEqual(
                 result["trial_stats"]["methodology"],
-                "v6.8.3-full-subset-uncapped",
+                ev.UNCAPPED_METHODOLOGY_VERSION.replace("-uncapped", "-subset-uncapped"),
             )
 
     def test_runaway_without_native_usage_is_not_reported_as_estimated_tokens(self):
@@ -156,7 +156,7 @@ class TailRecoveryTests(unittest.TestCase):
         )
         self.assertEqual(
             result["trial_stats"]["methodology"],
-            "v6.8.3-full-subset",
+            ev.METHODOLOGY_VERSION + "-subset",
         )
 
     def test_nonagentic_length_finish_is_model_failure_zero(self):

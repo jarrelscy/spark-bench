@@ -43,10 +43,10 @@ CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "planning", "composition", "classification",
                       "code", "agentic", "long_gen", "visual"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
-METHODOLOGY_VERSION = "v7.0-dev-full"
-CHALLENGE_METHODOLOGY_VERSION = "v6.8.3-challenge"
-UNCAPPED_METHODOLOGY_VERSION = "v6.8.3-full-uncapped"
-UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.3-challenge-uncapped"
+METHODOLOGY_VERSION = "v7.0-full"
+CHALLENGE_METHODOLOGY_VERSION = "v7.0-challenge"
+UNCAPPED_METHODOLOGY_VERSION = "v7.0-full-uncapped"
+UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v7.0-challenge-uncapped"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
 
 # Selected from the first controlled three-model v6.6 cohort. Each case
@@ -4416,7 +4416,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     if uncapped and selected_ids == CHALLENGE_SCENARIO_IDS:
         methodology = UNCAPPED_CHALLENGE_METHODOLOGY_VERSION
     elif uncapped and selected_ids is not None:
-        methodology = "v6.8.3-full-subset-uncapped"
+        methodology = UNCAPPED_METHODOLOGY_VERSION.replace("-uncapped", "-subset-uncapped")
     elif uncapped:
         methodology = UNCAPPED_METHODOLOGY_VERSION
     elif selected_ids == CHALLENGE_SCENARIO_IDS:

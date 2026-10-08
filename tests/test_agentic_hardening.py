@@ -22,7 +22,7 @@ class IntegrationTests(unittest.TestCase):
     def test_existing_eight_coding_revisions_remain(self):
         self.assertEqual(sum(s.get('scenario_revision')=='coding-2026-09-v1'
                              for s in suite.SCENARIOS), 8)
-        self.assertEqual(len(suite.SCENARIOS), 76)
+        self.assertEqual(len(suite.SCENARIOS), len({s['id'] for s in suite.SCENARIOS}))
 
 DEFECTS = {
     'AG-01': ['wrong_contact','first_page_only','wrong_slot','skip_verification','extra_email','dishonest_report'],

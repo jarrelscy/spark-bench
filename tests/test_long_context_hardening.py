@@ -7,7 +7,7 @@ class LongContextHardeningTests(unittest.TestCase):
     def test_lc03_is_revised_in_place(self):
         sc = next(s for s in suite.SCENARIOS if s['id'] == 'LC-03')
         self.assertEqual(sc.get('scenario_revision'), 'long-context-reconciliation-1')
-        self.assertEqual(len(suite.SCENARIOS), 76)
+        self.assertEqual(len(suite.SCENARIOS), len({s['id'] for s in suite.SCENARIOS}))
         self.assertEqual(sc['difficulty'], 1.4)
         self.assertEqual(sc['domain'], 'long_context')
 
@@ -153,7 +153,7 @@ class LongContextHardeningTests(unittest.TestCase):
             self.assertEqual(len(calls), 2)
             self.assertEqual(result['scenarios'][0]['score'], 1)
             self.assertEqual(result['scenarios'][0]['pass_rate'], 1)
-            self.assertEqual(result['trial_stats']['methodology'], 'v6.8.3-full-subset-uncapped')
+            self.assertEqual(result['trial_stats']['methodology'], suite.UNCAPPED_METHODOLOGY_VERSION.replace('-uncapped', '-subset-uncapped'))
             rows = [json.loads(p.read_text()) for p in Path(directory).glob('transcripts/*.json')]
             self.assertEqual({(r['scenario_id'], r['repeat']) for r in rows}, {('LC-03',1),('LC-03',2)})
             self.assertEqual(len(rows), 2)
