@@ -647,10 +647,16 @@ def _sandboxed(fn, timeout=8, mem_mb=768):
             _set_child_limit(resource.RLIMIT_CPU, timeout, timeout + 2)
             _set_child_limit(resource.RLIMIT_AS, mem_mb << 20)
             _set_child_limit(resource.RLIMIT_FSIZE, 1 << 20)
-            try:
-                resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
-            except (ValueError, OSError):
-                pass
+            import sys
+            if sys.platform.startswith("linux"):
+                # NPROC=0 also forbids the threads required by CODE-12.
+                from sandbox_threads import restrict_process_creation
+                restrict_process_creation()
+            else:
+                try:
+                    resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+                except (ValueError, OSError):
+                    pass
             import socket as _sock
 
             def _blocked(*a, **k):

@@ -655,7 +655,8 @@ def _build_haystack(approx_tokens, passcode, depth=0.5):
 #                     never from pgrep
 # --------------------------------------------------------------------------- #
 GRADER_FILES = [
-    "eval_suite.py", "spark_bench.py", "golden_gate.py",
+    "eval_suite.py", "spark_bench.py", "golden_gate.py", "sandbox_threads.py",
+    "tests/test_linux_thread_sandbox.py",
     "code_python_hardening.py", "code_sql_hardening.py",
     "agentic_hardening.py", "agentic_outcome_grading.py",
     "long_context_hardening.py", "tests/long_context_oracles.py",
