@@ -85,7 +85,7 @@ class TailRecoveryTests(unittest.TestCase):
             self.assertEqual(result["scenarios"][0]["reps"], 1)
             self.assertEqual(
                 result["trial_stats"]["methodology"],
-                "v6.8.0-full-subset-uncapped",
+                ev.UNCAPPED_METHODOLOGY_VERSION.replace("-uncapped", "-subset-uncapped"),
             )
 
     def test_runaway_without_native_usage_is_not_reported_as_estimated_tokens(self):
@@ -139,7 +139,7 @@ class TailRecoveryTests(unittest.TestCase):
             self.assertEqual(record["response"]["completion_tokens"], 32)
             self.assertIn("model_failure:length", record["reason"])
 
-    def test_capped_legacy_run_keeps_v671_methodology(self):
+    def test_capped_run_records_refreshed_methodology(self):
         def chat_fn(messages, max_tokens, temperature, tools, extra):
             return {
                 "text": "PONG", "reasoning": "", "tool_calls": [],
@@ -156,7 +156,7 @@ class TailRecoveryTests(unittest.TestCase):
         )
         self.assertEqual(
             result["trial_stats"]["methodology"],
-            "v6.7.1-full-subset",
+            ev.METHODOLOGY_VERSION + "-subset",
         )
 
     def test_nonagentic_length_finish_is_model_failure_zero(self):

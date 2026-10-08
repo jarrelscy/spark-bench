@@ -228,24 +228,13 @@ def run_gate(verbose=True):
     # ---- layer 2: grader-level golden transcripts ----
     if verbose:
         print("golden gate — layer 2: agentic grader on golden transcripts")
-    env, log, text = _ag11_perfect_env()
-    s, r = ev._grade_agentic("AG-11", env, log, text, n_turns=3, turn_budget=14)
-    case("AG-11 perfect transcript", s, 1.0, r)
-    if "✓" not in r:
-        n += 1
-        failures.append("AG-11 perfect: reason has no per-check ✓ marks — "
-                        "grader is not reporting per-check results")
-
-    env, log, text = _ag11_partial_env()
-    s, r = ev._grade_agentic("AG-11", env, log, text, n_turns=3, turn_budget=14)
-    case("AG-11 partial transcript (1/5 checks)", s, 0.2, r)
-
-    env, log, text = _ag11_garbage_env()
-    s, r = ev._grade_agentic("AG-11", env, log, text, n_turns=1, turn_budget=14)
-    case("AG-11 garbage transcript (no tools)", s, 0.0, r)
-    if "✗" not in r:
-        n += 1
-        failures.append("AG-11 garbage: reason has no per-check ✗ marks")
+    # Count-only legacy transcripts must not qualify the new stateful task.
+    for label, factory in [("perfect-looking", _ag11_perfect_env),
+                           ("partial", _ag11_partial_env),
+                           ("garbage", _ag11_garbage_env)]:
+        env, log, text = factory()
+        s, r = ev._grade_agentic("AG-11", env, log, text, n_turns=3, turn_budget=14)
+        case(f"legacy {label} transcript lacks authoritative state", s, 0.0, r)
 
     s, r = ev._grade_agentic("AG-99", _env(), [], [""], n_turns=1)
     case("unknown scenario id scores 0", s, 0.0, r)
@@ -253,15 +242,41 @@ def run_gate(verbose=True):
     # ---- layer 3: end-to-end through _run_agentic with scripted models ----
     if verbose:
         print("golden gate — layer 3: harness end-to-end with scripted models")
-    sc = _sc("AG-11")
-    s, r, _lat, _txt, _ratio = ev._run_agentic(sc, perfect_ag11_model(), {}, 0.0, 30)
-    case("harness+grader: perfect scripted model on AG-11", s, 1.0, r)
-
+    from tests.agentic_hardening_oracles import ScriptedAgent
+    failures_by_task = {"AG-01": "wrong_contact", "AG-02": "no_refresh",
+                        "AG-10": "duplicate_email", "AG-11": "wrong_target",
+                        "AG-12": "guess_correct_currency"}
+    for sid, defect in failures_by_task.items():
+        s, r, *_ = ev._run_agentic(_sc(sid), ScriptedAgent(sid), {}, 0.0, 30,
+                                   uncapped=True)
+        case(f"{sid} stateful reference completes", s, 1.0, r)
+        s, r, *_ = ev._run_agentic(_sc(sid), ScriptedAgent(sid, defect), {}, 0.0, 30,
+                                   uncapped=True)
+        case(f"{sid} rejects {defect} below pass threshold", float(s < .5), 1.0, r)
     for sid in ("AG-11", "AG-09"):
-        s, r, _lat, _txt, _ratio = ev._run_agentic(_sc(sid), dead_parser_model(),
-                                                   {}, 0.0, 30)
+        s, r, *_ = ev._run_agentic(_sc(sid), dead_parser_model(), {}, 0.0, 30)
         case(f"harness+grader: dead-parser model on {sid}", s, 0.0, r)
 
+    # Coding refresh: every upgraded production grader must accept an oracle
+    # and reject a plausible defect before a model run may produce a score.
+    from tests.code_hardening_oracles import SOLUTIONS as py_oracles, MUTATIONS as py_mutations
+    from tests.test_code_sql_hardening import SOLUTIONS as sql_oracles, MUTATIONS as sql_mutations
+    for sid, source in {**py_oracles, **sql_oracles}.items():
+        grader = _sc(sid)['grade']
+        s, r = grader({'text': source})
+        case(f'{sid} complete reference', s, 1.0, r)
+        name, old, new = {**py_mutations, **sql_mutations}[sid][0]
+        broken = source.replace(old, new)
+        s, r = grader({'text': broken})
+        case(f'{sid} rejects {name}', float(s < 1.0), 1.0, r)
+
+    # LC-03: independently written references + semantic/format defects.
+    from tests.long_context_oracles import REFERENCE as lc_reference, defective_answers
+    s, r = _sc('LC-03')['grade']({'text': lc_reference})
+    case('LC-03 cited reconciliation reference', s, 1.0, r)
+    for name, text in defective_answers().items():
+        s, r = _sc('LC-03')['grade']({'text': text})
+        case(f'LC-03 rejects {name} below pass threshold', float(s < .5), 1.0, r)
 
     # ---- layer 4: v6.5 render-based visual graders (range asserts) ----
     if verbose:

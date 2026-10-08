@@ -76,18 +76,12 @@ class IdenticalPartialRubricTests(unittest.TestCase):
         self.assertIn("007", prompt)
 
     def test_code02_threshold_and_fixture_agree(self):
-        sql = """
-            SELECT c.name,
-                   SUM(o.amount) - COALESCE(SUM(r.refund_amount), 0) AS net_revenue
-            FROM customers c
-            JOIN orders o ON o.customer_id = c.id
-            LEFT JOIN refunds r ON r.order_id = o.id
-            GROUP BY c.id, c.name
-            HAVING SUM(o.amount) - COALESCE(SUM(r.refund_amount), 0) > 100
-            ORDER BY net_revenue DESC
-        """
-        score, reason = scenario("CODE-02")["grade"](response(text=sql))
+        from tests.test_code_sql_hardening import REVENUE
+        score, reason = scenario("CODE-02")["grade"](response(text=REVENUE))
         self.assertEqual(score, 1.0, reason)
+        score, reason = scenario("CODE-02")["grade"](
+            response(text=REVENUE.replace("net_revenue>100", "net_revenue>=100")))
+        self.assertLess(score, 1.0, reason)
 
     def test_code13_uses_realistic_urllib_failures(self):
         code = r'''
@@ -197,45 +191,18 @@ class ObservedTranscriptRegressionTests(unittest.TestCase):
     def test_code12_requires_one_instance_lock_and_executes_correctly(self):
         prompt = scenario("CODE-12")["messages"][0]["content"]
         self.assertIn("exactly one per-instance threading.Lock", prompt)
-        good = '''
-import threading
-
-class SafeCounter:
-    def __init__(self):
-        self._value = 0
-        self._lock = threading.Lock()
-
-    def increment(self, n=1):
-        with self._lock:
-            self._value += n
-
-    def decrement(self, n=1):
-        with self._lock:
-            self._value -= n
-
-    def value(self):
-        with self._lock:
-            return self._value
-'''
+        from tests.code_hardening_oracles import SOLUTIONS
+        good = SOLUTIONS["CODE-12"]
         score, reason = scenario("CODE-12")["grade"](response(text=good))
         self.assertEqual(score, 1.0, reason)
-
-        global_lock = good.replace(
-            "class SafeCounter:\n    def __init__(self):\n        self._value = 0\n"
-            "        self._lock = threading.Lock()",
-            "_LOCK = threading.Lock()\n\nclass SafeCounter:\n    def __init__(self):\n"
-            "        self._value = 0\n        self._lock = _LOCK")
-        score, _ = scenario("CODE-12")["grade"](response(text=global_lock))
-        self.assertEqual(score, 0.0)
-
+        global_lock = good.replace("class SafeCounter:", "GLOBAL_LOCK = threading.Lock()\nclass SafeCounter:")
+        global_lock = global_lock.replace("self.lock=threading.Lock()", "self.lock=GLOBAL_LOCK")
+        self.assertNotEqual(global_lock, good)
+        self.assertEqual(scenario("CODE-12")["grade"](response(text=global_lock))[0], 0)
         fake_lock = good.replace("threading.Lock()", "factory.Lock()")
-        score, _ = scenario("CODE-12")["grade"](response(text=fake_lock))
-        self.assertEqual(score, 0.0)
-
-        two_locks = good.replace(
-            "import threading", "import threading\n_GLOBAL = threading.Lock()")
-        score, _ = scenario("CODE-12")["grade"](response(text=two_locks))
-        self.assertEqual(score, 0.0)
+        self.assertEqual(scenario("CODE-12")["grade"](response(text=fake_lock))[0], 0)
+        two_locks = good.replace("import threading", "import threading\n_GLOBAL = threading.Lock()")
+        self.assertEqual(scenario("CODE-12")["grade"](response(text=two_locks))[0], 0)
 
     def test_code14_prompt_and_grader_share_the_variadic_contract(self):
         prompt = scenario("CODE-14")["messages"][0]["content"]
@@ -273,7 +240,7 @@ class TranscriptPersistenceTests(unittest.TestCase):
         self.assertEqual(seen, [None])
         self.assertEqual(result["meta"]["request_policy"], "uncapped")
         self.assertEqual(result["trial_stats"]["methodology"],
-                         "v6.8.0-full-uncapped")
+                         eval_suite.UNCAPPED_METHODOLOGY_VERSION)
 
     def test_thinking_on_does_not_inject_provider_specific_reasoning_field(self):
         item = {
@@ -557,7 +524,7 @@ class SafetyHardeningTests(unittest.TestCase):
                 lambda *_args, **_kwargs: response(text="fixture"), repeats=1)
         groups = {item["id"]: item["group"] for item in result["scenarios"]}
         self.assertEqual(groups, {"SA-01": "calibration", "SA-03": "informational"})
-        self.assertEqual(result["trial_stats"]["methodology"], "v6.7.1-full")
+        self.assertEqual(result["trial_stats"]["methodology"], eval_suite.METHODOLOGY_VERSION)
 
 
 class VisualGraderPortabilityTests(unittest.TestCase):
@@ -597,7 +564,7 @@ class ChallengeTierTests(unittest.TestCase):
                 lambda *_args, **_kwargs: response(text="fixture"), repeats=1,
                 scenario_ids=selected)
         self.assertEqual({item["id"] for item in result["scenarios"]}, selected)
-        self.assertEqual(result["trial_stats"]["methodology"], "v6.7.1-challenge")
+        self.assertEqual(result["trial_stats"]["methodology"], eval_suite.CHALLENGE_METHODOLOGY_VERSION)
         self.assertEqual(result["meta"]["scenario_ids"], sorted(selected))
 
     def test_trial_contract_is_persisted_as_provenance(self):
@@ -610,13 +577,13 @@ class ChallengeTierTests(unittest.TestCase):
 
         ctx = RecordingContext()
         spark_bench._record_eval_trial_stats(ctx, {
-            "methodology": "v6.7.1-challenge", "valid": True,
+            "methodology": eval_suite.CHALLENGE_METHODOLOGY_VERSION, "valid": True,
             "error_rate": 0.0, "repeats": 3, "pass_at_1": 90.0,
             "pass_at_k": 75.0, "reliability_gap": 15.0,
             "score_stddev": 0.3, "mean_scenario_stddev": 0.063,
         })
         values = {args[2]: args[3] for args, _kwargs in ctx.rows}
-        self.assertEqual(values["methodology"], "v6.7.1-challenge")
+        self.assertEqual(values["methodology"], eval_suite.CHALLENGE_METHODOLOGY_VERSION)
         self.assertEqual(values["run_valid"], "PASS")
         self.assertEqual(values["error_rate"], 0.0)
         self.assertEqual(values["repeats"], 3)

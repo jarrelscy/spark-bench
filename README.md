@@ -2,12 +2,25 @@
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
 
-**Current methodology: v6.8.0 Uncapped · 76 scenarios · 12 domains · 12 agentic workflows · 2 rendered 3D-animation scenarios**
+**Current methodology: v7.0 Uncapped · 80 scenarios · 13 domains · 12 agentic workflows · 4 long-generation builds · 2 rendered 3D-animation scenarios**
+
+**v7.0** adds a **long_gen** domain: LG-01 to LG-04 are long, machine-graded builds, including a spreadsheet engine with 40 hidden tests and an order ledger with 33 traces. It also folds in:
+- the v6.8.1 coding hardening ([details](docs/coding-hardening-v6.8.1.md))
+- the v6.8.2 agentic hardening ([details](docs/agentic-hardening-v6.8.2.md))
+- the v6.8.3 long-context reconciliation ([details](docs/long-context-hardening-v6.8.3.md))
+
+**Runner changes:**
+- Repeats get distinct seeds (`SPARK_BENCH_SEED_PER_REPEAT`).
+- One temperature can be forced across every scenario for model-recommended sampling (`SPARK_BENCH_FORCE_TEMPERATURE`).
+- Uncapped runs send the remaining context window as `max_tokens` (`SPARK_BENCH_CONTEXT`), because some engines default to 4,096 when it's omitted.
+- The uncapped budget accounts for tool-call history.
+
+v7.0 scores are not comparable with v6.x.
 
 | | |
 |---|---|
-| Scenarios | **76** (base + hard + expert agentic) |
-| Domains | **12** |
+| Scenarios | **80** (base + hard + expert agentic + long_gen) |
+| Domains | **13** |
 | Agentic | **12** multi-turn workflows (AG-01…AG-12), including deep chains, tool failure injection, nested schemas, long noisy context |
 | TrueScore weights | Quality 55% · Calibration 25% · Reliability 15% · Efficiency 1.5% · Responsiveness 3.5% (speed total **5%**) |
 | Integrity | Golden-gate grader self-test, endpoint model + tool-call preflight, grader git provenance, one-eval-per-box lock, run heartbeats |
@@ -19,7 +32,20 @@ A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 G
 
 ## Leaderboard
 
-### Latest v6.8.0 uncapped comparison
+### Latest: v7.0 uncapped cohort (October 2026)
+
+| # | Deployment | Hardware | TrueScore |
+|---:|---|---|---:|
+| 1 | RED-SNOW-5.3-Flash 2.49bpw SAGE EXL3, exllamav3 + MTP | 1 Spark | **85.1** |
+| 2 | GLM-5.3-Flash EXL3 4bpw, TensorFold + DFlash2 | 2 Sparks TP2 | **84.8** |
+| 3 | Qwen3.8-27B MLX-4bit, TensorFold + DFlash2 | 1 Spark | **82.9** |
+| 4 | Qwen3.8-Flash-Next NVFP4, vLLM TP2+EP+MTP3 | 2 Sparks | **79.4** |
+| 5 | Qwen3.8-Flash-Next MLX-4bit, TensorFold + MTP | 1 Spark | **78.5** |
+| 6 | Qwen3.8-Flash-Next NVFP4, TensorFold Zig | 2 Sparks TP2 | **77.9** |
+
+80 scenarios, 2 repeats, thinking off, uncapped, grader `15c65bc`, 0 transport errors. Rows are deployments: engine, quant, Spark count and sampling differ, and gaps under about 1 point are noise. Caveats and per-run reports are in [`results/comparisons/2026-10-07-v7-cohort`](results/comparisons/2026-10-07-v7-cohort/README.md).
+
+### Previous: v6.8.0 uncapped comparison
 
 **Qwen3.8-Flash-Next spec-off scored 87.02 vs GLM-5.3-Flash DFlash2 K7 at
 85.67** across the full 76-scenario, two-repeat contract. The audited package,

@@ -41,12 +41,12 @@ DEFAULT_WEIGHTS = {
 CAPABILITY_DOMAINS = {"tool_use", "instruction", "structured",
                       "reasoning", "long_context",
                       "planning", "composition", "classification",
-                      "code", "agentic"}
+                      "code", "agentic", "long_gen", "visual"}
 CALIBRATION_DOMAINS = {"safety", "robustness"}
-METHODOLOGY_VERSION = "v6.7.1-full"
-CHALLENGE_METHODOLOGY_VERSION = "v6.7.1-challenge"
-UNCAPPED_METHODOLOGY_VERSION = "v6.8.0-full-uncapped"
-UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v6.8.0-challenge-uncapped"
+METHODOLOGY_VERSION = "v7.0-full"
+CHALLENGE_METHODOLOGY_VERSION = "v7.0-challenge"
+UNCAPPED_METHODOLOGY_VERSION = "v7.0-full-uncapped"
+UNCAPPED_CHALLENGE_METHODOLOGY_VERSION = "v7.0-challenge-uncapped"
 CONTENT_REFUSAL_SCENARIOS = frozenset({"SA-03", "RR-04"})
 
 # Selected from the first controlled three-model v6.6 cohort. Each case
@@ -2103,34 +2103,29 @@ def _test_merge_streams(ns):
     return (score, f"{passed}/{total} tests: " + ", ".join(reasons))
 
 
+# In-place coding refresh: preserve scenario IDs, count, difficulty and weights.
+from code_python_hardening import PROMPTS as _PY_CODE_PROMPTS, build_graders as _python_code_graders
+from code_sql_hardening import PROMPTS as _SQL_CODE_PROMPTS, build_graders as _sql_code_graders
+_UPGRADED_CODE_PROMPTS = {**_PY_CODE_PROMPTS, **_SQL_CODE_PROMPTS}
+_UPGRADED_CODE_GRADERS = {
+    **_python_code_graders(expect_executable_code, _extract_python_code, _safe_counter_lock_contract),
+    **_sql_code_graders(expect_sql_code),
+}
+
+import agentic_hardening as _agentic_problems
+import long_context_hardening as _long_context_problem
+from agentic_outcome_grading import assess as _assess_agentic_outcome
+
 SCENARIOS = [
     # ---- tool_use (capability) -------------------------------------------- #
-    dict(id="AG-01", domain="agentic", group="capability", tier="hard", difficulty=3.5,
-         max_tokens=800, agentic=True,
-         tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("You are a logistics coordinator. I need you to plan a multi-city "
-                       "business trip for next week. Here are the requirements:\n"
-                       "1. Check the weather forecast for New York, London, and Tokyo.\n"
-                       "2. If any city has below-freezing temperatures, add a note to pack warm clothing.\n"
-                       "3. Find the first available 2-hour slot on my calendar between Monday and Wednesday next week.\n"
-                       "4. Create a calendar event called 'NYC Meeting' in that slot.\n"
-                       "5. Email john.doe@corp.com with the subject 'Trip Confirmed' and include the meeting time and weather summary.\n"
-                       "6. Then check if Thursday has any conflicts — if it does, email john.doe@corp.com to reschedule.\n"
-                       "Complete all steps. Report what you did at the end."),
-         grade=None),
-    dict(id="AG-02", domain="agentic", group="capability", tier="hard", difficulty=3.6,
-         max_tokens=800, agentic=True,
-         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("You are managing a product launch. Here's the situation:\n"
-                       "We're launching 'Phoenix v2' next Friday. I need you to coordinate:\n"
-                       "1. Check my calendar for next Friday — is there a 1-hour slot free for a launch meeting? If not, find the next available slot.\n"
-                       "2. Create a calendar event for the launch meeting.\n"
-                       "3. Email the engineering team (eng-team@corp.com) with the meeting details and ask them to prepare the deployment checklist.\n"
-                       "4. Email marketing (marketing@corp.com) telling them the launch is confirmed and to prepare social media posts.\n"
-                       "5. Then check Monday's calendar — if there are more than 3 meetings already, email eng-team@corp.com to move our standup to Tuesday.\n"
-                       "6. Report back: list every action you took and any conflicts you found.\n"
-                       "Be thorough — don't skip any step."),
-         grade=None),
+    dict(id="AG-01", domain="agentic", group="capability", tier="hard", difficulty=3.5, max_tokens=800, agentic=True,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-01'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-01']), grade=None),
+    dict(id="AG-02", domain="agentic", group="capability", tier="hard", difficulty=3.6, max_tokens=800, agentic=True,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-02'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-02']), grade=None),
     # TU-03 removed (too easy — every model scored 1.0, trivial weather call)
     dict(id="AG-03", domain="agentic", group="capability", tier="hard", difficulty=3.8,
          max_tokens=1000, agentic=True,
@@ -2245,10 +2240,10 @@ SCENARIOS = [
     # ---- long context (capability) ---------------------------------------- #
     # LC-01 and LC-02 removed (too easy — every model scored 1.0, needles at 10%/50%)
     dict(id="LC-03", domain="long_context", group="capability", difficulty=1.4,
-         max_tokens=200, messages=_msg(_haystack("VESPER-3318", 0.92) +
-                                       "\n\nWhat is the secret passcode? Reply with "
-                                       "ONLY the passcode."),
-         grade=expect_answer(["VESPER-3318"])),
+         max_tokens=1600, scenario_revision=_long_context_problem.REVISION,
+         context_requirement_tokens=_long_context_problem.CONTEXT_REQUIREMENT_TOKENS,
+         messages=_msg(_long_context_problem.PROMPT),
+         grade=_long_context_problem.grade),
 
     # ---- code (capability, executable) ------------------------------------ #
     # CODE-01: CSV parser with type inference (int/float/bool/null)
@@ -2264,29 +2259,10 @@ SCENARIOS = [
          grade=expect_executable_code(test_fn=_test_csv_typed)),
 
     # CODE-02: SQL — 3-table join with HAVING + COALESCE
-    dict(id="CODE-02", domain="code", group="capability", difficulty=1.8,
-         max_tokens=500, messages=_msg(
-             "Given tables: customers(id, name, region), orders(id, customer_id, amount, status), "
-             "refunds(order_id, refund_amount). Write a SQL query to find customers whose "
-             "net revenue (total order amount minus total refunds) is greater than 100. "
-             "Include customers with no refunds (treat as 0). Return customer name and "
-             "net_revenue, ordered by net_revenue descending. Return only the SQL query."),
-         grade=expect_sql_code(
-             schema_sql="""
-                 CREATE TABLE customers (id INTEGER, name TEXT, region TEXT);
-                 CREATE TABLE orders (id INTEGER, customer_id INTEGER, amount REAL, status TEXT);
-                 CREATE TABLE refunds (order_id INTEGER, refund_amount REAL);
-                 INSERT INTO customers VALUES (1,'Alice','East'),(2,'Bob','West'),(3,'Carol','East'),(4,'Dave','South');
-                 INSERT INTO orders VALUES (1,1,200,'completed'),(2,1,50,'completed'),(3,2,300,'completed'),(4,3,80,'completed'),(5,4,40,'completed');
-                 INSERT INTO refunds VALUES (2,50),(3,250);
-             """,
-             test_queries=[
-                ("returns only Alice above 100", lambda rows, c: len(rows) == 1),
-                ("Alice net 200", lambda rows, c: any('Alice' in str(r) and '200' in str(r) for r in rows)),
-                ("Bob excluded (net=50)", lambda rows, c: not any('Bob' in str(r) for r in rows)),
-                ("Carol excluded (net=80)", lambda rows, c: not any('Carol' in str(r) for r in rows)),
-             ]
-         )),
+    dict(id="CODE-02", domain="code", group="capability", difficulty=1.8, max_tokens=500,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-02"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-02"]),
 
     # CODE-03: Token bucket rate limiter (not simple counter)
     dict(id="CODE-03", domain="code", group="capability", difficulty=1.7,
@@ -3432,88 +3408,34 @@ HARD_SCENARIOS = [
 
     # ---- code (hard, executable) ------------------------------------------ #
     # CODE-06: KV cache with TTL + LRU eviction
-    dict(id="CODE-06", domain="code", group="capability", tier="hard",
-         difficulty=2.6, max_tokens=1000, messages=_msg(
-             "Write a Python class `KVCache` with TTL and LRU eviction. "
-             "Constructor: KVCache(capacity, ttl_seconds). "
-             "Methods: get(key) -> value or None, put(key, value), delete(key) -> bool. "
-             "When capacity is exceeded, evict the least recently used item. "
-             "Expired items (by TTL) are treated as missing on get. "
-             "Use the `time` module. Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_kv_cache(ns))),
+    dict(id="CODE-06", domain="code", group="capability", tier="hard", difficulty=2.6, max_tokens=1000,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-06"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-06"]),
 
     # CODE-07: Recursive JSON leaf extraction
-    dict(id="CODE-07", domain="code", group="capability", tier="hard",
-         difficulty=2.4, max_tokens=600, messages=_msg(
-             "Write a Python function `extract_leaves` that takes any JSON-serializable "
-             "value (dict, list, scalar) and returns a flat list of all leaf values "
-             "(scalars only: str, int, float, bool, None). Nested dicts and lists should "
-             "be traversed recursively. If a value is not a container, return [value]. "
-             "Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: (
-            (1.0, "all tests passed") if ns.get("extract_leaves") and all([
-                # Simple dict
-                sorted(ns["extract_leaves"]({"a": 1, "b": 2})) == [1, 2],
-                # Nested dict + list
-                sorted(ns["extract_leaves"]({"x": [1, 2], "y": {"z": 3}})) == [1, 2, 3],
-                # Scalar passthrough
-                ns["extract_leaves"](42) == [42],
-                # Empty containers
-                ns["extract_leaves"]({}) == [],
-                ns["extract_leaves"]([]) == [],
-                # Mixed types
-                "hello" in ns["extract_leaves"]({"a": "hello", "b": True, "c": None}),
-                True in ns["extract_leaves"]({"a": True}),
-                None in ns["extract_leaves"]({"a": None}),
-            ]) else (0.0, "failed tests") if not ns.get("extract_leaves") else (0.5, "partial")
-        ))),
+    dict(id="CODE-07", domain="code", group="capability", tier="hard", difficulty=2.4, max_tokens=600,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-07"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-07"]),
 
     # CODE-08: SQL window function — running total + rank
-    dict(id="CODE-08", domain="code", group="capability", tier="hard",
-         difficulty=2.5, max_tokens=500, messages=_msg(
-             "Given table sales(id, region, month, amount), write a SQL query that "
-             "returns each row with: region, month, amount, "
-             "running_total (cumulative sum of amount per region ordered by month), "
-             "and rank (rank within each region by amount descending). "
-             "Return only the SQL query."),
-         grade=expect_sql_code(
-             schema_sql="""
-                 CREATE TABLE sales (id INTEGER, region TEXT, month INTEGER, amount REAL);
-                 INSERT INTO sales VALUES
-                     (1,'North',1,100),(2,'North',2,200),(3,'North',3,150),
-                     (4,'South',1,300),(5,'South',2,100),(6,'South',3,400);
-             """,
-             test_queries=[
-                 ("returns 6 rows", lambda rows, c: len(rows) == 6),
-                 ("has window function columns", lambda rows, c: len(rows[0]) >= 5),
-                 ("North running total correct",
-                  lambda rows, c: any(
-                      float(r[-2]) == 450 if len(r) >= 5 else False
-                      for r in rows if 'North' in str(r)
-                  )),
-             ]
-         )),
+    dict(id="CODE-08", domain="code", group="capability", tier="hard", difficulty=2.5, max_tokens=500,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-08"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-08"]),
 
     # CODE-09: Retry wrapper with exponential backoff
-    dict(id="CODE-09", domain="code", group="capability", tier="hard",
-         difficulty=2.7, max_tokens=800, messages=_msg(
-             "Write a Python function `retry_with_backoff` that takes a callable `func`, "
-             "`max_retries=3`, `initial_delay=0.1`, and `backoff_factor=2`. "
-             "It calls func(); if it raises an exception, it waits (initial_delay * "
-             "backoff_factor^attempt) seconds and retries. After max_retries failures, "
-             "it re-raises the last exception. If func succeeds, return its result. "
-             "Use the `time` module for sleeping. Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_retry(ns))),
+    dict(id="CODE-09", domain="code", group="capability", tier="hard", difficulty=2.7, max_tokens=800,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-09"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-09"]),
 
     # CODE-10: Mini state machine from transition table
-    dict(id="CODE-10", domain="code", group="capability", tier="hard",
-         difficulty=2.8, max_tokens=1000, messages=_msg(
-             "Write a Python class `StateMachine` that takes a transition table as a "
-             "dict of (state, event) -> new_state, plus an initial state. "
-             "Methods: trigger(event) -> new_state or raises ValueError for unknown "
-             "transition, current() -> current state, can_trigger(event) -> bool. "
-             "Output only the code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_state_machine(ns))),
+    dict(id="CODE-10", domain="code", group="capability", tier="hard", difficulty=2.8, max_tokens=1000,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-10"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-10"]),
 
     # ---- v6.4c: harder code scenarios calibrated to SWE-bench difficulty ----
     # Public data: Gemma 4 26B = 52% SWE-bench, Qwen 3.6 27B = 77%. Our v6.4b
@@ -3522,51 +3444,16 @@ HARD_SCENARIOS = [
     # separates 4B-active from 27B-dense models.
 
     # CODE-11: Multi-function refactoring — extract duplicates, preserve behavior
-    dict(id="CODE-11", domain="code", group="capability", tier="hard",
-         difficulty=3.5, max_tokens=1500, messages=_msg(
-             "Refactor this code. The three functions below have duplicated logic. "
-             "Extract a shared helper `_apply_discount(price, discount_type, value)` "
-             "and reimplement all three functions using it. The public API must stay "
-             "identical (same names, same args, same return values for ALL inputs).\n\n"
-             "```python\n"
-             "def percentage_discount(price, percent):\n"
-             "    if price < 0: raise ValueError('negative price')\n"
-             "    return round(price * (1 - percent / 100), 2)\n\n"
-             "def fixed_discount(price, amount):\n"
-             "    if price < 0: raise ValueError('negative price')\n"
-             "    result = price - amount\n"
-             "    return round(max(result, 0), 2)\n\n"
-             "def bogo_discount(price, quantity):\n"
-             "    if price < 0: raise ValueError('negative price')\n"
-             "    if quantity < 1: return 0\n"
-             "    paid = (quantity // 2 + quantity % 2) * price\n"
-             "    return round(paid, 2)\n"
-             "```\n"
-             "Output only the refactored code."),
-         grade=expect_executable_code(test_fn=lambda ns: _test_refactor_discounts(ns))),
+    dict(id="CODE-11", domain="code", group="capability", tier="hard", difficulty=3.5, max_tokens=1500,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-11"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-11"]),
 
     # CODE-12: Debug a concurrency bug with a portable synchronization contract
-    dict(id="CODE-12", domain="code", group="capability", tier="hard",
-         difficulty=3.8, max_tokens=1200, messages=_msg(
-             "This counter has a race condition. Fix it using exactly one "
-             "per-instance threading.Lock created in __init__. Protect increment, "
-             "decrement, and value using `with self.<lock_attribute>:` and that "
-             "same lock. Do not use a global lock or rely on the GIL.\n\n"
-             "```python\n"
-             "import threading\n\n"
-             "class SafeCounter:\n"
-             "    def __init__(self):\n"
-             "        self._value = 0\n"
-             "    def increment(self, n=1):\n"
-             "        self._value += n  # BUG: not atomic\n"
-             "    def decrement(self, n=1):\n"
-             "        self._value -= n  # BUG: not atomic\n"
-             "    def value(self):\n"
-             "        return self._value\n"
-             "```\n"
-             "Fix the race condition. The class must be importable and work with "
-             "concurrent threads. Output only the fixed code."),
-         grade=expect_safe_counter()),
+    dict(id="CODE-12", domain="code", group="capability", tier="hard", difficulty=3.8, max_tokens=1200,
+         scenario_revision="coding-2026-09-v1",
+         messages=_msg(_UPGRADED_CODE_PROMPTS["CODE-12"]),
+         grade=_UPGRADED_CODE_GRADERS["CODE-12"]),
 
     # CODE-13: API client with error handling and retry logic
     dict(id="CODE-13", domain="code", group="capability", tier="hard",
@@ -3608,6 +3495,10 @@ HARD_SCENARIOS = [
 ]
 
 SCENARIOS = SCENARIOS + HARD_SCENARIOS
+
+# v7: long-generation domain (8K-25K token outputs, machine graded, cap-hit = 0)
+from long_gen import LONG_GEN_SCENARIOS  # noqa: E402
+SCENARIOS = SCENARIOS + LONG_GEN_SCENARIOS
 
 
 # ── v6.4 expert agentic scenarios ─────────────────────────────────────────── #
@@ -3695,49 +3586,18 @@ V64_SCENARIOS = [
                        "new ticket's id.\n"
                        "4. Final summary of what you found and filed."),
          grade=None),
-    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=3.5,
-         max_tokens=1000, agentic=True, max_turns=34, turn_budget=28,
-         env_patch={"failure_plan": {"create_event": [1], "send_email": [2]}},
-         tools=[T_WEATHER, T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("Severe weather response drill. Services are flaky — RETRY any call that returns a "
-                       "transient error. Steps IN ORDER:\n"
-                       "1-2. Check weather in Denver and Boulder.\n"
-                       "3-4. Check my calendar for monday and tuesday.\n"
-                       "5. Create 'Storm Contingency Briefing' on tuesday 09:00, 60 min.\n"
-                       "6-8. Email facilities@corp.com, manager@corp.com and staff@corp.com — subject 'Storm "
-                       "contingency', each body must state both cities' temperatures.\n"
-                       "9. Check next_monday's calendar.\n"
-                       "10. Create 'Storm Retro' on next_monday 11:00, 45 min.\n"
-                       "11. Email manager@corp.com subject 'Storm retro invite' with the retro day/time.\n"
-                       "12. Final report: both temperatures, every event created, every email sent, and every "
-                       "failure you recovered from."),
-         grade=None),
-    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=3.0,
-         max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
-         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("Below is a long ops briefing. Buried somewhere in it are: (a) a war-room booking code, "
-                       "(b) the REQUIRED day for the incident postmortem, and (c) the escalation contact. "
-                       "Find all three, then:\n"
-                       "1. Create a calendar event titled 'Postmortem <booking code>' on the required day, "
-                       "10:00, 60 min.\n"
-                       "2. Email the escalation contact, subject 'Postmortem scheduled' — include the booking "
-                       "code and the day.\n"
-                       "3. One-paragraph summary naming all three facts.\n\n"
-                       "--- BRIEFING START ---\n" + _AG11_BRIEFING + "\n--- BRIEFING END ---"),
-         grade=None),
-    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=3.2,
-         max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
-         tools=[T_CAL_READ, T_CALENDAR, T_EMAIL],
-         messages=_msg("Below is a long planning document. It contains a SUPERSEDED draft budget and, later, a "
-                       "FINAL approved budget with a finance sign-off code and a confirmation contact. Use ONLY "
-                       "the final approved values:\n"
-                       "1. Email the confirmation contact, subject 'Budget Confirmed' — state the final approved "
-                       "amount and cite the sign-off code.\n"
-                       "2. Create a calendar event 'Offsite Budget Review <sign-off code>' on next_tuesday "
-                       "14:00, 60 min.\n"
-                       "3. One-paragraph summary: final amount, code, and why the other figure was wrong.\n\n"
-                       "--- DOCUMENT START ---\n" + _AG12_BRIEFING + "\n--- DOCUMENT END ---"),
-         grade=None),
+    dict(id="AG-10", domain="agentic", group="capability", tier="expert", difficulty=3.5, max_tokens=1000, agentic=True, max_turns=34, turn_budget=28,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-10'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-10']), grade=None),
+    dict(id="AG-11", domain="agentic", group="capability", tier="expert", difficulty=3.0, max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-11'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-11']), grade=None),
+    dict(id="AG-12", domain="agentic", group="capability", tier="expert", difficulty=3.2, max_tokens=1000, agentic=True, max_turns=20, turn_budget=14,
+         scenario_revision=_agentic_problems.REVISION,
+         tools=_agentic_problems.tools_for('AG-12'),
+         messages=_msg(_agentic_problems.PROMPTS['AG-12']), grade=None),
 ]
 
 SCENARIOS = SCENARIOS + V64_SCENARIOS
@@ -3797,6 +3657,8 @@ def _make_env():
 
 def _sim_tool(name, args, env):
     """Simulate a tool call and return a result string."""
+    if "problem_world" in env:
+        return _agentic_problems.simulate(env["problem_world"], name, args)
     name = name.lower().strip()
     args = args or {}
 
@@ -3910,6 +3772,11 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
                     "Call tools one at a time, wait for the result, then continue. "
                     "When all steps are done, provide a final summary of everything you did.")
     }
+    if sc["id"] in _agentic_problems.IDS:
+        env["problem_world"] = _agentic_problems.make_world(
+            sc["id"], variant=sc.get("agentic_variant", 0),
+            user_currency=sc.get("agentic_user_currency", "GBP"))
+        system_prompt["content"] = _agentic_problems.SYSTEM
     messages = [system_prompt] + list(sc["messages"])
     tools = sc.get("tools")
     max_turns = sc.get("max_turns", 20)
@@ -3977,12 +3844,29 @@ def _run_agentic(sc, chat_fn, extra_base, temperature, timeout,
              "tool_calls": tool_call_log, "finish": terminal_finish,
              "completion_tokens": completion_tokens,
              "runaway": terminal_runaway}
+    if "problem_world" in env:
+        env.setdefault("outcome", {"strict_success": False, "checks": {},
+                                   "error": "grader did not return an outcome receipt"})
+        if terminal_finish != "stop":
+            score = 0.0
+            reason = "stateful agent did not produce a clean final stop; " + reason
+            env["outcome"]["strict_success"] = False
+            env["outcome"]["terminal_failure"] = terminal_finish
+        trace["environment"] = json.loads(json.dumps(env["problem_world"]))
+        trace["outcome"] = json.loads(json.dumps(env["outcome"]))
     result = (score, reason, total_latency, full_text, token_ratio)
     return result + (trace,) if capture_trace else result
 
 
 def _grade_agentic(scenario_id, env, tool_log, text_chunks, n_turns, turn_budget=15):
     """Grade an agentic scenario based on tool calls made and task completion."""
+    if scenario_id in _agentic_problems.IDS:
+        world = env.get("problem_world")
+        if world is None:
+            return 0.0, "missing authoritative problem environment"
+        score, reason, receipt = _assess_agentic_outcome(world, text_chunks)
+        env["outcome"] = receipt
+        return score, reason
     # Build a map of what was called
     tools_called = [t["tool"].lower() for t in tool_log]
     emails = env["emails_sent"]
@@ -4323,6 +4207,10 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
         if not repeat_numbers or any(i < 1 or i > reps for i in repeat_numbers):
             raise ValueError(f"invalid repeat_indices {repeat_numbers} for {sc['id']} with {reps} repeats")
         temp = sc.get("temperature", temperature)
+        # Model-recommended sampling runs: one temperature for every scenario,
+        # including the few that pin their own (0.6 on long_gen/visual).
+        if os.environ.get("SPARK_BENCH_FORCE_TEMPERATURE"):
+            temp = float(os.environ["SPARK_BENCH_FORCE_TEMPERATURE"])
         # Scenario max_tokens remains the expected answer-size contract. With
         # uncapped=True it must not also cap hidden reasoning, so the transport
         # omits max_tokens and the endpoint uses its remaining context window.
@@ -4332,11 +4220,17 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
         last_reason = ""
         best = (-1.0, None)  # (score, resp) for artifact saving
         for repeat_number in repeat_numbers:
+            # Engines that seed by prompt hash (TensorFold) return byte-identical
+            # text for every repeat unless each repeat carries its own seed, which
+            # turns N repeats into one draw counted N times. Applies to agentic too.
+            rep_extra = dict(extra_base)
+            if os.environ.get("SPARK_BENCH_SEED_PER_REPEAT"):
+                rep_extra["seed"] = int(os.environ["SPARK_BENCH_SEED_PER_REPEAT"]) + repeat_number
             try:
                 if sc.get("agentic"):
                     # Multi-turn agentic scenario — route through agentic harness
                     a_score, a_reason, a_lat, a_text, a_ratio, a_trace = _run_agentic(
-                        sc, chat_fn, extra_base, temp, timeout, capture_trace=True,
+                        sc, chat_fn, rep_extra, temp, timeout, capture_trace=True,
                         uncapped=uncapped)
                     score = a_score
                     reason = a_reason
@@ -4352,7 +4246,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                                 else _est_tokens(a_text))
                 else:
                     resp = chat_fn(sc["messages"], mt, temp, sc.get("tools"),
-                                   dict(extra_base))
+                                   rep_extra)
                     score, reason = sc["grade"](resp)
                     if resp.get("finish") in ("length", "runaway"):
                         score = 0.0
@@ -4392,6 +4286,9 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
                 with open(transcript_path, "w") as fh:
                     json.dump({
                         "scenario_id": sc["id"],
+                        "scenario_revision": sc.get("scenario_revision"),
+                        **({"context_requirement_tokens": sc["context_requirement_tokens"]}
+                           if "context_requirement_tokens" in sc else {}),
                         "repeat": repeat_number,
                         "messages": sc["messages"],
                         "tools": sc.get("tools"),
@@ -4519,7 +4416,7 @@ def run_suite(chat_fn, *, repeats=2, temperature=0.3, domains=None, tiers=None,
     if uncapped and selected_ids == CHALLENGE_SCENARIO_IDS:
         methodology = UNCAPPED_CHALLENGE_METHODOLOGY_VERSION
     elif uncapped and selected_ids is not None:
-        methodology = "v6.8.0-full-subset-uncapped"
+        methodology = UNCAPPED_METHODOLOGY_VERSION.replace("-uncapped", "-subset-uncapped")
     elif uncapped:
         methodology = UNCAPPED_METHODOLOGY_VERSION
     elif selected_ids == CHALLENGE_SCENARIO_IDS:

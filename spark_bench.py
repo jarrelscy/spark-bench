@@ -156,6 +156,22 @@ def chat_stream(endpoint, model, messages, max_tokens, *, temperature=0.0,
     # remaining context window; numeric values preserve the historical contract.
     if max_tokens is not None:
         body["max_tokens"] = max_tokens
+    else:
+        import os as _os
+        _ctx = _os.environ.get("SPARK_BENCH_CONTEXT")
+        if _ctx:
+            # Engines like TensorFold apply a 4096 default when max_tokens is omitted,
+            # so "uncapped" silently becomes a 4K cap. Send the real remaining window:
+            # context minus a conservative prompt estimate and a margin. Count the
+            # WHOLE message list (tool_calls arguments and tool results included):
+            # counting only `content` underestimated agentic turns, so prompt +
+            # max_tokens exceeded the window and the server answered HTTP 400.
+            # chars/2 over-estimates tokens on purpose; losing a few K of a 128K+
+            # window is harmless, a 400 is a scored failure.
+            _chars = len(json.dumps(messages))
+            if tools:
+                _chars += len(json.dumps(tools))
+            body["max_tokens"] = max(1024, int(_ctx) - _chars // 2 - 4096)
     if tools:
         body["tools"] = tools
         body["tool_choice"] = "auto"
@@ -638,7 +654,15 @@ def _build_haystack(approx_tokens, passcode, depth=0.5):
 #   5. run marker   — .STARTED heartbeat file so watchers verify from disk,
 #                     never from pgrep
 # --------------------------------------------------------------------------- #
-GRADER_FILES = ["eval_suite.py", "spark_bench.py", "golden_gate.py"]
+GRADER_FILES = [
+    "eval_suite.py", "spark_bench.py", "golden_gate.py",
+    "code_python_hardening.py", "code_sql_hardening.py",
+    "agentic_hardening.py", "agentic_outcome_grading.py",
+    "long_context_hardening.py", "tests/long_context_oracles.py",
+    "visual_pixel_grader.py", "visual_3d_grader.py",
+    "tests/code_hardening_oracles.py", "tests/test_code_sql_hardening.py",
+    "tests/agentic_hardening_oracles.py",
+]
 
 # A flat perfect domain is only non-blocking when the current suite ran the
 # complete, known scenario set and its domain-specific evidence proves that
@@ -1269,8 +1293,8 @@ def main():
                     help="abort mode; auto uses /models owned_by metadata")
     se.add_argument("--tier", choices=["base", "hard", "challenge", "all"],
                     default="all", help="base = original suite, hard = "
-                    "adversarial+visual, challenge = v6.8.0 diagnostic subset, "
-                    "all = complete v6.8.0 suite")
+                    "adversarial+visual, challenge = v6.8.3 diagnostic subset, "
+                    "all = complete v6.8.3 suite")
     se.add_argument("--domains", default="",
                     help="comma filter e.g. tool_use,coding,safety,visual")
     se.add_argument("--scenario-ids", default="",
