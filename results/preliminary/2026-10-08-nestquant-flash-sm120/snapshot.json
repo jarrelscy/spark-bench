@@ -584,5 +584,7 @@
       "source_filename": "VIS-04-repeat-1.json",
       "source_sha256": "e38d6538347657b1e01e514296fcab09f6ba2a2605d45aa14ebc2fd7aa6952f9"
     }
-  ]
+  ],
+  "provisional_truescore": 91.08260213348247,
+  "provisional_score_scenarios": 35
 }

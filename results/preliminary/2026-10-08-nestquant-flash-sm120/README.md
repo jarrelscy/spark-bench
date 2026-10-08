@@ -10,7 +10,7 @@ Snapshot: 2026-10-08T21:56:52.644943+00:00. Run `glm53-flash-nq15-4bit-sm120-sin
 - Raw mean across saved trials: **94.61/100**. This is not TrueScore.
 - Difficulty-weighted capability on fully completed scenarios: **93.82/100**.
 - Difficulty-weighted calibration on fully completed scenarios: **97.74/100**.
-- No provisional TrueScore is supplied: the saved transcript artifacts do not contain all latency and token-efficiency data needed to reconstruct it faithfully.
+- Provisional **TrueScore: 91.08/100**, using only the 35 fully completed scenarios. This is not a final full-suite result.
 
 The completed subset is ordered, not a random sample. Later tasks may change results substantially.
 Partial scenarios contribute to the raw trial mean but are excluded from component scores.
@@ -81,3 +81,43 @@ live salience counter has been implemented but is not enabled in this run.
 | SOH-02 | 1.0000 | 1.0000 | 1.0000 |
 | VIS-03 | 0.9583 | 0.9167 | 0.9375 |
 | VIS-04 | 0.8300 | Pending | Pending |
+
+## Reconstructed provisional TrueScore
+
+The earlier claim that the saved transcripts lacked latency and efficiency data
+was incorrect. They store `response.total_seconds`, answer text and reasoning
+text. These suffice to recover the scorer's inputs without interrupting the run.
+
+| Component | Score / 100 | Weight |
+|---|---:|---:|
+| quality | 93.8202 | 0.550 |
+| calibration | 97.7419 | 0.250 |
+| reliability | 92.4951 | 0.150 |
+| efficiency | 32.0881 | 0.015 |
+| responsiveness | 19.7263 | 0.035 |
+
+Median of scenario median latencies: 81.3877 seconds.
+
+[`provisional-score.json`](provisional-score.json) contains compact, measured
+per-trial latency and reconstructed efficiency inputs, plus the component totals.
+No conversation text is included. Incomplete scenarios are excluded from the
+composite. The reconstruction preserves the existing v7 rules, including the
+hard-coded efficiency of 1.0 for agentic trials, even if those trials generated
+reasoning. For non-agentic trials, efficiency uses the grader's text-based token
+estimate, not a native tokenizer count. These are scorer semantics, not a claim
+that agentic reasoning was absent.
+
+Reproduce from the published compact inputs at repository root:
+
+```sh
+python3 tools/provisional_score.py \
+  --records results/preliminary/2026-10-08-nestquant-flash-sm120/provisional-score.json \
+  --output /tmp/nestquant-provisional-score.json
+python3 -m unittest discover -s tests -p test_provisional_score.py
+```
+
+Tests compare every component and TrueScore against `eval_suite.run_suite` on
+synthetic responses, including agentic and informational cases, and verify that
+partial scenarios are excluded and duplicate repeats rejected. The live server
+and running benchmark were not changed or restarted. A complete suite score and
+its normal integrity gates remain pending.
