@@ -1,3 +1,5 @@
+> **Fork experiment:** [NestQuant Flash U2630 + FP4 provisional SM120 results](results/experiments/nestquant-flash-U2630-FP4-SM120/README.md). This is not a native Spark result or an official leaderboard entry.
+
 # spark-bench
 
 A mixed-capability benchmark for evaluating LLMs on **NVIDIA DGX Spark** (GB10 Grace-Blackwell), tuned for **agentic / Hermes-style** local serving: tool use, multi-turn workflows, executable code, and real cluster serving (vLLM, llama.cpp, multi-node).
