@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Fix and extend a thread-safe Python SafeCounter, initially zero. Use exactly one per-instance threading.Lock created in __init__, no global locks and no reliance on the GIL. Protect increment(n=1), decrement(n=1), and value() with `with self.<lock_attribute>:` using the same lock. increment/decrement accept signed integers and return None; value returns the integer. Add compare_and_set(expected,new)->bool: atomically replace only if the current value equals expected. Add transfer_to(other,n)->None: atomically subtract n from self and add n to other, locking both instances in a deterministic global order to prevent opposite-direction deadlock; negative balances are allowed. n must be a non-bool integer >=0, otherwise raise ValueError before changing either counter. A transfer to self is a validated no-op. Other method numeric arguments are integers. No lock may remain held after an exception; different instances must have different locks. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 behavioral groups: atomic-API:pass, transfer-validation:pass, instrumented-lock-scope:pass, opposite-transfers:pass, contended-CAS:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 431,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport threading\n\n\nclass SafeCounter:\n    def __init__(self, initial: int = 0):\n        self._lock = threading.Lock()\n        self._value = initial\n\n    def _validate_count(self, n):\n        if isinstance(n, bool) or not isinstance(n, int):\n            raise ValueError(\"count must be a non-bool integer\")\n        if n < 0:\n            raise ValueError(\"count must be >= 0\")\n\n    def increment(self, n: int = 1) -> None:\n        if isinstance(n, bool) or not isinstance(n, int):\n            raise ValueError(\"count must be a non-bool integer\")\n        with self._lock:\n            self._value += n\n\n    def decrement(self, n: int = 1) -> None:\n        if isinstance(n, bool) or not isinstance(n, int):\n            raise ValueError(\"count must be a non-bool integer\")\n        with self._lock:\n            self._value -= n\n\n    def value(self) -> int:\n        with self._lock:\n            return self._value\n\n    def compare_and_set(self, expected: int, new: int) -> bool:\n        if isinstance(expected, bool) or not isinstance(expected, int):\n            raise ValueError(\"expected must be a non-bool integer\")\n        if isinstance(new, bool) or not isinstance(new, int):\n            raise ValueError(\"new must be a non-bool integer\")\n        with self._lock:\n            if self._value == expected:\n                self._value = new\n                return True\n            return False\n\n    def transfer_to(self, other: \"SafeCounter\", n: int) -> None:\n        self._validate_count(n)\n        if other is self:\n            return\n        if not isinstance(other, SafeCounter):\n            raise ValueError(\"other must be a SafeCounter\")\n        first, second = (self, other) if id(self) < id(other) else (other, self)\n        with first._lock:\n            with second._lock:\n                self._value -= n\n                other._value += n\n```",
+    "tool_calls": [],
+    "total_seconds": 26.74507577251643
+  },
+  "scenario_id": "CODE-12",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Implement extract_leaves(value, with_paths=False) for nested Python JSON-like dict/list/scalar structures. Return scalars in depth-first order, dict insertion order and list index order; preserve duplicates and scalar types (str,int,float,bool,None). Empty containers contribute no leaves. With with_paths=True return (JSON_pointer, scalar) tuples; root scalar has path \"\", list indices are decimal, dict keys escape ~ as ~0 and / as ~1. Dict keys must be strings. Unsupported objects or non-string dict keys raise TypeError. Cycles on the CURRENT ancestor path raise ValueError; a shared but acyclic child must be traversed each time it appears, not deduplicated. Support nesting depth at least 2500 without changing the interpreter recursion limit. Never mutate the input. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 behavioral groups: ordered-typed-leaves:pass, escaped-pointers:pass, deep-without-recursion:pass, aliases-vs-cycles:pass, invalid-input:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 689,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport sys\n\n\ndef extract_leaves(value, with_paths=False):\n    \"\"\"\n    Extract scalars from a nested JSON-like structure (dicts, lists, scalars)\n    in depth-first order.\n\n    - Dicts are traversed in insertion order, lists in index order.\n    - Duplicates and scalar types (str, int, float, bool, None) are preserved.\n    - Empty containers contribute no leaves.\n    - with_paths=True yields (JSON_pointer, scalar) tuples; root scalar has\n      path \"\", list indices are decimal strings, dict keys escape '~' as '~0'\n      and '/' as '~1'.\n    - Non-string dict keys or unsupported object types raise TypeError.\n    - Cycles along the current ancestor path raise ValueError; shared but\n      acyclic children are traversed each time they appear.\n    - Supports nesting depth of at least 2500 without changing the\n      interpreter recursion limit (iterative traversal).\n    - Never mutates the input.\n    \"\"\"\n    scalars = (str, int, float, bool, type(None))\n\n    # Iterative traversal using an explicit stack to avoid recursion limits.\n    # Each frame: (container_or_scalar, iterator, path_prefix, ancestor_id_set)\n    # ancestor_id_set holds ids of containers on the CURRENT ancestor path\n    # only, so shared acyclic children are traversed repeatedly.\n    stack = [(value, None, \"\", frozenset())]\n    out = []\n\n    while stack:\n        node, iterator, prefix, ancestors = stack[-1]\n\n        if iterator is None:\n            # First visit of this node.\n            if isinstance(node, scalars):\n                stack.pop()\n                out.append((prefix, node) if with_paths else node)\n                continue\n\n            if isinstance(node, dict):\n                for k in node:\n                    if not isinstance(k, str):\n                        raise TypeError(\n                            \"dict keys must be strings, got %r\" % (type(k).__name__,)\n                        )\n                stack[-1] = (node, iter(list(node.items())), prefix, ancestors | {id(node)})\n                continue\n\n            if isinstance(node, list):\n                stack[-1] = (node, iter(list(enumerate(node))), prefix, ancestors | {id(node)})\n                continue\n\n            raise TypeError(\n                \"unsupported object of type %s\" % (type(node).__name__,)\n            )\n\n        # Resume iteration over container children.\n        nxt = next(iterator, _SENTINEL := object())\n        if nxt is _SENTINEL:\n            stack.pop()\n            continue\n\n        if isinstance(node, dict):\n            key, child = nxt\n            escaped = key.replace(\"~\", \"~0\").replace(\"/\", \"~1\")\n            child_prefix = prefix + \"/\" + escaped\n        else:\n            idx, child = nxt\n            child_prefix = prefix + \"/\" + str(idx)\n\n        if isinstance(child, scalars):\n            out.append((child_prefix, child) if with_paths else child)\n            continue\n\n        if isinstance(child, dict) or isinstance(child, list):\n            if id(child) in ancestors:\n                raise ValueError(\"cycle detected on current ancestor path\")\n            stack.append((child, None, child_prefix, ancestors))\n            continue\n\n        raise TypeError(\n            \"unsupported object of type %s\" % (type(child).__name__,)\n        )\n\n    return out\n```",
+    "tool_calls": [],
+    "total_seconds": 41.52987183071673
+  },
+  "scenario_id": "CODE-07",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

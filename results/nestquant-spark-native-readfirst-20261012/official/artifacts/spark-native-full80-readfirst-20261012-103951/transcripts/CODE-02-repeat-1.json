@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write one SQLite SELECT query (WITH/CTEs allowed). Schema: customers(id INTEGER PRIMARY KEY, name TEXT, region TEXT); orders(id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL, status TEXT); refunds(order_id INTEGER, refund_amount REAL). Return exactly customer_id, customer_name, net_revenue for customers with net_revenue STRICTLY greater than100. Count only orders whose status is 'completed'. Each qualifying order's net is COALESCE(amount,0) minus the sum of ALL its refund rows (NULL refund values count0; no refunds count0). Multiple refunds must not multiply the order amount; refunds of non-completed orders do not count. Over-refunds and negative order amounts remain negative contributions; do not clamp. Customers with identical names remain separate by id. Exclude customers with no qualifying revenue. Order by net_revenue descending, then customer_id ascending. Return only SQL, no hardcoded customer names or result rows.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 complete SQL datasets: db1:1/1 checks passed: entire-ordered-result:pass; db2:1/1 checks passed: entire-ordered-result:pass; db3:1/1 checks passed: entire-ordered-result:pass; db4:1/1 checks passed: entire-ordered-result:pass; db5:1/1 checks passed: entire-ordered-result:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 230,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```sql\nWITH completed_orders AS (\n    SELECT o.id,\n           o.customer_id,\n           COALESCE(o.amount, 0) AS base_amount\n    FROM orders o\n    WHERE o.status = 'completed'\n),\nrefunds_per_order AS (\n    SELECT r.order_id,\n           SUM(COALESCE(r.refund_amount, 0)) AS total_refund\n    FROM refunds r\n    GROUP BY r.order_id\n),\norder_net AS (\n    SELECT c.customer_id,\n           (c.base_amount - COALESCE(r.total_refund, 0)) AS net\n    FROM completed_orders c\n    LEFT JOIN refunds_per_order r ON r.order_id = c.id\n),\ncustomer_net AS (\n    SELECT customer_id,\n           SUM(net) AS net_revenue\n    FROM order_net\n    GROUP BY customer_id\n)\nSELECT cn.customer_id,\n       c.name AS customer_name,\n       cn.net_revenue\nFROM customer_net cn\nJOIN customers c ON c.id = cn.customer_id\nWHERE cn.net_revenue > 100\nORDER BY cn.net_revenue DESC, cn.customer_id ASC;\n```",
+    "tool_calls": [],
+    "total_seconds": 17.888558520004153
+  },
+  "scenario_id": "CODE-02",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

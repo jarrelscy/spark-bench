@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "List exactly 5 European capital cities, one per line, in alphabetical order. Rules:\n- Do NOT include Paris, London, or Berlin.\n- No numbering, no bullets, no extra text.\n- Each city on its own line.",
+      "role": "user"
+    }
+  ],
+  "reason": "100% 5 lines (want 5) | 100% excluded forbidden cities | 100% alphabetical order",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 14,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "Amsterdam\nAthens\nBern\nBrussels\nCopenhagen",
+    "tool_calls": [],
+    "total_seconds": 5.0357661210000515
+  },
+  "scenario_id": "IFS-03",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

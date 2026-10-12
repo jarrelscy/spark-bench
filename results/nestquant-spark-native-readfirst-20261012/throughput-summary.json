@@ -1,0 +1,8 @@
+{
+  "source": "Archived full80 serving log Avg generation throughput intervals",
+  "all_intervals": 1502,
+  "positive_intervals": 1249,
+  "median_positive_interval_tokens_per_second": 17.2,
+  "maximum_interval_tokens_per_second": 22.2,
+  "limitation": "Interval generation throughput includes scheduling/prefill and idle portions; not a dedicated decode benchmark. Dedicated throughput sweep skipped."
+}

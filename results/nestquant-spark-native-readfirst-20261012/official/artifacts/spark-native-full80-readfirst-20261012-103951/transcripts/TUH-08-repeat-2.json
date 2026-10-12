@@ -1,0 +1,136 @@
+{
+  "messages": [
+    {
+      "content": "Get the total revenue from the sales database and the marketing spend from document search, then calculate the ROI. Report the final number.",
+      "role": "user"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"sql\": \"SELECT SUM(amount) FROM revenue WHERE quarter = 'Q4'\", \"database\": \"sales\"}",
+            "name": "query_db"
+          },
+          "id": "call00001",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"error\": \"connection_refused\", \"message\": \"The sales database is currently offline for maintenance.\"}",
+      "role": "tool",
+      "tool_call_id": "call00001"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"query\": \"total revenue\"}",
+            "name": "search_docs"
+          },
+          "id": "call00002",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"results\": [{\"title\": \"Annual Revenue Report\", \"path\": \"/docs/revenue.txt\", \"summary\": \"Total revenue for 2026: $4,200,000\"}]}",
+      "role": "tool",
+      "tool_call_id": "call00002"
+    }
+  ],
+  "reason": "0% none of ['4200000', '4,200,000', '4.2'] in answer | 100% recovered via alternative source",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 12,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "runaway": null,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "query": "marketing spend"
+        },
+        "name": "search_docs"
+      }
+    ],
+    "total_seconds": 8.67234720196575
+  },
+  "scenario_id": "TUH-08",
+  "scenario_revision": null,
+  "score": 0.5,
+  "tools": [
+    {
+      "function": {
+        "description": "Search internal documents by query.",
+        "name": "search_docs",
+        "parameters": {
+          "properties": {
+            "limit": {
+              "description": "Max results (default 5)",
+              "type": "integer"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Run a SQL query on the analytics database.",
+        "name": "query_db",
+        "parameters": {
+          "properties": {
+            "database": {
+              "enum": [
+                "sales",
+                "inventory",
+                "users"
+              ],
+              "type": "string"
+            },
+            "sql": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sql"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Evaluate an arithmetic expression.",
+        "name": "calculator",
+        "parameters": {
+          "properties": {
+            "expression": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

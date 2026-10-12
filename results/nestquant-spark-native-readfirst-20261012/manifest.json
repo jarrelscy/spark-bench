@@ -1,0 +1,909 @@
+{
+  "files": [
+    {
+      "path": "full80-routing-history.jsonl",
+      "bytes": 34213524,
+      "sha256": "21cba389e6848372b36259a280290610bf59102e130a405241bd09b6ef705845"
+    },
+    {
+      "path": "coverage-summary.json",
+      "bytes": 703,
+      "sha256": "fa7aa1656b1ef6049db0eefcf4368cf62c877d44b69918fd07c768baa201f83c"
+    },
+    {
+      "path": "status.json",
+      "bytes": 68,
+      "sha256": "e7374989e3d97cdf8c3b4fdd7a8cc066854cf75dd9135b19b20a976d20990089"
+    },
+    {
+      "path": "task-coverage.json",
+      "bytes": 53228,
+      "sha256": "499dee4ac63998c4d5786fc1b38e27f0af91b86dd53a710d567ba1e8414ab033"
+    },
+    {
+      "path": "throughput-summary.json",
+      "bytes": 403,
+      "sha256": "fbee6034cf3b5a8e8bb2713be53bd98d74d681477e133c647308c88a8bdce5b3"
+    },
+    {
+      "path": "telemetry.jsonl",
+      "bytes": 82781,
+      "sha256": "6fc2c2559e7da41de2227424a30f6bebbe8013680d45c743f1f02ee6761bfec2"
+    },
+    {
+      "path": "official/spark_bench.csv",
+      "bytes": 56482,
+      "sha256": "a916abdf9cdb737a7c8d7cebae41eb554f405188ed1fbdafd200da335f87395b"
+    },
+    {
+      "path": "official/latest.html",
+      "bytes": 283768,
+      "sha256": "c2d25a8a5937b48da437eddd5f5b7d0a28bb0d22185f778d14b44a8e2b6f0a7a"
+    },
+    {
+      "path": "official/runs/spark-native-full80-readfirst-20261012-103951.md",
+      "bytes": 12247,
+      "sha256": "b3a54b4dd1f7621f686ec6b94bc074d617916048109cee5e2ad7fd1471994dd1"
+    },
+    {
+      "path": "official/runs/spark-native-full80-readfirst-20261012-103951.html",
+      "bytes": 283768,
+      "sha256": "c2d25a8a5937b48da437eddd5f5b7d0a28bb0d22185f778d14b44a8e2b6f0a7a"
+    },
+    {
+      "path": "official/runs/spark-native-full80-readfirst-20261012-103951.STARTED",
+      "bytes": 167,
+      "sha256": "89451746f3a26f95b5ce8a23c5e7eb3021a972931f853acf9f0002d3555f969d"
+    },
+    {
+      "path": "official/runs/spark-native-full80-readfirst-20261012-103951.DONE",
+      "bytes": 248,
+      "sha256": "8e9e2f7d871b9b45d7afcd8b4c9c4d25356caf8f4fbeeefe0b17e66058bf3c62"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/VIS-02.html",
+      "bytes": 5401,
+      "sha256": "88109c4cd3594c35b5927f21f9485d227ae8d90f36155f3a6bf16ddea096fc27"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/LG-02.md",
+      "bytes": 1809,
+      "sha256": "c3ea05f074176aebbf5a3f6fbc3aa3e27a5e5b0548ba079afe786ed92a36a8ed"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/LG-03.md",
+      "bytes": 36572,
+      "sha256": "d006b0226892abcbe0ca225af57978d6091c5dd7fdf3b2512ba2ff0b73dd5a14"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/LG-04.md",
+      "bytes": 12916,
+      "sha256": "8f7006c1285965ed910c940fd550341222d55b9058536c0159552c8d7c9ef22b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/VIS-05.html",
+      "bytes": 8932,
+      "sha256": "330e62537b1c0bfb558b64db94d5f674f51e26f8b2e1e205d8be9f722b943489"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/VIS-04.html",
+      "bytes": 11099,
+      "sha256": "05f2a65e42f30559320651c41ecec92b74028ae5dac60d16a975ed05177ba4f4"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/VIS-03.html",
+      "bytes": 4788,
+      "sha256": "9e12ec9d8f5821316d0a51d5ed8361c110199281e49d017fcdf34757d313a0f6"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/LG-01.html",
+      "bytes": 19789,
+      "sha256": "2b21f766881491704a88ce1d094d134f5d7a03fdd16c255b63151a8934eb1f37"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/VIS-01.html",
+      "bytes": 6585,
+      "sha256": "df4e49de648e7fe52e24eb94742ba1dcf425062edddfa756d91d6e30c3792088"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IF-03-repeat-2.json",
+      "bytes": 497,
+      "sha256": "4b640160dc214621cecb4dcf146e47a1ffebedc9edbefc8fe75c0616fd01dc2e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-02-repeat-1.json",
+      "bytes": 3372,
+      "sha256": "79673fd8353f5be6c889d420045041837bdc978e432d02767a67268e147b47eb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/TUH-08-repeat-1.json",
+      "bytes": 3343,
+      "sha256": "cd285cbfc6353c96848b12bc15125adc897962637cbd4d168c81fa1a8b1bb9fe"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-04-repeat-1.json",
+      "bytes": 12779,
+      "sha256": "26f30d3431a55bbc47c4e662f0e726d8d97167a3f6595f95d89c7cca38d179ea"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-13-repeat-1.json",
+      "bytes": 4428,
+      "sha256": "8bc66fb68dd0106412866e0098345b44ebf2e917e540b742c89531727739d6b7"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-11-repeat-2.json",
+      "bytes": 2853,
+      "sha256": "1cbb2b7b87358056b03feb91539a29adc6ffceb77d3e4220869dc3c9efa817bf"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/MSC-03-repeat-2.json",
+      "bytes": 4545,
+      "sha256": "f2a422573571d5876157ad8fc4dd53d16687adedcee68dc223ddc601833198db"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-03-repeat-2.json",
+      "bytes": 2370,
+      "sha256": "f3e55df959688d4234a6fc20938ce37e50545e1303097130714dfa1d090d18b7"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-01-repeat-1.json",
+      "bytes": 22257,
+      "sha256": "52d11449bdfd67ddc1e6d1a5a35164054a27fdef0a040a65319a02a41c6e4286"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFS-01-repeat-1.json",
+      "bytes": 1116,
+      "sha256": "42eac73fe702de9794ad2222641e72362d715b8a9167796bc26fa98db0279f3e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFS-02-repeat-2.json",
+      "bytes": 1090,
+      "sha256": "8fa697468319aa88eaa25b379653d979f32c47332d7e6523a32a1a734ba56218"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-04-repeat-2.json",
+      "bytes": 22684,
+      "sha256": "7d0f0e94e9c7b6ae61af98725648da861019a565680f1926f11bf58ee45b51ab"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-02-repeat-2.json",
+      "bytes": 7775,
+      "sha256": "8e475177c80d2561774406d051c1295b52d88ab2511b29b19e2a9a82e34a8d37"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-01-repeat-2.json",
+      "bytes": 7265,
+      "sha256": "2101420265b9e51b21ea2b085446c880e1943cf175ce19ebc1671aff7e0373c3"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-04-repeat-2.json",
+      "bytes": 3689,
+      "sha256": "4efb0860c5d7885f4ff7b79784d0ca0c9fa3e790442f4ddbf25683c9606d40a7"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-08-repeat-2.json",
+      "bytes": 49318,
+      "sha256": "9e3425bc8af9121243b8001685c534b5290af2025d11eebeb2864684fe87fae9"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-02-repeat-1.json",
+      "bytes": 38424,
+      "sha256": "b830938f17730345cb66ec0a7875b2a916f02d0ec5ac7406ae95c0d2354eb132"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFS-01-repeat-2.json",
+      "bytes": 1103,
+      "sha256": "ba53ec02b1d68c6c20d387c10616fbe2ff564ebf5b97997387dcfa9802a8970f"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-03-repeat-2.json",
+      "bytes": 2539,
+      "sha256": "84512542626c066d6ee5bfdba214042a5285ce179487bb8170537c1976a8d4da"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IF-04-repeat-1.json",
+      "bytes": 549,
+      "sha256": "4ca143daabd6b89e7e7f61a99ec54d6e4b67d08d31afcd8a7b59e58ba3a0ccae"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LCH-01-repeat-2.json",
+      "bytes": 48382,
+      "sha256": "3cf5943330a3b79d822b00361b426756acce7c20e45497e9f3f41148695fdba8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-04-repeat-2.json",
+      "bytes": 13938,
+      "sha256": "b1a836700930598d0fdc9882a654e792273e83340611473c1f5c544e46293b3e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-03-repeat-2.json",
+      "bytes": 1670,
+      "sha256": "fd8488d68bb31bd76beb49fead488fd503b741c41ac622e0e0ffc4e3b9d46101"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-11-repeat-2.json",
+      "bytes": 63315,
+      "sha256": "e16958399997bc7b7b8ddbef77508cd9dc602c490c81d0a87000d9276c547800"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-07-repeat-1.json",
+      "bytes": 4765,
+      "sha256": "4cf3adfacabbfd4f46c29b3d5808d43be357b57a2006c3f260ffe381776515c3"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-06-repeat-1.json",
+      "bytes": 40525,
+      "sha256": "d7999668229c19df251c16a20f497e8f29e0c43226d1b88af86c1898c5213674"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-02-repeat-2.json",
+      "bytes": 61104,
+      "sha256": "fc4bf66f18fdba4d0270b12b6fe6a7df0ed04844fffd69e36984b41dc9669886"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IF-04-repeat-2.json",
+      "bytes": 558,
+      "sha256": "a5353a807f35134157fc6187f9ca34707c3ecbed334b68430087ddf6418507cb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-04-repeat-2.json",
+      "bytes": 3004,
+      "sha256": "4c299c841968deca87e8e7a44a11804ff3108bf99713e4b27125400b21d30e8c"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-02-repeat-1.json",
+      "bytes": 1195,
+      "sha256": "4cd74448ff9800c1dbe05326bb4d8fd614bbe183b2a5e96c4df44f351526ea11"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-12-repeat-2.json",
+      "bytes": 62462,
+      "sha256": "70afc35268c96dd71f3a2e822c3fb1f8c80d7a95d150ab9b423cfd572468ccf2"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SAH-02-repeat-2.json",
+      "bytes": 3751,
+      "sha256": "eaa939bff41c2cfc25443609954a4aa4ec613a5082681b6fc0cf2e58132ee436"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-05-repeat-2.json",
+      "bytes": 9867,
+      "sha256": "92e7b8e041f6a1c7a3ef2316edde603323f6c9a98fcfc5dbf6a890bac1291785"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-09-repeat-1.json",
+      "bytes": 16031,
+      "sha256": "b69f935841cbf004e7dfd4b154eb12ab35566b7850044057633d2d911af1626a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-03-repeat-2.json",
+      "bytes": 24719,
+      "sha256": "04328d127e7f65e8406edb205504f7c73b5fcb89a7aea359db3dfacf6a007f4a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SAH-03-repeat-2.json",
+      "bytes": 3374,
+      "sha256": "b9aed365120211b70c131397324c899202951aba82558e3e9cf6a61f98916d53"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IF-01-repeat-2.json",
+      "bytes": 501,
+      "sha256": "783bf51d8bc62fa0b1d58de62e6e25c2bc06eb92173b308908d17660539a3723"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SO-02-repeat-2.json",
+      "bytes": 1602,
+      "sha256": "13f22f6c6723ea5009cc81c2a19e4caf0d15f86df0fd093d58051edab2887bdf"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-03-repeat-1.json",
+      "bytes": 84039,
+      "sha256": "93f7299153604d3e261ebd7bad3ed98a77eae7dcdaf28fcb2a56c28266e15c4c"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-14-repeat-1.json",
+      "bytes": 7153,
+      "sha256": "202ac1e3a31c3af1edce55c296309082b84402c8c9e66f5429f23fe54ea144ac"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-02-repeat-1.json",
+      "bytes": 4932,
+      "sha256": "a867eaf5c191b7d8cdd043a3d6174a8b7c30d3f5253f9da319ffa73cb866d7a9"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-11-repeat-1.json",
+      "bytes": 2830,
+      "sha256": "6adda6754c0843b529b898d6f2cab1b4a4fe02789bfb5ad9d24dfbd54c151502"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-03-repeat-2.json",
+      "bytes": 136027,
+      "sha256": "254acf8c95d6de6e9959addd58b272728e81500f6bd7c84dd57ce50f81bdca5b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFH-01-repeat-2.json",
+      "bytes": 559,
+      "sha256": "fdee003d840c4ced009ac7860884d2c8e88a47f5e6efc1eccb3206a754b8791d"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-01-repeat-1.json",
+      "bytes": 2049,
+      "sha256": "11b5d7a827aaec5dbeaedab0ad7c10db23eb9878adf00cbe7c713f7abe4f95cc"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/PL-01-repeat-2.json",
+      "bytes": 2800,
+      "sha256": "0264529ef53c2c7ed852462ed1b73a322f0bf2711d809a0fed498a7d1b5cd3d3"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-01-repeat-1.json",
+      "bytes": 2031,
+      "sha256": "271716e6be1a6d0e485ea978f3e9a7a08118f2ad79a11b2bf2ce593f188b068d"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-02-repeat-1.json",
+      "bytes": 72061,
+      "sha256": "9ec9c79f5d91436266be7c1097023ad98bdd11f3be55686ad72ef30888242589"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-02-repeat-2.json",
+      "bytes": 4087,
+      "sha256": "75268978f09c7a69fe329632c47277d8858fba7b560f3d3197966990ec898144"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-02-repeat-1.json",
+      "bytes": 2556,
+      "sha256": "5de2c2901291d3f63f9d27948c42454b424577e5b8d0bfdff6ab8fab50c5c958"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/PL-03-repeat-2.json",
+      "bytes": 3906,
+      "sha256": "16f7261e1cd666ccda643ee30f2ddee96c054635eec76917c7c4b26b4a76abca"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/PL-02-repeat-1.json",
+      "bytes": 2710,
+      "sha256": "2a534df071a719b7ab5db8dc7a97d4869ae83ad1373350d572de1327846ed38b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/MSC-02-repeat-1.json",
+      "bytes": 5029,
+      "sha256": "08767c8b67135bce7cb91968736cb87e7b53abe636c0d3b305fbe35cb4e4baab"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LC-03-repeat-1.json",
+      "bytes": 22264,
+      "sha256": "d41bed9399f200a4550ec189d2044bdc0d71b2d6126cfacd1e46f0333b3794f0"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IF-01-repeat-1.json",
+      "bytes": 502,
+      "sha256": "79662457354dc17460215dd5eab37b675a2ec3c18937af32145cdfe8be09740f"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-01-repeat-2.json",
+      "bytes": 2182,
+      "sha256": "dca4f2fe4b13ed871484c9169e1b1825890c8d7bc08899ca1e57b95403cde598"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LCH-01-repeat-1.json",
+      "bytes": 48383,
+      "sha256": "04298ba80124c9eb52c6db4495e1ac0dcb990c43b926e19407e2bc35ad030450"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-08-repeat-2.json",
+      "bytes": 2142,
+      "sha256": "e45cd690dbc37d0c972fda1527c70fd211120dc69de1ebcf3025306cc6067d7a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CP-01-repeat-2.json",
+      "bytes": 3276,
+      "sha256": "2ca0d2d706d9e8ec5d5603b3650440101d965246c3eaaf5537cf9d5b045e08a0"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-06-repeat-1.json",
+      "bytes": 4800,
+      "sha256": "fbbadefaae30c003d980c22913c2038d15c9889cce2c54e80d79289bc27bc56e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CL-01-repeat-1.json",
+      "bytes": 1381,
+      "sha256": "8c9e5a281570f5faac2a71191ae980e7468254b0dfe362af6d12c16752c50a54"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CL-01-repeat-2.json",
+      "bytes": 1336,
+      "sha256": "f6fbf64d427b2e7aabf7ae58cec773ddbca7b6b8bd9794ac3d268fa06eccc6fd"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SAH-02-repeat-1.json",
+      "bytes": 3762,
+      "sha256": "a8412e6b8aaa437d898842128e353824e42051d0e6b420f70a7a17cc2644b9b2"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-05-repeat-1.json",
+      "bytes": 24768,
+      "sha256": "351f66a6fd73c61460300e8ab9c083ee2b77fa47b6533c08400e719c69bd63f3"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-01-repeat-2.json",
+      "bytes": 1419,
+      "sha256": "2e1ef944217dce6f3f97453f0362929fd0c978a32c0ad7f79195b13329db6041"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-02-repeat-2.json",
+      "bytes": 2835,
+      "sha256": "f69d9546bd9d39cfb5035d5e948c10b587c44e9db10266a28d45269a6f1904d3"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-03-repeat-1.json",
+      "bytes": 24752,
+      "sha256": "7381ce4398ad80b7e8c063e40bd28fff0d98c45772cf840f3b0cad34119321a8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-03-repeat-1.json",
+      "bytes": 2371,
+      "sha256": "861980a05fce5ec0cda17cd5fd62b888457ddd7d870b7ec9598c1badf9038f34"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AP-01-repeat-2.json",
+      "bytes": 5774,
+      "sha256": "96985fda807410994d41fa895779f7bd959facd876aa8cb0ad9337d9925101dd"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-09-repeat-2.json",
+      "bytes": 15629,
+      "sha256": "366b4a3b4e75d2de8790b85f626ae607ce8c7ed8474043ad156ad99d5231da09"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-01-repeat-1.json",
+      "bytes": 79147,
+      "sha256": "4ee4780f56f0415da3629f92172be7cb2aa495e4d81d7fac3dd7512cd5ac71a8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/TUH-05-repeat-1.json",
+      "bytes": 8216,
+      "sha256": "69e91d10a142582f5948478b1d793b7413920c917149e0620717b7e856d429f8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-02-repeat-2.json",
+      "bytes": 1194,
+      "sha256": "3992d3ced623d149a0baedede40aedd90b49f3db06b69c83191aa08e114b904b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AP-01-repeat-1.json",
+      "bytes": 5815,
+      "sha256": "fb3c4c2dfadee022a307974b75e032f7401dc8c8b4335cb38e2b99ae9f7d9dcc"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-07-repeat-1.json",
+      "bytes": 27608,
+      "sha256": "6d62ca8a764b0001ac3983f3dd4d44bcc68fb3f9dbcfaa50509ecf00a6d71a58"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-13-repeat-2.json",
+      "bytes": 4753,
+      "sha256": "69238658898075bf07d674e2e46ae9250446b61411f08bb558c6e94d3f3a9220"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IF-03-repeat-1.json",
+      "bytes": 497,
+      "sha256": "2193e372dbabfa0187866fdae2453f6b4c27c1da7f309410f328a02b95b871ce"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/TUH-10-repeat-1.json",
+      "bytes": 5553,
+      "sha256": "1ae643e5aa869d7e4825473a324985fb12f76223104edd5d81da7e0baeac6286"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/MSC-02-repeat-2.json",
+      "bytes": 4563,
+      "sha256": "68b70425a4c6ce452af57ecdd8002fae3530c8f20ab93cdfe12e58e8acbd1194"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-03-repeat-2.json",
+      "bytes": 21922,
+      "sha256": "1ebeb380d9e3efe2c0034df3ff25e6ac5dd45c3fb58a17c84401b8a245c961d6"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-12-repeat-2.json",
+      "bytes": 3326,
+      "sha256": "69c778881c55e03d5a2781cbae1662059bcc2eee68f1a6c6c0b36d33b62fc2eb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-04-repeat-1.json",
+      "bytes": 2425,
+      "sha256": "dc7762094293d74c969eb92c8892597d01e946b8bf9ff1bbc4cae0cacc6636c7"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/MSC-01-repeat-1.json",
+      "bytes": 4740,
+      "sha256": "6b5156db3534c127cc149f7543971921238f8fe80e23230f00f7350ede7734dd"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-12-repeat-1.json",
+      "bytes": 62436,
+      "sha256": "50928c9cec36679777b9543dcc7dd6fa538e7c1512f247ebbc970dba9f5c9e34"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFS-03-repeat-1.json",
+      "bytes": 743,
+      "sha256": "0a370f0c74deb6215c60d1c1d91fd4044c800f24878c296c47dfe2ee12c84298"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CP-02-repeat-1.json",
+      "bytes": 3908,
+      "sha256": "cfac179c5d904c065ae32074b0d87b78e83374001c72fb426bf4ccfe9a48b4bd"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-10-repeat-2.json",
+      "bytes": 71582,
+      "sha256": "8fcd2685cc63222588c8a662245d1e81b8e99da252d205a834a7a26b0c9c26bd"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-07-repeat-2.json",
+      "bytes": 5437,
+      "sha256": "8ecd2555739c4ed92c63717809768a558c73dee5565d101a2a8a3ecb86d16a46"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-09-repeat-1.json",
+      "bytes": 3782,
+      "sha256": "69ffd4753ee51f5a73f8aae757f79c983fc2cda07c24d40dea51195abc079ed6"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-02-repeat-1.json",
+      "bytes": 1912,
+      "sha256": "9beb29b253400dfb6e9d6b5432a9210002979554fa3af93daa87b39eed2dca8a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-03-repeat-2.json",
+      "bytes": 5624,
+      "sha256": "b0c3149ba0280d5cf96723562fffbdc3f30d7162e8f42a9ba67663a9f6729a9a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-01-repeat-1.json",
+      "bytes": 1350,
+      "sha256": "0bf0af76cc87a844d5f764a20dc460f040f6b1592ce9245299dd4dc27184bf5f"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-05-repeat-2.json",
+      "bytes": 2798,
+      "sha256": "9143f0bdbc5c6106b881bd3fc1f7cacda9b34e4f5f4b5590e13f98f22e99196a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFH-03-repeat-1.json",
+      "bytes": 1168,
+      "sha256": "146218f50efbd47f139828e24ca42249be8b76405689f2b4a3dba486b67273d1"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-02-repeat-2.json",
+      "bytes": 33245,
+      "sha256": "24be939d7305cb1e6659623821d2890ce4accdfe8cfb9adae475110a9d86501c"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-03-repeat-1.json",
+      "bytes": 20681,
+      "sha256": "be10fa9381f36283c349881f507ca40e6cb98a56095d5e399a665cc08d5bd90a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-04-repeat-1.json",
+      "bytes": 41414,
+      "sha256": "a84bbd798c2a087da92ea919c68e966705807d023e7d41ce529dd09e64cf7b30"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-02-repeat-2.json",
+      "bytes": 2274,
+      "sha256": "b0559818bc978973671cd93c86cfb6fa26b41458034bdd5a6f52d469c98dd06b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-06-repeat-2.json",
+      "bytes": 41328,
+      "sha256": "d9bf33d6449c89b1c9b9bb319dada89f918056ab7f7e3cc5723b7eee29de7ee4"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-04-repeat-2.json",
+      "bytes": 7777,
+      "sha256": "1af3f7976f68cf1fda913abba086017df6cc3ae67e85aa5e028f72f7b9ef81aa"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-05-repeat-2.json",
+      "bytes": 21964,
+      "sha256": "ba02a86983c131aaca3a6287942f413849b56a9507a8f03bef952c3c5f024941"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-03-repeat-2.json",
+      "bytes": 3212,
+      "sha256": "e318c9884a50ba8e46ad0ea4bc92354a0bfc83b42e9a993f2346aff2dd8fd45e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CP-01-repeat-1.json",
+      "bytes": 3309,
+      "sha256": "950e86d128ba4020049794f233b9e46a5d977d23b2384266bf29cd11e91f976a"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AP-02-repeat-1.json",
+      "bytes": 4553,
+      "sha256": "824f371fcc180cd36fd7e4cd2e057153381f70c7ed0f7bbfd6975ed74b7cc55f"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-07-repeat-2.json",
+      "bytes": 26544,
+      "sha256": "221be099b31c5d77c92b90852293026d2c00a955c9843954158d1f7cc745cc15"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-02-repeat-1.json",
+      "bytes": 6650,
+      "sha256": "1239b7c3ca1dfa8ba08545f3fb10b9623d542f6254326b8bd2ddaa0b4f5608e2"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-04-repeat-2.json",
+      "bytes": 890,
+      "sha256": "dffd10c2e064daf84f5357246b77f6c47fabf6126bd3a1a17a5079e867c51a06"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-01-repeat-2.json",
+      "bytes": 8318,
+      "sha256": "06200b5de199e85c608b0b736a92b280c9aeb68d5769dbe03dfa24c9ba36b560"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-04-repeat-1.json",
+      "bytes": 18553,
+      "sha256": "8d282c70b1bf0f534afa4d0f4bbd53982e1dd0b725aa1bc58d0f12dce554d7e2"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-01-repeat-2.json",
+      "bytes": 53621,
+      "sha256": "b2aa7e3eb553f6e2e3dcfaf9f901103592638aa7d44f2129700072149e08d4eb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LG-01-repeat-2.json",
+      "bytes": 45828,
+      "sha256": "2d98115205b773d2c2d8c204da61bc4dc87723af313748ecf5ca359a39148beb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-04-repeat-1.json",
+      "bytes": 3610,
+      "sha256": "48e95d16d170bdabf7c9df133d0635402e981c645d1c41dd4eea2a8451de7f3d"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-01-repeat-2.json",
+      "bytes": 1467,
+      "sha256": "8e85ea102b214c787e52163268a61ee41b468cf1f0fd99f2467e7b162c10ceec"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-02-repeat-2.json",
+      "bytes": 1824,
+      "sha256": "2d0e744a95af6033aa32940fdb1e19939da74db0b7641cb0388079de8ecb8273"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-01-repeat-2.json",
+      "bytes": 2908,
+      "sha256": "fc65743319526931a463773e060eaed56ccd9c6c261abcc448ebd9c8731b6f5b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-01-repeat-1.json",
+      "bytes": 8539,
+      "sha256": "69e7c988e9e3f1f4eb35844e36d18d23d31eb0733558f7a9bb2b1307965b4df8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-08-repeat-1.json",
+      "bytes": 2064,
+      "sha256": "4640f793222e5d59b8b02215f35637ee21d3d886412f3e1dc4bf8e0e462088e4"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SO-02-repeat-1.json",
+      "bytes": 1603,
+      "sha256": "34585d6e298041b9a7727e32209a1f50bf5e9c916ba3becd77429e48493f7dab"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/MSC-01-repeat-2.json",
+      "bytes": 4727,
+      "sha256": "76e93013b03fae65cdf497c007ae43dac0c05ab335bad9583a3c30c989def92c"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-05-repeat-1.json",
+      "bytes": 10597,
+      "sha256": "d5b410a306a89e2f703796ec823df6a43650dec096e5c045b443ca4b0cfd4daa"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-04-repeat-2.json",
+      "bytes": 1289,
+      "sha256": "9145e37f43b2568799aceebe320a59334ee9f8cab4d31944b0e887711c4e4274"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFH-03-repeat-2.json",
+      "bytes": 1201,
+      "sha256": "5e7573d32b4772297216511541d6fad22b8ae99aa45125e216fdda9f54588bd8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CP-02-repeat-2.json",
+      "bytes": 3865,
+      "sha256": "be89e837bda1d21c7369871fadea968af25b99c1fd1832c95e9e70ba42f37491"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SAH-01-repeat-1.json",
+      "bytes": 3373,
+      "sha256": "da3b17dcc62186d4973f8ce6bc211e7aa6688f1bba0d9a82da69a297ebb39b89"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-06-repeat-2.json",
+      "bytes": 4315,
+      "sha256": "4bb7657faa32623dc8aee7690d43e2766bfc364e782cce0a92057456213ffdb7"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-01-repeat-1.json",
+      "bytes": 7913,
+      "sha256": "dd12dc62dc51d8f8bb21644c1882e052ac046f9e8a5724b17ba7259768997559"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-01-repeat-1.json",
+      "bytes": 1419,
+      "sha256": "3fba54da6a10104a445d4a2156d12e7f566c7399603f48db0f0e4c5a88664386"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/PL-01-repeat-1.json",
+      "bytes": 2884,
+      "sha256": "1fe7a70e184a1a4f50317644684264c4364b35b2512d177899ea144e23cfa380"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFH-02-repeat-2.json",
+      "bytes": 568,
+      "sha256": "8e459c8fb5635c62529e90519ae3370a3b8a93c671bf0f0653431e8e7e2a268e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/MSC-03-repeat-1.json",
+      "bytes": 4541,
+      "sha256": "722f5260b419b4578924423932201b6fc166c5660ad09e6993a76e046448402b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/TUH-08-repeat-2.json",
+      "bytes": 3342,
+      "sha256": "26871903d9f3fcfd7ce2299d1f4a786d30b516a7c42a9dbd3dfe1216a46932c2"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-12-repeat-1.json",
+      "bytes": 3473,
+      "sha256": "68ead9cb91df3cd8a9e33e98089cb70ef2a907fd59cd5ab25dd727ef61e5cc51"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-04-repeat-2.json",
+      "bytes": 29817,
+      "sha256": "7da7d208422e272f1a7073e2a7c1b4269b5b13e50e2e2ddb886078c390024b12"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/TUH-05-repeat-2.json",
+      "bytes": 8216,
+      "sha256": "419d33d2974e83541e4b5a3d1d0d1c202eabcac836c9e18a6056ddf7b97f6fb7"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFH-01-repeat-1.json",
+      "bytes": 589,
+      "sha256": "e499072c414d353ccf94cf26744dd9e10e2f7fb03da5c3ff093ddeb60dd343d6"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-10-repeat-1.json",
+      "bytes": 69421,
+      "sha256": "6d86481272d207319fbe90e873647c1c421435d76cc2423501148c665939bdb9"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-14-repeat-2.json",
+      "bytes": 2815,
+      "sha256": "7175cabca5d477078b0426155f024fefcddec4e9c78a8101cb83583e28f94981"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/PL-03-repeat-1.json",
+      "bytes": 3946,
+      "sha256": "bc86fa90d5b88b0dc8f0bd1a8ee4b83b5c4f6d1b5e2dd2c5780f6af074f8b9ad"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/VIS-03-repeat-1.json",
+      "bytes": 5924,
+      "sha256": "c75ed31693f57a6fbe55d54b20a28954880e219206e4bba3e270870f11c51f12"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-03-repeat-1.json",
+      "bytes": 1672,
+      "sha256": "ecfbb65de6abd65bdd3edc8b7db1b38f3e39e5cb513295cc1f606705fecb6095"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-04-repeat-1.json",
+      "bytes": 1449,
+      "sha256": "7b032fe128bb22f60bf0441225e3e1965c9f58b824b90825d3f562cd4fcfb3fb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-08-repeat-1.json",
+      "bytes": 48270,
+      "sha256": "a7f8552b5d3a89bb7f4510a1dc7fa5f70e7efb31f92d858730e1ba65cadd3d7c"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AG-11-repeat-1.json",
+      "bytes": 57855,
+      "sha256": "415889e828c7d50f27891bb3709fecd92683bab7423c5506d6231ad1800a267c"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SOH-04-repeat-1.json",
+      "bytes": 3689,
+      "sha256": "7e0108f54abcc5e76b1cc0463cefafe9620dab07b59032df928582b01b9a500e"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFS-02-repeat-1.json",
+      "bytes": 1013,
+      "sha256": "4f6cf74d076021101561c4a312c0d36cf96eb043aa7ae7f14147671b88dc50eb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/TUH-10-repeat-2.json",
+      "bytes": 5554,
+      "sha256": "f6927c1d6ce06d711e57e3b59b885660b4e9fd291bba808fa30c0bd6ef571432"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-05-repeat-1.json",
+      "bytes": 3483,
+      "sha256": "67a9077571e49e27b78797ff5cb6e2a401f7f23fceb168d202432b2b85bd27d9"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-09-repeat-2.json",
+      "bytes": 4342,
+      "sha256": "dc26ea4f6de66154f7bbfbb638c95ee1f6db45b1fd22a9e9bffb5d2cc0428cd9"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFH-02-repeat-1.json",
+      "bytes": 588,
+      "sha256": "91daad158161b17804dd02ac9f69249dea5f8026b5ec5cf931dc06731893804b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SAH-01-repeat-2.json",
+      "bytes": 3321,
+      "sha256": "d4dd564e8d4681c92f8f4a25924b450ec2bfc5d461f5dc667ed290e6cde3e34b"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/IFS-03-repeat-2.json",
+      "bytes": 738,
+      "sha256": "31bbf7aaca1c32b33975d61f293cead12e6b452b2d1645cce0b605a53e71835f"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SAH-03-repeat-1.json",
+      "bytes": 3258,
+      "sha256": "a64dd87de8ab356dd7ef1a8fa6dbc14e57e74cdb50478ef69e9838867101a2e8"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/PL-02-repeat-2.json",
+      "bytes": 2752,
+      "sha256": "2933577ace4a443c21808c7a0c4afeb676fe4078d51d652435efcd4baef9dbef"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RO-04-repeat-1.json",
+      "bytes": 876,
+      "sha256": "4b4902a1f3e32777b85c59b94a6ce114870b3c925dbe1f5da768c984cf6c7404"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/AP-02-repeat-2.json",
+      "bytes": 4589,
+      "sha256": "a44045f3f50c2511eb9e884009ba7413a3a979f5be3a27f7c78d8608580bbedb"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-10-repeat-2.json",
+      "bytes": 3405,
+      "sha256": "ac9ddbbf2d7deaa8ea15f996e2ed5b4f56c10cfa1ef6fc758db13a31be60007d"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/SA-03-repeat-1.json",
+      "bytes": 3098,
+      "sha256": "e387e896d96951bb7b6ceb8a949d777d187d8818793ad346e0ef6e4ebe9b6549"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/RR-03-repeat-1.json",
+      "bytes": 3212,
+      "sha256": "520530f21c884c2321297a2cbaf690c553d453567358bd8cdb07b75256873323"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/LC-03-repeat-2.json",
+      "bytes": 22338,
+      "sha256": "0039c66992b9fb4c5a4bada52615bb3cd95145883f67359fec8928ed9408a6b3"
+    },
+    {
+      "path": "official/artifacts/spark-native-full80-readfirst-20261012-103951/transcripts/CODE-10-repeat-1.json",
+      "bytes": 3536,
+      "sha256": "3831b2efdbf42b01fbbde8afb644399e67720b76f65c4e5725dec3dfa4917a8d"
+    }
+  ]
+}

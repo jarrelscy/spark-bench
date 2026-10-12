@@ -1,0 +1,1835 @@
+{
+  "completed_task_pairs": 80,
+  "tasks": [
+    {
+      "task": "AG-01",
+      "official_repeat_scores": [
+        0.0,
+        0.49
+      ],
+      "hot_pct": 49.35960179526356,
+      "hot_salience_pct": 63.67975004042619,
+      "selected_cold_salience_pct": 9.147293412035308,
+      "boundary_offsets_s": [
+        -1.7323963642120361,
+        -1.2884228229522705
+      ],
+      "counts": {
+        "salience_sum": 33782611.81617022,
+        "hot_salience_sum": 21512682.76166468,
+        "expert_activations": 502656,
+        "hot_expert_activations": 248109
+      },
+      "local_hot_pct": 50.61018913059729,
+      "local_salience_pct": 65.7839893277963,
+      "salience_delta_pp": -2.1042392873701132
+    },
+    {
+      "task": "AG-02",
+      "official_repeat_scores": [
+        0.49,
+        0.3333333333333333
+      ],
+      "hot_pct": 47.0813427328517,
+      "hot_salience_pct": 64.01089098451406,
+      "selected_cold_salience_pct": 8.005110998475939,
+      "boundary_offsets_s": [
+        -1.2970361709594727,
+        -0.4824337959289551
+      ],
+      "counts": {
+        "salience_sum": 28168427.00899619,
+        "hot_salience_sum": 18030861.104780965,
+        "expert_activations": 411936,
+        "hot_expert_activations": 193945
+      },
+      "local_hot_pct": 49.41649542075754,
+      "local_salience_pct": 64.935114547381,
+      "salience_delta_pp": -0.924223562866942
+    },
+    {
+      "task": "AG-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 53.769626421223606,
+      "hot_salience_pct": 68.52797725414457,
+      "selected_cold_salience_pct": 5.324003823817644,
+      "boundary_offsets_s": [
+        -0.4856984615325928,
+        -1.1943025588989258
+      ],
+      "counts": {
+        "salience_sum": 41471778.40084442,
+        "hot_salience_sum": 28419770.869419903,
+        "expert_activations": 620592,
+        "hot_expert_activations": 333690
+      },
+      "local_hot_pct": 53.46657346212506,
+      "local_salience_pct": 68.76669871234253,
+      "salience_delta_pp": -0.23872145819795776
+    },
+    {
+      "task": "AG-04",
+      "official_repeat_scores": [
+        0.8,
+        1.0
+      ],
+      "hot_pct": 55.123454491285564,
+      "hot_salience_pct": 69.73916743313936,
+      "selected_cold_salience_pct": 4.675906152277863,
+      "boundary_offsets_s": [
+        -0.5006310939788818,
+        -1.1467416286468506
+      ],
+      "counts": {
+        "salience_sum": 64384593.9420301,
+        "hot_salience_sum": 44901279.770379275,
+        "expert_activations": 966672,
+        "hot_expert_activations": 532863
+      },
+      "local_hot_pct": 55.688148656898655,
+      "local_salience_pct": 70.94722241041474,
+      "salience_delta_pp": -1.2080549772753812
+    },
+    {
+      "task": "AG-05",
+      "official_repeat_scores": [
+        1.0,
+        0.8333333333333334
+      ],
+      "hot_pct": 53.40610119047619,
+      "hot_salience_pct": 68.41850108035263,
+      "selected_cold_salience_pct": 5.813168639549943,
+      "boundary_offsets_s": [
+        -1.070038080215454,
+        -1.1425549983978271
+      ],
+      "counts": {
+        "salience_sum": 45633847.050708234,
+        "hot_salience_sum": 31221994.137395278,
+        "expert_activations": 672000,
+        "hot_expert_activations": 358889
+      },
+      "local_hot_pct": 53.57025453179299,
+      "local_salience_pct": 69.02405106301877,
+      "salience_delta_pp": -0.6055499826661475
+    },
+    {
+      "task": "AG-06",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 55.12219992422628,
+      "hot_salience_pct": 68.37143961011262,
+      "selected_cold_salience_pct": 3.7985091445279147,
+      "boundary_offsets_s": [
+        -1.147695541381836,
+        -1.3122053146362305
+      ],
+      "counts": {
+        "salience_sum": 89638866.60369316,
+        "hot_salience_sum": 61287383.547133476,
+        "expert_activations": 1351392,
+        "hot_expert_activations": 744917
+      },
+      "local_hot_pct": 54.56030793562192,
+      "local_salience_pct": 68.28917901223166,
+      "salience_delta_pp": 0.08226059788096052
+    },
+    {
+      "task": "AG-07",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 53.07671889873325,
+      "hot_salience_pct": 68.0540650371719,
+      "selected_cold_salience_pct": 5.039189711456065,
+      "boundary_offsets_s": [
+        -0.21506452560424805,
+        -1.7380762100219727
+      ],
+      "counts": {
+        "salience_sum": 43551686.37308979,
+        "hot_salience_sum": 29638692.969127655,
+        "expert_activations": 655536,
+        "hot_expert_activations": 347937
+      },
+      "local_hot_pct": 52.68412242945959,
+      "local_salience_pct": 68.53274986501408,
+      "salience_delta_pp": -0.47868482784218713
+    },
+    {
+      "task": "AG-08",
+      "official_repeat_scores": [
+        0.8,
+        0.8
+      ],
+      "hot_pct": 52.15698435669492,
+      "hot_salience_pct": 66.164328541602,
+      "selected_cold_salience_pct": 6.098424112788296,
+      "boundary_offsets_s": [
+        -1.7487971782684326,
+        -1.8144850730895996
+      ],
+      "counts": {
+        "salience_sum": 46193208.94112301,
+        "hot_salience_sum": 30563426.5277133,
+        "expert_activations": 696528,
+        "hot_expert_activations": 363288
+      },
+      "local_hot_pct": 53.803856033627184,
+      "local_salience_pct": 68.28009852457197,
+      "salience_delta_pp": -2.115769982969965
+    },
+    {
+      "task": "AG-09",
+      "official_repeat_scores": [
+        0.8333333333333334,
+        0.8333333333333334
+      ],
+      "hot_pct": 52.82542807149106,
+      "hot_salience_pct": 67.57063243191203,
+      "selected_cold_salience_pct": 5.033815341289622,
+      "boundary_offsets_s": [
+        -1.8166663646697998,
+        -0.3169848918914795
+      ],
+      "counts": {
+        "salience_sum": 25496121.34445858,
+        "hot_salience_sum": 17227890.438058376,
+        "expert_activations": 384048,
+        "hot_expert_activations": 202875
+      },
+      "local_hot_pct": 53.439473562900474,
+      "local_salience_pct": 68.7432356127239,
+      "salience_delta_pp": -1.172603180811862
+    },
+    {
+      "task": "AG-10",
+      "official_repeat_scores": [
+        0.49,
+        0.49
+      ],
+      "hot_pct": 47.95272652603322,
+      "hot_salience_pct": 63.26577706366518,
+      "selected_cold_salience_pct": 7.054348452586278,
+      "boundary_offsets_s": [
+        -0.32284975051879883,
+        -2.1371986865997314
+      ],
+      "counts": {
+        "salience_sum": 53317692.90958929,
+        "hot_salience_sum": 33731852.73167038,
+        "expert_activations": 798672,
+        "hot_expert_activations": 382985
+      },
+      "local_hot_pct": 47.69979457479457,
+      "local_salience_pct": 63.98495059216075,
+      "salience_delta_pp": -0.7191735284955669
+    },
+    {
+      "task": "AG-11",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 47.11281043517886,
+      "hot_salience_pct": 64.79935541030154,
+      "selected_cold_salience_pct": 9.353327973526447,
+      "boundary_offsets_s": [
+        -2.142312526702881,
+        -1.3241727352142334
+      ],
+      "counts": {
+        "salience_sum": 19650643.626010418,
+        "hot_salience_sum": 12733490.403630257,
+        "expert_activations": 280896,
+        "hot_expert_activations": 132338
+      },
+      "local_hot_pct": 50.47695770037338,
+      "local_salience_pct": 68.63608302517488,
+      "salience_delta_pp": -3.8367276148733396
+    },
+    {
+      "task": "AG-12",
+      "official_repeat_scores": [
+        1.0,
+        0.49
+      ],
+      "hot_pct": 47.614578075046275,
+      "hot_salience_pct": 63.99814576341849,
+      "selected_cold_salience_pct": 11.008621972473048,
+      "boundary_offsets_s": [
+        -1.3335602283477783,
+        -0.4686312675476074
+      ],
+      "counts": {
+        "salience_sum": 26269961.16564226,
+        "hot_salience_sum": 16812288.038781166,
+        "expert_activations": 380352,
+        "hot_expert_activations": 181103
+      },
+      "local_hot_pct": 50.81496653588738,
+      "local_salience_pct": 68.00013288996868,
+      "salience_delta_pp": -4.0019871265501905
+    },
+    {
+      "task": "AP-01",
+      "official_repeat_scores": [
+        0.6,
+        0.6
+      ],
+      "hot_pct": 47.66086186540732,
+      "hot_salience_pct": 60.618688460494305,
+      "selected_cold_salience_pct": 18.75257153816773,
+      "boundary_offsets_s": [
+        -1.9991793632507324,
+        -1.885927677154541
+      ],
+      "counts": {
+        "salience_sum": 2819832.8865163326,
+        "hot_salience_sum": 1709345.7125838995,
+        "expert_activations": 40656,
+        "hot_expert_activations": 19377
+      },
+      "local_hot_pct": 49.87541528239203,
+      "local_salience_pct": 63.60370878317099,
+      "salience_delta_pp": -2.9850203226766823
+    },
+    {
+      "task": "AP-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 57.74420024420024,
+      "hot_salience_pct": 72.46694988714434,
+      "selected_cold_salience_pct": 6.570607557326671,
+      "boundary_offsets_s": [
+        -1.886601209640503,
+        -1.866926908493042
+      ],
+      "counts": {
+        "salience_sum": 4401036.985558033,
+        "hot_salience_sum": 3189297.2668390274,
+        "expert_activations": 65520,
+        "hot_expert_activations": 37834
+      },
+      "local_hot_pct": 55.978347714924894,
+      "local_salience_pct": 71.2817312365753,
+      "salience_delta_pp": 1.1852186505690412
+    },
+    {
+      "task": "CL-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 53.86904761904762,
+      "hot_salience_pct": 71.00090790426356,
+      "selected_cold_salience_pct": 7.591092445577008,
+      "boundary_offsets_s": [
+        -1.8930695056915283,
+        -1.852872610092163
+      ],
+      "counts": {
+        "salience_sum": 4991587.913972139,
+        "hot_salience_sum": 3544072.7377597094,
+        "expert_activations": 71568,
+        "hot_expert_activations": 38553
+      },
+      "local_hot_pct": 55.03588117489986,
+      "local_salience_pct": 72.86713612764129,
+      "salience_delta_pp": -1.8662282233777319
+    },
+    {
+      "task": "CODE-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 47.38630876938862,
+      "hot_salience_pct": 76.22538833664437,
+      "selected_cold_salience_pct": 3.0950429742546666,
+      "boundary_offsets_s": [
+        -1.9994139671325684,
+        -0.5933928489685059
+      ],
+      "counts": {
+        "salience_sum": 20256857.577320278,
+        "hot_salience_sum": 15440868.353113353,
+        "expert_activations": 265104,
+        "hot_expert_activations": 125623
+      },
+      "local_hot_pct": 48.12773142630115,
+      "local_salience_pct": 75.1022692686638,
+      "salience_delta_pp": 1.1231190679805678
+    },
+    {
+      "task": "CODE-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 49.58076504713561,
+      "hot_salience_pct": 77.18037255557591,
+      "selected_cold_salience_pct": 2.4413302633029996,
+      "boundary_offsets_s": [
+        -0.6117258071899414,
+        -1.1834073066711426
+      ],
+      "counts": {
+        "salience_sum": 9879193.015576124,
+        "hot_salience_sum": 7624797.974906087,
+        "expert_activations": 132384,
+        "hot_expert_activations": 65637
+      },
+      "local_hot_pct": 48.91125770902841,
+      "local_salience_pct": 77.66931571716114,
+      "salience_delta_pp": -0.488943161585226
+    },
+    {
+      "task": "CODE-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 46.58516988062443,
+      "hot_salience_pct": 73.27401435652338,
+      "selected_cold_salience_pct": 3.30248971827864,
+      "boundary_offsets_s": [
+        -1.3903915882110596,
+        -0.9436068534851074
+      ],
+      "counts": {
+        "salience_sum": 9030231.423294783,
+        "hot_salience_sum": 6616813.069532305,
+        "expert_activations": 121968,
+        "hot_expert_activations": 56819
+      },
+      "local_hot_pct": 45.70923775870772,
+      "local_salience_pct": 72.54039508287674,
+      "salience_delta_pp": 0.7336192736466387
+    },
+    {
+      "task": "CODE-04",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 46.0814673654121,
+      "hot_salience_pct": 72.11747857018781,
+      "selected_cold_salience_pct": 2.7989447181683365,
+      "boundary_offsets_s": [
+        -0.9494199752807617,
+        -1.1820650100708008
+      ],
+      "counts": {
+        "salience_sum": 51584033.41006321,
+        "hot_salience_sum": 37201104.240140855,
+        "expert_activations": 705264,
+        "hot_expert_activations": 324996
+      },
+      "local_hot_pct": 48.623321123321126,
+      "local_salience_pct": 77.48015050059294,
+      "salience_delta_pp": -5.362671930405128
+    },
+    {
+      "task": "CODE-05",
+      "official_repeat_scores": [
+        1.0,
+        0.6
+      ],
+      "hot_pct": 47.29855735397607,
+      "hot_salience_pct": 70.51095981320704,
+      "selected_cold_salience_pct": 3.5314861689310675,
+      "boundary_offsets_s": [
+        -1.188490390777588,
+        -0.6205105781555176
+      ],
+      "counts": {
+        "salience_sum": 24071232.991707206,
+        "hot_salience_sum": 16972857.4213261,
+        "expert_activations": 341040,
+        "hot_expert_activations": 161307
+      },
+      "local_hot_pct": 49.04319165682802,
+      "local_salience_pct": 74.23791881578931,
+      "salience_delta_pp": -3.7269590025822765
+    },
+    {
+      "task": "CODE-06",
+      "official_repeat_scores": [
+        0.0,
+        1.0
+      ],
+      "hot_pct": 45.22632040537907,
+      "hot_salience_pct": 71.62095613267336,
+      "selected_cold_salience_pct": 2.2374968836777644,
+      "boundary_offsets_s": [
+        -1.1507878303527832,
+        -0.49775195121765137
+      ],
+      "counts": {
+        "salience_sum": 35665306.64171386,
+        "hot_salience_sum": 25543833.62444532,
+        "expert_activations": 492576,
+        "hot_expert_activations": 222774
+      },
+      "local_hot_pct": 45.23698987487288,
+      "local_salience_pct": 72.85536254789689,
+      "salience_delta_pp": -1.234406415223532
+    },
+    {
+      "task": "CODE-07",
+      "official_repeat_scores": [
+        1.0,
+        0.6
+      ],
+      "hot_pct": 48.82505000645244,
+      "hot_salience_pct": 75.09292799857668,
+      "selected_cold_salience_pct": 2.177450896707057,
+      "boundary_offsets_s": [
+        -0.6016154289245605,
+        -0.36625218391418457
+      ],
+      "counts": {
+        "salience_sum": 37252456.04654765,
+        "hot_salience_sum": 27973959.996735454,
+        "expert_activations": 495936,
+        "hot_expert_activations": 242141
+      },
+      "local_hot_pct": 46.39573260922357,
+      "local_salience_pct": 73.05071618118669,
+      "salience_delta_pp": 2.0422118173899975
+    },
+    {
+      "task": "CODE-08",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 49.82344632768361,
+      "hot_salience_pct": 78.47922392338289,
+      "selected_cold_salience_pct": 2.803776570131968,
+      "boundary_offsets_s": [
+        -0.3847980499267578,
+        -0.7470648288726807
+      ],
+      "counts": {
+        "salience_sum": 7670129.432590961,
+        "hot_salience_sum": 6019458.052616358,
+        "expert_activations": 99120,
+        "hot_expert_activations": 49385
+      },
+      "local_hot_pct": 49.065383391664014,
+      "local_salience_pct": 75.98093936363783,
+      "salience_delta_pp": 2.498284559745059
+    },
+    {
+      "task": "CODE-09",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 45.15708650324035,
+      "hot_salience_pct": 73.1793143656462,
+      "selected_cold_salience_pct": 2.0616224198292827,
+      "boundary_offsets_s": [
+        -0.7545170783996582,
+        -1.681297779083252
+      ],
+      "counts": {
+        "salience_sum": 25257848.136874437,
+        "hot_salience_sum": 18483520.090080857,
+        "expert_activations": 340704,
+        "hot_expert_activations": 153852
+      },
+      "local_hot_pct": 71.78911067408686,
+      "local_salience_pct": 77.73250483829429,
+      "salience_delta_pp": -4.553190472648083
+    },
+    {
+      "task": "CODE-10",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 43.005356348146734,
+      "hot_salience_pct": 71.29714246121164,
+      "selected_cold_salience_pct": 1.831521953475071,
+      "boundary_offsets_s": [
+        -1.6888561248779297,
+        -1.696326494216919
+      ],
+      "counts": {
+        "salience_sum": 18561373.31117034,
+        "hot_salience_sum": 13233728.772422433,
+        "expert_activations": 251664,
+        "hot_expert_activations": 108229
+      },
+      "local_hot_pct": 43.82793921466272,
+      "local_salience_pct": 70.56261299623417,
+      "salience_delta_pp": 0.7345294649774701
+    },
+    {
+      "task": "CODE-11",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 43.66996798719488,
+      "hot_salience_pct": 68.36368007766973,
+      "selected_cold_salience_pct": 2.6138055989050972,
+      "boundary_offsets_s": [
+        -1.7023842334747314,
+        -1.5655300617218018
+      ],
+      "counts": {
+        "salience_sum": 11099833.097480059,
+        "hot_salience_sum": 7588254.387916565,
+        "expert_activations": 159936,
+        "hot_expert_activations": 69844
+      },
+      "local_hot_pct": 43.51222535692913,
+      "local_salience_pct": 68.31618621570686,
+      "salience_delta_pp": 0.04749386196286309
+    },
+    {
+      "task": "CODE-12",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 43.32437275985663,
+      "hot_salience_pct": 71.44052773013708,
+      "selected_cold_salience_pct": 1.6597434145818906,
+      "boundary_offsets_s": [
+        -1.574040412902832,
+        -0.45232701301574707
+      ],
+      "counts": {
+        "salience_sum": 20400610.165251017,
+        "hot_salience_sum": 14574303.562223315,
+        "expert_activations": 281232,
+        "hot_expert_activations": 121842
+      },
+      "local_hot_pct": 45.0901568716896,
+      "local_salience_pct": 68.36480017947918,
+      "salience_delta_pp": 3.075727550657902
+    },
+    {
+      "task": "CODE-13",
+      "official_repeat_scores": [
+        0.8571428571428571,
+        1.0
+      ],
+      "hot_pct": 45.928899082568805,
+      "hot_salience_pct": 72.5988768612382,
+      "selected_cold_salience_pct": 2.6128881081758863,
+      "boundary_offsets_s": [
+        -0.46242666244506836,
+        -1.8762569427490234
+      ],
+      "counts": {
+        "salience_sum": 32347238.325392485,
+        "hot_salience_sum": 23483731.719862938,
+        "expert_activations": 439488,
+        "hot_expert_activations": 201852
+      },
+      "local_hot_pct": 72.38944350201082,
+      "local_salience_pct": 78.84711603189119,
+      "salience_delta_pp": -6.248239170652994
+    },
+    {
+      "task": "CODE-14",
+      "official_repeat_scores": [
+        1.0,
+        0.0
+      ],
+      "hot_pct": 48.142603077816496,
+      "hot_salience_pct": 71.40482122512836,
+      "selected_cold_salience_pct": 2.3548218628889037,
+      "boundary_offsets_s": [
+        -1.8838047981262207,
+        -1.8415412902832031
+      ],
+      "counts": {
+        "salience_sum": 39189207.30171108,
+        "hot_salience_sum": 27982983.413331747,
+        "expert_activations": 551040,
+        "hot_expert_activations": 265285
+      },
+      "local_hot_pct": 47.24314959628711,
+      "local_salience_pct": 71.59625310838027,
+      "salience_delta_pp": -0.19143188325190863
+    },
+    {
+      "task": "CP-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 58.50302840434419,
+      "hot_salience_pct": 73.51956494710655,
+      "selected_cold_salience_pct": 9.553130563984936,
+      "boundary_offsets_s": [
+        -2.180450677871704,
+        -0.6385324001312256
+      ],
+      "counts": {
+        "salience_sum": 2681701.091939211,
+        "hot_salience_sum": 1971574.9759755135,
+        "expert_activations": 38304,
+        "hot_expert_activations": 22409
+      },
+      "local_hot_pct": 57.17556253270539,
+      "local_salience_pct": 72.44917875345318,
+      "salience_delta_pp": 1.0703861936533627
+    },
+    {
+      "task": "CP-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 57.38246569814366,
+      "hot_salience_pct": 72.10573950350533,
+      "selected_cold_salience_pct": 9.600378363923197,
+      "boundary_offsets_s": [
+        -0.6391596794128418,
+        -1.7660019397735596
+      ],
+      "counts": {
+        "salience_sum": 2727251.3532571793,
+        "hot_salience_sum": 1966504.7563854456,
+        "expert_activations": 39648,
+        "hot_expert_activations": 22751
+      },
+      "local_hot_pct": 59.61605402394876,
+      "local_salience_pct": 76.03193961094746,
+      "salience_delta_pp": -3.9262001074421278
+    },
+    {
+      "task": "IF-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 48.97959183673469,
+      "hot_salience_pct": 64.59439242824949,
+      "selected_cold_salience_pct": 12.956485283756665,
+      "boundary_offsets_s": [
+        -1.1946110725402832,
+        -0.48050904273986816
+      ],
+      "counts": {
+        "salience_sum": 498307.86238466203,
+        "hot_salience_sum": 321878.93612957,
+        "expert_activations": 7056,
+        "hot_expert_activations": 3456
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "IF-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 50.243506493506494,
+      "hot_salience_pct": 66.05994876795287,
+      "selected_cold_salience_pct": 12.3212635287747,
+      "boundary_offsets_s": [
+        -1.1470816135406494,
+        -1.0078253746032715
+      ],
+      "counts": {
+        "salience_sum": 517281.85060599446,
+        "hot_salience_sum": 341716.12549623847,
+        "expert_activations": 7392,
+        "hot_expert_activations": 3714
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "IF-04",
+      "official_repeat_scores": [
+        0.8,
+        0.7
+      ],
+      "hot_pct": 54.558982683982684,
+      "hot_salience_pct": 68.67917460972288,
+      "selected_cold_salience_pct": 16.116701534813654,
+      "boundary_offsets_s": [
+        -1.0080654621124268,
+        -1.0677261352539062
+      ],
+      "counts": {
+        "salience_sum": 538246.9717757702,
+        "hot_salience_sum": 369663.57757742703,
+        "expert_activations": 7392,
+        "hot_expert_activations": 4033
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "IFH-01",
+      "official_repeat_scores": [
+        0.75,
+        1.0
+      ],
+      "hot_pct": 47.94146825396825,
+      "hot_salience_pct": 56.54831678892918,
+      "selected_cold_salience_pct": 25.8930568803341,
+      "boundary_offsets_s": [
+        -0.3394773006439209,
+        -0.9362666606903076
+      ],
+      "counts": {
+        "salience_sum": 296947.0924961567,
+        "hot_salience_sum": 167918.58256024122,
+        "expert_activations": 4032,
+        "hot_expert_activations": 1933
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "IFH-02",
+      "official_repeat_scores": [
+        0.7,
+        1.0
+      ],
+      "hot_pct": 51.09126984126984,
+      "hot_salience_pct": 60.83053308298262,
+      "selected_cold_salience_pct": 23.958403023536988,
+      "boundary_offsets_s": [
+        -0.9375877380371094,
+        -1.0739433765411377
+      ],
+      "counts": {
+        "salience_sum": 523369.52582514286,
+        "hot_salience_sum": 318368.4725533128,
+        "expert_activations": 7056,
+        "hot_expert_activations": 3605
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "IFH-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 46.89265536723164,
+      "hot_salience_pct": 59.57546470175449,
+      "selected_cold_salience_pct": 17.862645567143097,
+      "boundary_offsets_s": [
+        -0.5110507011413574,
+        -0.7822678089141846
+      ],
+      "counts": {
+        "salience_sum": 1444210.7154358625,
+        "hot_salience_sum": 860395.2449934483,
+        "expert_activations": 19824,
+        "hot_expert_activations": 9296
+      },
+      "local_hot_pct": 46.98680823680824,
+      "local_salience_pct": 61.56459281547354,
+      "salience_delta_pp": -1.9891281137190475
+    },
+    {
+      "task": "IFS-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 53.37110805860806,
+      "hot_salience_pct": 66.7293080115951,
+      "selected_cold_salience_pct": 9.83155357548415,
+      "boundary_offsets_s": [
+        -1.8668932914733887,
+        -0.7530031204223633
+      ],
+      "counts": {
+        "salience_sum": 3848550.045933008,
+        "hot_salience_sum": 2568110.8141310215,
+        "expert_activations": 52416,
+        "hot_expert_activations": 27975
+      },
+      "local_hot_pct": 57.478924584187745,
+      "local_salience_pct": 71.6315659588386,
+      "salience_delta_pp": -4.902257947243513
+    },
+    {
+      "task": "IFS-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 50.69817400644468,
+      "hot_salience_pct": 63.50669997522492,
+      "selected_cold_salience_pct": 14.337321398635432,
+      "boundary_offsets_s": [
+        -0.7533669471740723,
+        -0.4615349769592285
+      ],
+      "counts": {
+        "salience_sum": 3352100.064911127,
+        "hot_salience_sum": 2128808.131092429,
+        "expert_activations": 44688,
+        "hot_expert_activations": 22656
+      },
+      "local_hot_pct": 53.64893353174603,
+      "local_salience_pct": 67.84548819883621,
+      "salience_delta_pp": -4.338788223611289
+    },
+    {
+      "task": "IFS-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 55.19179894179894,
+      "hot_salience_pct": 66.43216939922377,
+      "selected_cold_salience_pct": 17.12989815945692,
+      "boundary_offsets_s": [
+        -0.4627368450164795,
+        -1.132735013961792
+      ],
+      "counts": {
+        "salience_sum": 456721.41869950294,
+        "hot_salience_sum": 303409.94655299187,
+        "expert_activations": 6048,
+        "hot_expert_activations": 3338
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "LC-03",
+      "official_repeat_scores": [
+        0.3675,
+        0.2909375
+      ],
+      "hot_pct": 48.303312629399585,
+      "hot_salience_pct": 64.40375623215108,
+      "selected_cold_salience_pct": 2.4476918013569193,
+      "boundary_offsets_s": [
+        -2.107100248336792,
+        -1.9791574478149414
+      ],
+      "counts": {
+        "salience_sum": 12487488.197435737,
+        "hot_salience_sum": 8042411.45819515,
+        "expert_activations": 193200,
+        "hot_expert_activations": 93322
+      },
+      "local_hot_pct": 48.353794642857146,
+      "local_salience_pct": 65.69337064000867,
+      "salience_delta_pp": -1.2896144078575844
+    },
+    {
+      "task": "LCH-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 46.03625541125541,
+      "hot_salience_pct": 62.40402343332702,
+      "selected_cold_salience_pct": 18.18424382408361,
+      "boundary_offsets_s": [
+        -1.074777364730835,
+        -1.4370665550231934
+      ],
+      "counts": {
+        "salience_sum": 554293.2795699835,
+        "hot_salience_sum": 345901.30807220936,
+        "expert_activations": 7392,
+        "hot_expert_activations": 3403
+      },
+      "local_hot_pct": 54.63060224089636,
+      "local_salience_pct": 67.60321589935387,
+      "salience_delta_pp": -5.199192466026851
+    },
+    {
+      "task": "LG-01",
+      "official_repeat_scores": [
+        0.8333333333333334,
+        0.0
+      ],
+      "hot_pct": 49.19345994433351,
+      "hot_salience_pct": 71.4088720990535,
+      "selected_cold_salience_pct": 1.387470849103928,
+      "boundary_offsets_s": [
+        -0.3491814136505127,
+        8.946581363677979
+      ],
+      "counts": {
+        "salience_sum": 508841024.5724864,
+        "hot_salience_sum": 363357636.4244802,
+        "expert_activations": 7404096,
+        "hot_expert_activations": 3642331
+      },
+      "local_hot_pct": 47.38144873087144,
+      "local_salience_pct": 68.32940619933972,
+      "salience_delta_pp": 3.0794658997137816
+    },
+    {
+      "task": "LG-02",
+      "official_repeat_scores": [
+        0.8,
+        0.88
+      ],
+      "hot_pct": 42.740739791480266,
+      "hot_salience_pct": 67.11849598644531,
+      "selected_cold_salience_pct": 1.7510408674666098,
+      "boundary_offsets_s": [
+        8.68847918510437,
+        -0.5096309185028076
+      ],
+      "counts": {
+        "salience_sum": 360733193.30537415,
+        "hot_salience_sum": 242118693.87044358,
+        "expert_activations": 5150208,
+        "hot_expert_activations": 2201237
+      },
+      "local_hot_pct": 42.84267275933943,
+      "local_salience_pct": 66.94465516618452,
+      "salience_delta_pp": 0.17384082026079284
+    },
+    {
+      "task": "LG-03",
+      "official_repeat_scores": [
+        0.7,
+        0.0
+      ],
+      "hot_pct": 42.84273929438036,
+      "hot_salience_pct": 67.58005785922462,
+      "selected_cold_salience_pct": 1.1494564866498498,
+      "boundary_offsets_s": [
+        4.515193700790405,
+        -0.35184383392333984
+      ],
+      "counts": {
+        "salience_sum": 1099214879.2565432,
+        "hot_salience_sum": 742850051.398778,
+        "expert_activations": 15878016,
+        "hot_expert_activations": 6802577
+      },
+      "local_hot_pct": 45.66992180853431,
+      "local_salience_pct": 73.73130999105533,
+      "salience_delta_pp": -6.151252131830702
+    },
+    {
+      "task": "LG-04",
+      "official_repeat_scores": [
+        1.0,
+        0.9
+      ],
+      "hot_pct": 45.020403345474165,
+      "hot_salience_pct": 69.56649845708222,
+      "selected_cold_salience_pct": 1.451839630275635,
+      "boundary_offsets_s": [
+        -0.36858415603637695,
+        -0.2118983268737793
+      ],
+      "counts": {
+        "salience_sum": 167278596.25198793,
+        "hot_salience_sum": 116369862.08066797,
+        "expert_activations": 2372160,
+        "hot_expert_activations": 1067956
+      },
+      "local_hot_pct": 46.280359917636886,
+      "local_salience_pct": 71.44786299971487,
+      "salience_delta_pp": -1.881364542632653
+    },
+    {
+      "task": "MSC-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 61.04588488938882,
+      "hot_salience_pct": 78.05209897004812,
+      "selected_cold_salience_pct": 4.8692100230956,
+      "boundary_offsets_s": [
+        -1.8538403511047363,
+        -0.3252441883087158
+      ],
+      "counts": {
+        "salience_sum": 5906609.541685104,
+        "hot_salience_sum": 4610232.725250363,
+        "expert_activations": 85344,
+        "hot_expert_activations": 52099
+      },
+      "local_hot_pct": 61.64535070785071,
+      "local_salience_pct": 78.30737782586633,
+      "salience_delta_pp": -0.2552788558182044
+    },
+    {
+      "task": "MSC-02",
+      "official_repeat_scores": [
+        1.0,
+        0.75
+      ],
+      "hot_pct": 55.14912954429084,
+      "hot_salience_pct": 71.173422445207,
+      "selected_cold_salience_pct": 8.216635288790222,
+      "boundary_offsets_s": [
+        -0.3250133991241455,
+        -1.4537687301635742
+      ],
+      "counts": {
+        "salience_sum": 4420012.946676254,
+        "hot_salience_sum": 3145874.4866707325,
+        "expert_activations": 62496,
+        "hot_expert_activations": 34466
+      },
+      "local_hot_pct": 58.65372105126203,
+      "local_salience_pct": 76.14549027223661,
+      "salience_delta_pp": -4.972067827029619
+    },
+    {
+      "task": "MSC-03",
+      "official_repeat_scores": [
+        0.5,
+        0.5
+      ],
+      "hot_pct": 56.51818419675563,
+      "hot_salience_pct": 71.60179592486155,
+      "selected_cold_salience_pct": 6.864653255078263,
+      "boundary_offsets_s": [
+        -1.454134464263916,
+        -0.6092138290405273
+      ],
+      "counts": {
+        "salience_sum": 4128173.4515457153,
+        "hot_salience_sum": 2955846.330200076,
+        "expert_activations": 61152,
+        "hot_expert_activations": 34562
+      },
+      "local_hot_pct": 58.66675617615467,
+      "local_salience_pct": 74.5826645146637,
+      "salience_delta_pp": -2.9808685898021565
+    },
+    {
+      "task": "PL-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 44.72481021394065,
+      "hot_salience_pct": 56.88693519574341,
+      "selected_cold_salience_pct": 23.07068732763679,
+      "boundary_offsets_s": [
+        6.87483286857605,
+        -0.3542914390563965
+      ],
+      "counts": {
+        "salience_sum": 1669420.2383122444,
+        "hot_salience_sum": 949682.0091133118,
+        "expert_activations": 23184,
+        "hot_expert_activations": 10369
+      },
+      "local_hot_pct": 36.65674603174603,
+      "local_salience_pct": 52.850132909114734,
+      "salience_delta_pp": 4.036802286628678
+    },
+    {
+      "task": "PL-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 50.38416075650118,
+      "hot_salience_pct": 65.81937334910054,
+      "selected_cold_salience_pct": 11.515581389338713,
+      "boundary_offsets_s": [
+        -0.3546116352081299,
+        -0.21704339981079102
+      ],
+      "counts": {
+        "salience_sum": 3438467.0330450535,
+        "hot_salience_sum": 2263177.453965664,
+        "expert_activations": 47376,
+        "hot_expert_activations": 23870
+      },
+      "local_hot_pct": 50.22469252601703,
+      "local_salience_pct": 65.54047638416782,
+      "salience_delta_pp": 0.2788969649327271
+    },
+    {
+      "task": "PL-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 57.429453262786595,
+      "hot_salience_pct": 71.85657639513202,
+      "selected_cold_salience_pct": 7.260082662474194,
+      "boundary_offsets_s": [
+        -0.2188863754272461,
+        -2.17976450920105
+      ],
+      "counts": {
+        "salience_sum": 6349971.3221206665,
+        "hot_salience_sum": 4562871.994148612,
+        "expert_activations": 90720,
+        "hot_expert_activations": 52100
+      },
+      "local_hot_pct": 56.45997662868829,
+      "local_salience_pct": 71.73908643441119,
+      "salience_delta_pp": 0.11748996072083173
+    },
+    {
+      "task": "RO-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 56.984747023809526,
+      "hot_salience_pct": 70.60695376274705,
+      "selected_cold_salience_pct": 7.92606015121671,
+      "boundary_offsets_s": [
+        -1.7129356861114502,
+        -1.8511111736297607
+      ],
+      "counts": {
+        "salience_sum": 3855062.8186662197,
+        "hot_salience_sum": 2721942.421900511,
+        "expert_activations": 53760,
+        "hot_expert_activations": 30635
+      },
+      "local_hot_pct": 59.61934156378601,
+      "local_salience_pct": 72.90231792330808,
+      "salience_delta_pp": -2.2953641605610215
+    },
+    {
+      "task": "RO-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 62.800324675324674,
+      "hot_salience_pct": 78.62702228613483,
+      "selected_cold_salience_pct": 3.9202716437344214,
+      "boundary_offsets_s": [
+        -1.851496696472168,
+        -0.6358506679534912
+      ],
+      "counts": {
+        "salience_sum": 2722837.2820028067,
+        "hot_salience_sum": 2140885.876535535,
+        "expert_activations": 36960,
+        "hot_expert_activations": 23211
+      },
+      "local_hot_pct": 62.279625590694295,
+      "local_salience_pct": 77.64496717172413,
+      "salience_delta_pp": 0.9820551144106986
+    },
+    {
+      "task": "RO-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 44.09722222222222,
+      "hot_salience_pct": 55.56000084882383,
+      "selected_cold_salience_pct": 17.02940566314901,
+      "boundary_offsets_s": [
+        -0.6366817951202393,
+        -1.2905304431915283
+      ],
+      "counts": {
+        "salience_sum": 2019845.4830477238,
+        "hot_salience_sum": 1122226.1675262451,
+        "expert_activations": 28224,
+        "hot_expert_activations": 12446
+      },
+      "local_hot_pct": 55.019996279761905,
+      "local_salience_pct": 69.03267654319467,
+      "salience_delta_pp": -13.472675694370835
+    },
+    {
+      "task": "RO-04",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 53.06855500821018,
+      "hot_salience_pct": 67.28251552407994,
+      "selected_cold_salience_pct": 12.622715722159905,
+      "boundary_offsets_s": [
+        -1.2903738021850586,
+        -0.33922743797302246
+      ],
+      "counts": {
+        "salience_sum": 2018391.6790192127,
+        "hot_salience_sum": 1358024.6947728395,
+        "expert_activations": 29232,
+        "hot_expert_activations": 15513
+      },
+      "local_hot_pct": 56.37473739495798,
+      "local_salience_pct": 69.47165727623198,
+      "salience_delta_pp": -2.1891417521520395
+    },
+    {
+      "task": "RR-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 48.416061339790154,
+      "hot_salience_pct": 65.16609085205201,
+      "selected_cold_salience_pct": 13.533480806160961,
+      "boundary_offsets_s": [
+        -0.6100609302520752,
+        -1.4609007835388184
+      ],
+      "counts": {
+        "salience_sum": 1444697.8694694042,
+        "hot_salience_sum": 941453.1261560917,
+        "expert_activations": 19824,
+        "hot_expert_activations": 9598
+      },
+      "local_hot_pct": 51.198574667962426,
+      "local_salience_pct": 70.2890759863155,
+      "salience_delta_pp": -5.122985134263487
+    },
+    {
+      "task": "RR-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 50.21368872032589,
+      "hot_salience_pct": 71.6735756941124,
+      "selected_cold_salience_pct": 3.101701759787335,
+      "boundary_offsets_s": [
+        -1.4613983631134033,
+        -0.45334935188293457
+      ],
+      "counts": {
+        "salience_sum": 41213717.89743447,
+        "hot_salience_sum": 29539345.293575644,
+        "expert_activations": 569520,
+        "hot_expert_activations": 285977
+      },
+      "local_hot_pct": 50.70247270391779,
+      "local_salience_pct": 72.84327746907172,
+      "salience_delta_pp": -1.1697017749593215
+    },
+    {
+      "task": "RR-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 52.157738095238095,
+      "hot_salience_pct": 72.9789504243233,
+      "selected_cold_salience_pct": 11.384847105520546,
+      "boundary_offsets_s": [
+        -0.454134464263916,
+        -1.097752332687378
+      ],
+      "counts": {
+        "salience_sum": 198186.57428526878,
+        "hot_salience_sum": 144634.48179531097,
+        "expert_activations": 2688,
+        "hot_expert_activations": 1402
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "RR-04",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 55.92092528068138,
+      "hot_salience_pct": 71.3583648932028,
+      "selected_cold_salience_pct": 8.968102608933634,
+      "boundary_offsets_s": [
+        -1.0985848903656006,
+        -1.9970965385437012
+      ],
+      "counts": {
+        "salience_sum": 2889525.337300062,
+        "hot_salience_sum": 2061918.0338721275,
+        "expert_activations": 41328,
+        "hot_expert_activations": 23111
+      },
+      "local_hot_pct": 57.64874790495909,
+      "local_salience_pct": 73.15264577294836,
+      "salience_delta_pp": -1.794280879745557
+    },
+    {
+      "task": "SA-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 64.07006579924547,
+      "hot_salience_pct": 78.3067348034039,
+      "selected_cold_salience_pct": 2.166100594805953,
+      "boundary_offsets_s": [
+        -0.6218397617340088,
+        -2.1137168407440186
+      ],
+      "counts": {
+        "salience_sum": 78333157.49799836,
+        "hot_salience_sum": 61340137.90509027,
+        "expert_activations": 1077216,
+        "hot_expert_activations": 690173
+      },
+      "local_hot_pct": 63.75515348698589,
+      "local_salience_pct": 78.85230704817724,
+      "salience_delta_pp": -0.5455722447733393
+    },
+    {
+      "task": "SA-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 52.50883785175821,
+      "hot_salience_pct": 67.84585540148507,
+      "selected_cold_salience_pct": 5.745058955247656,
+      "boundary_offsets_s": [
+        -2.114705801010132,
+        -0.7737095355987549
+      ],
+      "counts": {
+        "salience_sum": 24117948.63838947,
+        "hot_salience_sum": 16363028.559006155,
+        "expert_activations": 341712,
+        "hot_expert_activations": 179429
+      },
+      "local_hot_pct": 53.41682127396413,
+      "local_salience_pct": 69.52844343049314,
+      "salience_delta_pp": -1.6825880290080732
+    },
+    {
+      "task": "SA-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 59.82289467511142,
+      "hot_salience_pct": 74.9071172481762,
+      "selected_cold_salience_pct": 2.0466335535357976,
+      "boundary_offsets_s": [
+        -0.7744801044464111,
+        -1.5673789978027344
+      ],
+      "counts": {
+        "salience_sum": 19155047.529942393,
+        "hot_salience_sum": 14348493.912197828,
+        "expert_activations": 272832,
+        "hot_expert_activations": 163216
+      },
+      "local_hot_pct": 59.623612065018314,
+      "local_salience_pct": 75.08867373210191,
+      "salience_delta_pp": -0.18155648392570356
+    },
+    {
+      "task": "SA-04",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 65.50215953201028,
+      "hot_salience_pct": 80.08642555667451,
+      "selected_cold_salience_pct": 1.826195425125752,
+      "boundary_offsets_s": [
+        -1.5679538249969482,
+        -1.7129337787628174
+      ],
+      "counts": {
+        "salience_sum": 20688434.23467982,
+        "hot_salience_sum": 16568627.482198417,
+        "expert_activations": 292656,
+        "hot_expert_activations": 191696
+      },
+      "local_hot_pct": 63.98460410557185,
+      "local_salience_pct": 78.64304160172573,
+      "salience_delta_pp": 1.4433839549487857
+    },
+    {
+      "task": "SAH-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 48.30910240202276,
+      "hot_salience_pct": 62.371043174039684,
+      "selected_cold_salience_pct": 12.664382063987919,
+      "boundary_offsets_s": [
+        -1.9864065647125244,
+        -0.5098021030426025
+      ],
+      "counts": {
+        "salience_sum": 2643541.611271858,
+        "hot_salience_sum": 1648804.479690075,
+        "expert_activations": 37968,
+        "hot_expert_activations": 18342
+      },
+      "local_hot_pct": 45.48350041771094,
+      "local_salience_pct": 61.856771354254235,
+      "salience_delta_pp": 0.5142718197854492
+    },
+    {
+      "task": "SAH-02",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 50.25244472789116,
+      "hot_salience_pct": 62.59169950015507,
+      "selected_cold_salience_pct": 14.141077226346537,
+      "boundary_offsets_s": [
+        -1.0444588661193848,
+        -2.049917221069336
+      ],
+      "counts": {
+        "salience_sum": 2570857.959966898,
+        "hot_salience_sum": 1609143.6888782978,
+        "expert_activations": 37632,
+        "hot_expert_activations": 18911
+      },
+      "local_hot_pct": 53.41269841269841,
+      "local_salience_pct": 65.82161426930449,
+      "salience_delta_pp": -3.229914769149417
+    },
+    {
+      "task": "SAH-03",
+      "official_repeat_scores": [
+        0.0,
+        1.0
+      ],
+      "hot_pct": 51.051587301587304,
+      "hot_salience_pct": 64.72948943884566,
+      "selected_cold_salience_pct": 14.959348774575117,
+      "boundary_offsets_s": [
+        -2.0505712032318115,
+        -1.7217092514038086
+      ],
+      "counts": {
+        "salience_sum": 1781455.316735506,
+        "hot_salience_sum": 1153126.931104064,
+        "expert_activations": 25200,
+        "hot_expert_activations": 12865
+      },
+      "local_hot_pct": 54.55544830544831,
+      "local_salience_pct": 70.7432616789329,
+      "salience_delta_pp": -6.013772240087235
+    },
+    {
+      "task": "SO-02",
+      "official_repeat_scores": [
+        0.9,
+        0.9
+      ],
+      "hot_pct": 45.88379917184265,
+      "hot_salience_pct": 62.902539987306355,
+      "selected_cold_salience_pct": 7.93243759769778,
+      "boundary_offsets_s": [
+        -1.3129160404205322,
+        -2.106459856033325
+      ],
+      "counts": {
+        "salience_sum": 5161091.92516917,
+        "hot_salience_sum": 3246457.9120111763,
+        "expert_activations": 77280,
+        "hot_expert_activations": 35459
+      },
+      "local_hot_pct": 50.15146683673469,
+      "local_salience_pct": 64.96141447870548,
+      "salience_delta_pp": -2.0588744913991235
+    },
+    {
+      "task": "SOH-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 44.9798166392994,
+      "hot_salience_pct": 62.81475184754751,
+      "selected_cold_salience_pct": 12.293371491993682,
+      "boundary_offsets_s": [
+        -1.4375722408294678,
+        -0.6269981861114502
+      ],
+      "counts": {
+        "salience_sum": 4040334.681785345,
+        "hot_salience_sum": 2537926.204173863,
+        "expert_activations": 58464,
+        "hot_expert_activations": 26297
+      },
+      "local_hot_pct": 44.59586466165413,
+      "local_salience_pct": 61.04130056358705,
+      "salience_delta_pp": 1.773451283960462
+    },
+    {
+      "task": "SOH-02",
+      "official_repeat_scores": [
+        0.9,
+        0.9
+      ],
+      "hot_pct": 45.002851439977185,
+      "hot_salience_pct": 62.47540442118946,
+      "selected_cold_salience_pct": 6.577438383651182,
+      "boundary_offsets_s": [
+        -0.7821440696716309,
+        -0.6317672729492188
+      ],
+      "counts": {
+        "salience_sum": 7470329.846946597,
+        "hot_salience_sum": 4667118.78347671,
+        "expert_activations": 112224,
+        "hot_expert_activations": 50504
+      },
+      "local_hot_pct": 46.222422455220624,
+      "local_salience_pct": 65.85651642073529,
+      "salience_delta_pp": -3.38111199954583
+    },
+    {
+      "task": "SOH-03",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 51.75674252001686,
+      "hot_salience_pct": 69.58578052166251,
+      "selected_cold_salience_pct": 9.270715588588128,
+      "boundary_offsets_s": [
+        -1.7666831016540527,
+        -0.9242024421691895
+      ],
+      "counts": {
+        "salience_sum": 2593152.7965569496,
+        "hot_salience_sum": 1804465.6136034727,
+        "expert_activations": 37968,
+        "hot_expert_activations": 19651
+      },
+      "local_hot_pct": 52.925787250384026,
+      "local_salience_pct": 71.32031497491624,
+      "salience_delta_pp": -1.7345344532537297
+    },
+    {
+      "task": "SOH-04",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 50.29761904761905,
+      "hot_salience_pct": 69.40324919590795,
+      "selected_cold_salience_pct": 3.485283955138349,
+      "boundary_offsets_s": [
+        -0.9247214794158936,
+        -1.0442390441894531
+      ],
+      "counts": {
+        "salience_sum": 4202939.668070555,
+        "hot_salience_sum": 2916976.691384673,
+        "expert_activations": 62496,
+        "hot_expert_activations": 31434
+      },
+      "local_hot_pct": 50.66685765215177,
+      "local_salience_pct": 69.57666289170727,
+      "salience_delta_pp": -0.17341369579932575
+    },
+    {
+      "task": "TUH-05",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 44.49404761904762,
+      "hot_salience_pct": 63.943251067054206,
+      "selected_cold_salience_pct": 13.065844777143125,
+      "boundary_offsets_s": [
+        -0.9119422435760498,
+        -1.985732078552246
+      ],
+      "counts": {
+        "salience_sum": 1092388.9030627012,
+        "hot_salience_sum": 698508.9789140224,
+        "expert_activations": 14784,
+        "hot_expert_activations": 6578
+      },
+      "local_hot_pct": 55.63390961480133,
+      "local_salience_pct": 69.8926686007974,
+      "salience_delta_pp": -5.949417533743201
+    },
+    {
+      "task": "TUH-08",
+      "official_repeat_scores": [
+        0.5,
+        0.5
+      ],
+      "hot_pct": 51.24338624338624,
+      "hot_salience_pct": 67.23493299239425,
+      "selected_cold_salience_pct": 11.774280284115596,
+      "boundary_offsets_s": [
+        -1.7234675884246826,
+        -1.3206794261932373
+      ],
+      "counts": {
+        "salience_sum": 1043819.7289948463,
+        "hot_salience_sum": 701811.4953510761,
+        "expert_activations": 15120,
+        "hot_expert_activations": 7748
+      },
+      "local_reference": "not yet loaded"
+    },
+    {
+      "task": "TUH-10",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 45.093537414965986,
+      "hot_salience_pct": 61.807344105984235,
+      "selected_cold_salience_pct": 18.045754107405227,
+      "boundary_offsets_s": [
+        -1.320988655090332,
+        -1.892132043838501
+      ],
+      "counts": {
+        "salience_sum": 852654.2188920975,
+        "hot_salience_sum": 527002.9271048307,
+        "expert_activations": 11760,
+        "hot_expert_activations": 5303
+      },
+      "local_hot_pct": 49.21923314780457,
+      "local_salience_pct": 64.8052945448987,
+      "salience_delta_pp": -2.997950438914465
+    },
+    {
+      "task": "VIS-01",
+      "official_repeat_scores": [
+        1.0,
+        1.0
+      ],
+      "hot_pct": 51.24742592533316,
+      "hot_salience_pct": 74.42134447547777,
+      "selected_cold_salience_pct": 2.1452054586065077,
+      "boundary_offsets_s": [
+        -0.6282827854156494,
+        -1.1712253093719482
+      ],
+      "counts": {
+        "salience_sum": 106841615.74456835,
+        "hot_salience_sum": 79512966.8964315,
+        "expert_activations": 1499568,
+        "hot_expert_activations": 768490
+      },
+      "local_hot_pct": 50.69762209816662,
+      "local_salience_pct": 74.52984739719984,
+      "salience_delta_pp": -0.10850292172207787
+    },
+    {
+      "task": "VIS-02",
+      "official_repeat_scores": [
+        0.8888888888888888,
+        1.0
+      ],
+      "hot_pct": 53.11469595889886,
+      "hot_salience_pct": 75.75644268997813,
+      "selected_cold_salience_pct": 2.1393873889929202,
+      "boundary_offsets_s": [
+        -1.1716392040252686,
+        -0.9103376865386963
+      ],
+      "counts": {
+        "salience_sum": 88787296.84866798,
+        "hot_salience_sum": 67262097.65314192,
+        "expert_activations": 1251936,
+        "hot_expert_activations": 664962
+      },
+      "local_hot_pct": 51.21731716559303,
+      "local_salience_pct": 74.59175770123316,
+      "salience_delta_pp": 1.1646849887449662
+    },
+    {
+      "task": "VIS-03",
+      "official_repeat_scores": [
+        1.0,
+        0.875
+      ],
+      "hot_pct": 49.13293844745458,
+      "hot_salience_pct": 73.66102042837251,
+      "selected_cold_salience_pct": 2.0932533885393907,
+      "boundary_offsets_s": [
+        -0.6338393688201904,
+        -1.6146674156188965
+      ],
+      "counts": {
+        "salience_sum": 72936801.44689536,
+        "hot_salience_sum": 53725992.213599086,
+        "expert_activations": 1031184,
+        "hot_expert_activations": 506651
+      },
+      "local_hot_pct": 50.34993145923611,
+      "local_salience_pct": 70.08493578507283,
+      "salience_delta_pp": 3.57608464329968
+    },
+    {
+      "task": "VIS-04",
+      "official_repeat_scores": [
+        0.9830000000000001,
+        0.915
+      ],
+      "hot_pct": 54.04289797376614,
+      "hot_salience_pct": 77.3089632848835,
+      "selected_cold_salience_pct": 1.1084554570497749,
+      "boundary_offsets_s": [
+        -0.8153598308563232,
+        5.415566921234131
+      ],
+      "counts": {
+        "salience_sum": 180098067.7252493,
+        "hot_salience_sum": 139231949.0544976,
+        "expert_activations": 2507904,
+        "hot_expert_activations": 1355344
+      },
+      "local_hot_pct": 53.182504383631816,
+      "local_salience_pct": 76.42687205251384,
+      "salience_delta_pp": 0.8820912323696604
+    },
+    {
+      "task": "VIS-05",
+      "official_repeat_scores": [
+        1.0,
+        0.66
+      ],
+      "hot_pct": 55.19554194366224,
+      "hot_salience_pct": 78.13093236308453,
+      "selected_cold_salience_pct": 0.9496724628170229,
+      "boundary_offsets_s": [
+        -0.22016191482543945,
+        6.8756630420684814
+      ],
+      "counts": {
+        "salience_sum": 116306829.30785036,
+        "hot_salience_sum": 90871610.14016473,
+        "expert_activations": 1653456,
+        "hot_expert_activations": 912634
+      },
+      "local_hot_pct": 53.17483216653139,
+      "local_salience_pct": 76.50387043375903,
+      "salience_delta_pp": 1.6270619293254924
+    }
+  ],
+  "limitations": [
+    "Periodic timestamps approximate task boundaries, including scorer delay",
+    "Same tasks and seeds do not imply identical generated trajectories",
+    "Local reference has usable windows for 72 of 80 tasks; unavailable windows remain explicit",
+    "Official full-run scorer remains authoritative for TrueScore"
+  ]
+}

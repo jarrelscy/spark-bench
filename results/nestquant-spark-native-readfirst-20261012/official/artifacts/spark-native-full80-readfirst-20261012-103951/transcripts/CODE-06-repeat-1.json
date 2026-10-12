@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Implement Python KVCache(capacity, ttl_seconds, clock=None), preserving get(key), put(key,value), delete(key)->bool. clock is an injectable zero-argument seconds clock, default time.monotonic. Capacity must be a non-bool integer >=0; TTL must be a finite non-bool int/float >=0; invalid constructor arguments raise ValueError. TTL starts/resets on put, not get; an item expires exactly when now >= expiry. Before evicting a live LRU entry, remove ALL expired entries, including entries recently accessed. Successful get and put mark an entry most recently used. Missing/expired get returns None and delete returns False; deleting a live entry returns True. Updating a key must not evict another live entry. Capacity zero and TTL zero store nothing. Support falsy keys and values, independent instances, and do not sleep. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "0/5 behavioral groups: expiry-boundary:fail(AttributeError), purge-before-LRU:fail(AttributeError), update-recency-TTL:fail(AttributeError), validation-falsy:fail(AttributeError), mixed-trace:fail(AttributeError)",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 802,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport time\nimport heapq\n\n\nclass KVCache:\n    def __init__(self, capacity, ttl_seconds, clock=None):\n        if isinstance(capacity, bool) or not isinstance(capacity, int) or capacity < 0:\n            raise ValueError(\"capacity must be a non-bool integer >= 0\")\n        if isinstance(ttl_seconds, bool) or not isinstance(ttl_seconds, (int, float)) \\\n                or isinstance(ttl_seconds, complex) or ttl_seconds != ttl_seconds \\\n                or ttl_seconds in (float('inf'), float('-inf')) or ttl_seconds < 0:\n            raise ValueError(\"ttl_seconds must be a finite non-bool number >= 0\")\n        self._capacity = capacity\n        self._ttl = ttl_seconds\n        self._clock = clock if clock is not None else time.monotonic\n        if not callable(self._clock) or self._clock.__code__.co_argcount != 0:\n            raise ValueError(\"clock must be a zero-argument callable\")\n        # key -> [value, expiry, counter]\n        self._store = {}\n        # counter -> key (for LRU ordering; smaller counter = least recently used)\n        self._lru = {}\n        self._counter = 0\n\n    def _now(self):\n        return self._clock()\n\n    def _purge_expired(self):\n        now = self._now()\n        expired = [k for k, (v, exp, cnt) in self._store.items() if now >= exp]\n        for k in expired:\n            entry = self._store.pop(k)\n            del self._lru[entry[2]]\n        return expired\n\n    def _touch(self, key):\n        entry = self._store[key]\n        del self._lru[entry[2]]\n        self._counter += 1\n        entry[2] = self._counter\n        self._lru[self._counter] = key\n\n    def _evict_lru_if_full(self):\n        if len(self._store) < self._capacity:\n            return\n        # find LRU (smallest counter)\n        lru_counter = min(self._lru)\n        lru_key = self._lru[lru_counter]\n        entry = self._store.pop(lru_key)\n        del self._lru[entry[2]]\n\n    def get(self, key):\n        now = self._now()\n        if key in self._store:\n            entry = self._store[key]\n            if now >= entry[1]:\n                # expired\n                del self._store[key]\n                del self._lru[entry[2]]\n                return None\n            self._touch(key)\n            return entry[0]\n        return None\n\n    def put(self, key, value):\n        self._purge_expired()\n        now = self._now()\n        if key in self._store:\n            entry = self._store[key]\n            del self._lru[entry[2]]\n        elif len(self._store) >= self._capacity:\n            # evict LRU live entry\n            self._evict_lru_if_full()\n        if self._capacity == 0:\n            return\n        if self._ttl == 0:\n            # TTL zero stores nothing\n            return\n        self._counter += 1\n        self._store[key] = [value, now + self._ttl, self._counter]\n        self._lru[self._counter] = key\n\n    def delete(self, key):\n        if key in self._store:\n            entry = self._store[key]\n            now = self._now()\n            if now >= entry[1]:\n                del self._store[key]\n                del self._lru[entry[2]]\n                return False\n            del self._store[key]\n            del self._lru[entry[2]]\n            return True\n        return False\n```",
+    "tool_calls": [],
+    "total_seconds": 46.26965352334082
+  },
+  "scenario_id": "CODE-06",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 0.0,
+  "tools": null
+}

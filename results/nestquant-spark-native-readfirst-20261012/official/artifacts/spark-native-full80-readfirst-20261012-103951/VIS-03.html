@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Double Helix</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0a0a12;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<canvas id="dna"></canvas>
+<script>
+(function () {
+  var canvas = document.getElementById('dna');
+  var ctx = canvas.getContext('2d');
+
+  var W, H, CX, CY, AMP, STEP;
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    CX = W / 2;
+    CY = H / 2;
+    AMP = Math.min(W, H) * 0.22;
+    STEP = H / 26;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Strand colors (subtle variation)
+  var strandA = { hue: 185, sat: 70, light: 60 };  // cyan-teal
+  var strandB = { hue: 330, sat: 60, light: 58 };  // soft rose
+
+  var NODES = 26;
+  var TWIST = 0.55;        // radians per node along the axis
+  var SPEED = 0.012;       // rotation speed per frame
+
+  function render(time) {
+    var phase = time * SPEED;
+
+    ctx.fillStyle = '#0a0a12';
+    ctx.fillRect(0, 0, W, H);
+
+    // Compute 3D positions for both strands
+    var ptsA = [], ptsB = [];
+    var i, a, x3, y3, z3, s;
+    for (i = 0; i < NODES; i++) {
+      var y = CY + (i - (NODES - 1) / 2) * STEP;
+
+      // Strand A: angle = phase + i*TWIST
+      a = phase + i * TWIST;
+      x3 = Math.cos(a) * AMP;
+      z3 = Math.sin(a) * AMP;
+      // Perspective scale
+      s = 1 / (1 + z3 / (AMP * 4));
+      ptsA.push({ x: CX + x3 * s, y: y, z: z3, s: s, a: a });
+
+      // Strand B: 180 degrees out of phase (pi offset)
+      a = phase + i * TWIST + Math.PI;
+      x3 = Math.cos(a) * AMP;
+      z3 = Math.sin(a) * AMP;
+      s = 1 / (1 + z3 / (AMP * 4));
+      ptsB.push({ x: CX + x3 * s, y: y, z: z3, s: s, a: a });
+    }
+
+    // Draw rungs first (behind nodes), sorted back-to-front
+    var rungs = [];
+    for (i = 0; i < NODES; i++) {
+      rungs.push({ i: i, z: (ptsA[i].z + ptsB[i].z) / 2 });
+    }
+    rungs.sort(function (p, q) { return p.z - q.z; });
+
+    for (var r = 0; r < rungs.length; r++) {
+      var idx = rungs[r].i;
+      var pA = ptsA[idx], pB = ptsB[idx];
+      var depth = (pA.z + pB.z) / (2 * AMP); // -1..1
+      var alpha = 0.15 + 0.35 * (depth * 0.5 + 0.5);
+      var lw = 1 + 1.5 * (depth * 0.5 + 0.5);
+
+      ctx.beginPath();
+      ctx.moveTo(pA.x, pA.y);
+      ctx.lineTo(pB.x, pB.y);
+      ctx.strokeStyle = 'hsla(200, 40%, 65%, ' + alpha.toFixed(3) + ')';
+      ctx.lineWidth = lw;
+      ctx.stroke();
+
+      // Small base-pair markers at rung ends
+      ctx.beginPath();
+      ctx.arc(pA.x, pA.y, 2 * pA.s, 0, Math.PI * 2);
+      ctx.fillStyle = 'hsla(' + strandA.hue + ',' + strandA.sat + '%,' + strandA.light + '%,' + (alpha * 0.9).toFixed(3) + ')';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(pB.x, pB.y, 2 * pB.s, 0, Math.PI * 2);
+      ctx.fillStyle = 'hsla(' + strandB.hue + ',' + strandB.sat + '%,' + strandB.light + '%,' + (alpha * 0.9).toFixed(3) + ')';
+      ctx.fill();
+    }
+
+    // Draw backbone connections per strand, back-to-front segments
+    function drawStrand(pts, col) {
+      for (var j = 0; j < pts.length - 1; j++) {
+        var p1 = pts[j], p2 = pts[j + 1];
+        var d = (p1.z + p2.z) / (2 * AMP);
+        var t = d * 0.5 + 0.5; // 0 far, 1 near
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        // Slight curve for smoothness
+        var mx = (p1.x + p2.x) / 2 + Math.cos((p1.a + p2.a) / 2) * AMP * 0.12;
+        var my = (p1.y + p2.y) / 2;
+        ctx.quadraticCurveTo(mx, my, p2.x, p2.y);
+        ctx.strokeStyle = 'hsla(' + col.hue + ',' + col.sat + '%,' + (col.light - 8 + t * 14) + '%,' + (0.25 + 0.65 * t).toFixed(3) + ')';
+        ctx.lineWidth = (1.5 + 2.5 * t) * p1.s;
+        ctx.stroke();
+      }
+      // Nodes
+      for (var k = 0; k < pts.length; k++) {
+        var p = pts[k];
+        var tt = p.z / AMP * 0.5 + 0.5;
+        var radius = (3 + 3 * tt) * p.s;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'hsla(' + col.hue + ',' + col.sat + '%,' + (col.light + tt * 12) + '%,' + (0.5 + 0.5 * tt).toFixed(3) + ')';
+        ctx.fill();
+        // Soft glow on nearest nodes
+        if (tt > 0.75) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius * 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'hsla(' + col.hue + ',' + col.sat + '%,' + col.light + '%,' + ((tt - 0.75) * 0.25).toFixed(3) + ')';
+          ctx.fill();
+        }
+      }
+    }
+
+    drawStrand(ptsA, strandA);
+    drawStrand(ptsB, strandB);
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>

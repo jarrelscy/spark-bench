@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Create a JSON object for a library book record with these rules:\n- title (string, must be between 10 and 80 characters)\n- authors (array of exactly 2 strings)\n- year (integer between 1900 and 2026)\n- isbn (string matching pattern: 3 digits, hyphen, 10 digits)\n- available (boolean, must be true)\n- tags (array of 2-4 strings, none can be 'fiction')\nOutput ONLY the JSON, no code fences.",
+      "role": "user"
+    }
+  ],
+  "reason": "valid nested JSON",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 78,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "{\n  \"title\": \"The Structure of Scientific Revolutions\",\n  \"authors\": [\"Thomas S. Kuhn\", \"Isaac Newton\"],\n  \"year\": 1962,\n  \"isbn\": \"978-0226458110\",\n  \"available\": true,\n  \"tags\": [\"philosophy\", \"history\", \"science\", \"academic\"]\n}",
+    "tool_calls": [],
+    "total_seconds": 9.52665052935481
+  },
+  "scenario_id": "IFS-02",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

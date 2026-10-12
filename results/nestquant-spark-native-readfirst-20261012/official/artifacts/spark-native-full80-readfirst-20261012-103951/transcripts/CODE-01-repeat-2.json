@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python function called `parse_csv_typed` that takes a CSV string (with a header row) and returns a list of dictionaries. Values should be type-inferred: 'true'/'false' become booleans, integers become int, floats become float, 'null'/'None' become None, everything else stays string. Handle quoted fields with commas inside them. Empty rows should be skipped. Numeric-looking values with leading zeroes (for example '007') must remain strings. Output only the code in a code block.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 467,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport csv\nimport io\n\n\ndef _infer(value):\n    \"\"\"Type-infer a single CSV field value.\"\"\"\n    if value in ('null', 'None'):\n        return None\n    if value == 'true':\n        return True\n    if value == 'false':\n        return False\n    # Integers: reject leading zeros (e.g. '007' stays a string), allow\n    # optional sign, and reject things like '+'/'-' alone.\n    if value.lstrip('+-').isdigit() and len(value.lstrip('+-')) > 1 or (value.isdigit() and len(value) == 1):\n        if not (len(value.lstrip('+-')) > 1 and value.lstrip('+-')[0] == '0'):\n            try:\n                return int(value)\n            except ValueError:\n                pass\n    # Floats: use float() but guard against inf/nan and leading-zero\n    # mantissas like '007.5'.\n    try:\n        f = float(value)\n        if value.lower() in ('inf', '-inf', '+inf', 'infinity', '-infinity', '+infinity',\n                             'nan', '-nan', '+nan'):\n            return value\n        stripped = value.lstrip('+-')\n        if '.' in stripped or 'e' in stripped.lower():\n            mantissa = stripped.lower().split('e')[0]\n            int_part = mantissa.split('.')[0]\n            if len(int_part) > 1 and int_part[0] == '0':\n                return value\n            return f\n    except ValueError:\n        pass\n    return value\n\n\ndef parse_csv_typed(csv_string):\n    \"\"\"Parse a CSV string with a header row into a list of typed dicts.\"\"\"\n    reader = csv.reader(io.StringIO(csv_string))\n    rows = [row for row in reader if row]  # skip empty rows\n    if not rows:\n        return []\n    header = rows[0]\n    result = []\n    for row in rows[1:]:\n        if not row:\n            continue\n        record = {}\n        for i, key in enumerate(header):\n            raw = row[i] if i < len(row) else ''\n            record[key] = _infer(raw)\n        result.append(record)\n    return result\n```",
+    "tool_calls": [],
+    "total_seconds": 30.671495544724166
+  },
+  "scenario_id": "CODE-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

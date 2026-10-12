@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Implement retry_with_backoff(func, max_retries=3, initial_delay=0.1, backoff_factor=2, *, retry_on=(Exception,), max_delay=None, sleep=None). max_retries means ADDITIONAL calls after the first: 0 still calls once. Retry only exceptions matching retry_on; never retry BaseException subclasses outside Exception (e.g. KeyboardInterrupt). Re-raise the exact last exception object on exhaustion and immediately propagate non-retryable exceptions. After retryable failure number i (zero-based), sleep min(initial_delay * backoff_factor**i, max_delay) if a cap is supplied, otherwise the uncapped delay. No sleep after success, a non-retryable exception or the final failed attempt. sleep defaults to time.sleep and is injectable. Return successful values unchanged, including None/False. Validate BEFORE calling func: max_retries a non-bool integer >=0; initial_delay finite non-bool number >=0; backoff_factor finite non-bool number >=1; max_delay None or finite non-bool number >=0; retry_on a nonempty tuple of Exception subclass types. Invalid values raise ValueError. Do not use jitter. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/4 behavioral groups: attempt-count-and-capped-delays:pass, success-and-zero-retries:pass, exception-identity-filter-cancel:pass, validate-before-side-effects:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 565,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport time\nimport math\n\n\ndef retry_with_backoff(\n    func,\n    max_retries=3,\n    initial_delay=0.1,\n    backoff_factor=2,\n    *,\n    retry_on=(Exception,),\n    max_delay=None,\n    sleep=None,\n):\n    # --- Validation (before calling func) ---\n    if isinstance(max_retries, bool) or not isinstance(max_retries, int) or max_retries < 0:\n        raise ValueError(\"max_retries must be a non-bool integer >= 0\")\n\n    for name, value in ((\"initial_delay\", initial_delay), (\"backoff_factor\", backoff_factor)):\n        if isinstance(value, bool) or not isinstance(value, (int, float)):\n            raise ValueError(name + \" must be a non-bool number\")\n        if not math.isfinite(value):\n            raise ValueError(name + \" must be finite\")\n        if value < (0 if name == \"initial_delay\" else 1):\n            raise ValueError(name + \" must be >= \" + (\"0\" if name == \"initial_delay\" else \"1\"))\n\n    if max_delay is not None:\n        if isinstance(max_delay, bool) or not isinstance(max_delay, (int, float)):\n            raise ValueError(\"max_delay must be None or a non-bool number\")\n        if not math.isfinite(max_delay):\n            raise ValueError(\"max_delay must be finite\")\n        if max_delay < 0:\n            raise ValueError(\"max_delay must be >= 0\")\n\n    if not isinstance(retry_on, tuple) or len(retry_on) == 0:\n        raise ValueError(\"retry_on must be a nonempty tuple\")\n    for exc_type in retry_on:\n        if not (isinstance(exc_type, type) and issubclass(exc_type, Exception)):\n            raise ValueError(\"retry_on must contain only Exception subclasses\")\n\n    if sleep is None:\n        sleep = time.sleep\n\n    # --- Retry loop ---\n    attempt = 0  # number of failed retryable attempts so far (zero-based index for delay)\n    while True:\n        try:\n            return func()\n        except BaseException as exc:\n            # Never retry BaseException subclasses outside Exception (e.g. KeyboardInterrupt)\n            if not isinstance(exc, Exception):\n                raise\n            # Retry only exceptions matching retry_on\n            if not isinstance(exc, retry_on):\n                raise\n            # Exhausted: max_retries means additional calls after the first\n            if attempt >= max_retries:\n                raise\n            # Compute delay after retryable failure number `attempt`\n            delay = initial_delay * (backoff_factor ** attempt)\n            if max_delay is not None:\n                delay = min(delay, max_delay)\n            sleep(delay)\n            attempt += 1\n``` ",
+    "tool_calls": [],
+    "total_seconds": 34.86477773170918
+  },
+  "scenario_id": "CODE-09",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

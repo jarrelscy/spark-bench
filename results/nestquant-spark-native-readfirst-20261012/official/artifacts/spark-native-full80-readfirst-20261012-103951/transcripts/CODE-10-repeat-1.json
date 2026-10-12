@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Implement StateMachine(transitions, initial_state, *, guards=None, actions=None). transitions maps (state,event) to next_state; guards/actions optionally map the same keys to callbacks. Copy these mappings so later caller mutations do not alter the machine. current() returns state. can_trigger(event) reports ONLY whether the transition exists, without invoking callbacks. trigger(event, **payload) first rejects missing transitions with ValueError. A guard, if present, is called as guard(old_state,event,payload_dict); false raises ValueError. Then an action, if present, is called as action(old_state,new_state,event,payload_dict). Only after both succeed commit new_state and return it. Callback exceptions propagate without changing state; falsy states/targets are valid. During a callback, a nested trigger on the SAME instance must raise RuntimeError without changing state; current and can_trigger remain usable. After rejection or exception the machine must still work normally. Instances are independent. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/4 behavioral groups: snapshot-and-falsy-states:pass, callback-order-purity:pass, rollback-and-reentrant-trigger:pass, guard-exception-recovery:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 383,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport threading\n\n\nclass StateMachine:\n    def __init__(self, transitions, initial_state, *, guards=None, actions=None):\n        self._transitions = dict(transitions)\n        self._guards = dict(guards) if guards is not None else {}\n        self._actions = dict(actions) if actions is not None else {}\n        self._state = initial_state\n        self._in_callback = False\n        self._lock = threading.RLock()\n\n    def current(self):\n        return self._state\n\n    def can_trigger(self, event):\n        return (self._state, event) in self._transitions\n\n    def trigger(self, event, **payload):\n        with self._lock:\n            if self._in_callback:\n                raise RuntimeError(\"cannot trigger while another trigger is in progress on this machine\")\n\n            key = (self._state, event)\n            if key not in self._transitions:\n                raise ValueError(f\"no transition for state {self._state!r} and event {event!r}\")\n\n            new_state = self._transitions[key]\n            guard = self._guards.get(key)\n            action = self._actions.get(key)\n            payload_dict = dict(payload)\n\n            if guard is not None:\n                self._in_callback = True\n                try:\n                    guard_result = guard(self._state, event, payload_dict)\n                finally:\n                    self._in_callback = False\n                if not guard_result:\n                    raise ValueError(f\"guard rejected event {event!r} in state {self._state!r}\")\n\n            if action is not None:\n                old_state = self._state\n                self._in_callback = True\n                try:\n                    action(old_state, new_state, event, payload_dict)\n                finally:\n                    self._in_callback = False\n\n            self._state = new_state\n            return self._state\n```",
+    "tool_calls": [],
+    "total_seconds": 24.680024310946465
+  },
+  "scenario_id": "CODE-10",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

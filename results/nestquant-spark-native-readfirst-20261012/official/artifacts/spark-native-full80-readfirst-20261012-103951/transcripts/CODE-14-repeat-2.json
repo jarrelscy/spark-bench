@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "0/5 tests: t1:error(name '_SENTINEL' is not defined), t2:error(name '_SENTINEL' is not defined), t3:error(name '_SENTINEL' is not defined), t4:error(name '_SENTINEL' is not defined), t5:error(name '_SENTINEL' is not defined)",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 327,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport heapq\n\ndef merge_sorted_streams(*streams):\n    \"\"\"Merge sorted (key, value) streams into one sorted stream.\n\n    Later streams override earlier ones for duplicate keys, and within\n    a stream, later occurrences override earlier ones.\n    \"\"\"\n    # Materialize each stream so we can track positions within it.\n    iters = [iter(s) for s in streams]\n    # Heap entries: (key, stream_index, position_in_stream, value)\n    # stream_index breaks ties between equal keys so later streams\n    # (higher index) are popped LAST (they must override earlier ones).\n    heap = []\n    for idx, it in enumerate(iters):\n        for pos, (key, value) in enumerate(it):\n            heap.append((key, -idx, pos, value))\n    heapq.heapify(heap)\n\n    last_key = object()  # sentinel that can't equal any int key\n    last_value = None\n\n    while heap:\n        key, neg_idx, pos, value = heapq.heappop(heap)\n        if key == last_key:\n            # Later stream (higher idx => smaller neg_idx) pops later,\n            # so keep overwriting; only yield when moving to a new key.\n            last_value = value\n        else:\n            if last_key is not _SENTINEL:\n                pass\n            if _has_prev(last_key):\n                yield (last_key, last_value)\n            last_key = key\n            last_value = value\n\n    if last_key is not _SENTINEL:\n        yield (last_key, last_value)\n```",
+    "tool_calls": [],
+    "total_seconds": 24.920901834964752
+  },
+  "scenario_id": "CODE-14",
+  "scenario_revision": null,
+  "score": 0.0,
+  "tools": null
+}

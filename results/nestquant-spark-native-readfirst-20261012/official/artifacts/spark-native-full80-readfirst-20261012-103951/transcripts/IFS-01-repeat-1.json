@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a product description for a smart watch. Constraints:\n1. Exactly 3 sentences.\n2. Each sentence must start with a capital letter.\n3. Must include the word 'battery' somewhere.\n4. Must NOT mention any specific price or dollar amount.\n5. Output ONLY the description, no preamble or numbering.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 63,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "Experience seamless connectivity and fitness tracking with our sleek smart watch, designed to keep you informed and motivated throughout your day. Its long-lasting battery ensures you stay powered from morning workouts to late-night notifications without interruption. With intuitive touch controls and a vibrant display, this watch blends style and technology effortlessly into your everyday life.",
+    "tool_calls": [],
+    "total_seconds": 8.43398021813482
+  },
+  "scenario_id": "IFS-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

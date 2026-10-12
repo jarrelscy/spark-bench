@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Describe a sunrise in exactly five words.",
+      "role": "user"
+    }
+  ],
+  "reason": "5 words",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 7,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "Golden light spills over mountains.",
+    "tool_calls": [],
+    "total_seconds": 3.182378739118576
+  },
+  "scenario_id": "IF-03",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

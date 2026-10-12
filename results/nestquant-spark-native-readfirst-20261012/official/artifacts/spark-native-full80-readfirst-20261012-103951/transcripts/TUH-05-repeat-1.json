@@ -1,0 +1,361 @@
+{
+  "messages": [
+    {
+      "content": "Find all Python files under /app/src, including nested directories, that were modified within the last 7 days. Use exactly one appropriate tool call.",
+      "role": "user"
+    }
+  ],
+  "reason": "100% called list_directory | 100% recursive search requested",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 33,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "runaway": null,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "modified_within_days": 7,
+          "path": "/app/src",
+          "pattern": "*.py",
+          "recursive": true
+        },
+        "name": "list_directory"
+      }
+    ],
+    "total_seconds": 15.581330445595086
+  },
+  "scenario_id": "TUH-05",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Evaluate an arithmetic expression.",
+        "name": "calculator",
+        "parameters": {
+          "properties": {
+            "expression": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Convert money between currencies.",
+        "name": "convert_currency",
+        "parameters": {
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "from_currency": {
+              "type": "string"
+            },
+            "to_currency": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "from_currency",
+            "to_currency"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Send an email.",
+        "name": "send_email",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to",
+            "body"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Search internal documents by query.",
+        "name": "search_docs",
+        "parameters": {
+          "properties": {
+            "limit": {
+              "description": "Max results (default 5)",
+              "type": "integer"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Run a SQL query on the analytics database.",
+        "name": "query_db",
+        "parameters": {
+          "properties": {
+            "database": {
+              "enum": [
+                "sales",
+                "inventory",
+                "users"
+              ],
+              "type": "string"
+            },
+            "sql": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sql"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Create a calendar event.",
+        "name": "create_event",
+        "parameters": {
+          "properties": {
+            "attendees": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "day": {
+              "description": "Day of the event, e.g. 'monday', 'next_friday', 'tomorrow'",
+              "type": "string"
+            },
+            "duration": {
+              "description": "Duration in minutes",
+              "type": "integer"
+            },
+            "start": {
+              "description": "Start time, e.g. '14:00'",
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "day",
+            "start"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Read a file from disk.",
+        "name": "read_file",
+        "parameters": {
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Write content to a file on disk.",
+        "name": "write_file",
+        "parameters": {
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Make an HTTP request.",
+        "name": "http_request",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "method": {
+              "enum": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+              ],
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "method",
+            "url"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Translate text between languages.",
+        "name": "translate_text",
+        "parameters": {
+          "properties": {
+            "source_lang": {
+              "type": "string"
+            },
+            "target_lang": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "target_lang"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Set a countdown timer.",
+        "name": "set_timer",
+        "parameters": {
+          "properties": {
+            "duration_seconds": {
+              "type": "number"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "duration_seconds"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "List and filter files in a directory, optionally recursively, by glob pattern and age.",
+        "name": "list_directory",
+        "parameters": {
+          "properties": {
+            "modified_within_days": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "description": "Glob such as *.py",
+              "type": "string"
+            },
+            "recursive": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

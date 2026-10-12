@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Voxel Village</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#87b5d8;}
+  #app{width:100vw;height:100vh;display:block;}
+  #hint{position:fixed;left:12px;bottom:10px;font-family:monospace;font-size:12px;
+    color:#fff;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:6px;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="hint">N — toggle day / night &nbsp;·&nbsp; drag to orbit, scroll to zoom</div>
+<script type="module">
+import * as THREE from './three.module.js';
+
+/* ------------------------------------------------------------------ */
+/*  World size & height field                                          */
+/* ------------------------------------------------------------------ */
+const N = 64;                    // 64 x 64 voxel columns
+const V = 1;                     // voxel size
+const MAXH = 14;                 // max terrain height
+
+// deterministic pseudo-random
+let seed = 1337;
+function rnd(){ seed = (seed*1103515245 + 12345) & 0x7fffffff; return seed/0x7fffffff; }
+function smooth(t){ return t*t*(3-2*t); }
+function vnoise(x,z){ // value noise
+  const xi=Math.floor(x), zi=Math.floor(z);
+  const xf=x-xi, zf=z-zi;
+  function h(a,b){ const s=Math.sin(a*127.1+b*311.7)*43758.5453; return s-Math.floor(s); }
+  const a=h(xi,zi), b=h(xi+1,zi), c=h(xi,zi+1), d=h(xi+1,zi+1);
+  return a+(b-a)*smooth(xf)+((c+(d-c)*smooth(xf))-(a+(b-a)*smooth(xf)))*smooth(zf);
+}
+function fbm(x,z){
+  return vnoise(x*0.045,z*0.045)*0.6 + vnoise(x*0.11,z*0.11)*0.3 + vnoise(x*0.23,z*0.23)*0.1;
+}
+
+// river: winding curve from z=0 edge to z=N edge (x follows a sine path)
+function riverX(z){ return N*0.5 + Math.sin(z*0.11)*9 + Math.sin(z*0.23+2.0)*4; }
+const RIVER_HALF = 2.2;
+
+const height = new Int8Array(N*N);
+const isSand = new Uint8Array(N*N);
+const isWaterTop = new Uint8Array(N*N);
+const WATER_LEVEL = 3;
+
+for(let z=0;z<N;z++)for(let x=0;x<N;x++){
+  const d = Math.abs(x - riverX(z));
+  // valley carved around the river
+  const valley = Math.max(0, 1 - Math.pow(d/16, 2));
+  let h = 3 + fbm(x,z)*11 - valley*5.5;
+  h = Math.max(1, Math.min(MAXH, Math.round(h)));
+  height[z*N+x] = h;
+  if(d < RIVER_HALF+1.4 && h <= WATER_LEVEL+2) isSand[z*N+x] = 1;
+}
+// flatten gentle spots for building plots later (kept from original heights)
+
+/* water surface voxels */
+for(let z=0;z<N;z++)for(let x=0;x<N;x++){
+  const d = Math.abs(x - riverX(z));
+  if(d < RIVER_HALF){ isWaterTop[z*N+x]=1; if(height[z*N+x]>WATER_LEVEL-1) height[z*N+x]=WATER_LEVEL-1; }
+}
+
+const groundH = (x,z)=> (x<0||z<0||x>=N||z>=N)?0:height[z*N+x];
+
+/* ------------------------------------------------------------------ */
+/*  Renderer / scene / camera                                          */
+/* ------------------------------------------------------------------ */
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const CENTER = new THREE.Vector3(N/2, 6, N/2);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 400);
+
+/* lights */
+const hemi = new THREE.HemisphereLight(0xbdd8ff, 0x6a5a43, 0.9);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2d8, 1.5);
+sun.position.set(N*0.9, 55, N*0.35);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+const sc = sun.shadow.camera;
+sc.left=-52; sc.right=52; sc.top=52; sc.bottom=-52; sc.near=10; sc.far=180;
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+scene.add(sun.target);
+
+const moonLight = new THREE.DirectionalLight(0x8fa8ff, 0);
+moonLight.position.set(-N*0.7, 45, -N*0.4);
+moonLight.castShadow = false;
+scene.add(moonLight);
+
+/* ------------------------------------------------------------------ */
+/*  Merged-geometry builder helpers                                    */
+/* ------------------------------------------------------------------ */
+const boxGeo = new THREE.BoxGeometry(1,1,1);
+// per-face colored box: build one BufferGeometry from many boxes with vertex colors
+function pushBox(arr, x,y,z, sx,sy,sz, color, shadeTop=1, shadeSide=0.82, shadeEnd=0.7){
+  // +Y
+  quad(arr, x,y+sy/2,z, sx,sz, 0, color.clone().multiplyScalar(shadeTop));
+  // -Y (skip mostly, still cheap)
+  quad(arr, x,y-sy/2,z, sx,sz, 1, color.clone().multiplyScalar(0.5));
+  // +Z
+  quadZ(arr, x,y,z+sz/2, sx,sy, color.clone().multiplyScalar(shadeSide));
+  // -Z
+  quadZ(arr, x,y,z-sz/2, sx,sy, color.clone().multiplyScalar(shadeSide*0.86));
+  // +X
+  quadX(arr, x+sx/2,y,z, sy,sz, color.clone().multiplyScalar(shadeEnd));
+  // -X
+  quadX(arr, x-sx/2,y,z, sy,sz, color.clone().multiplyScalar(shadeEnd*0.86));
+}
+function quad(a, x,y,z, sx,sz, bottom, c){
+  const y0 = bottom? -0:0;
+  const s=0.5;
+  const v=[[-sx*s,y0,-sz*s],[sx*s,y0,-sz*s],[sx*s,y0,sz*s],[-sx*s,y0,sz*s]];
+  const idx = bottom? [0,3,2, 0,2,1] : [0,2,1, 0,3,2];
+  const ny = bottom? -1:1;
+  for(const i of idx){ a.pos.push(x+v[i][0],y+v[i][1],z+v[i][2]); a.nor.push(0,ny,0); a.col.push(c.r,c.g,c.b); }
+}
+function quadZ(a, x,y,z, sx,sy, c){
+  const s=0.5;
+  const v=[[-sx*s,-sy*s],[sx*s,-sy*s],[sx*s,sy*s],[-sx*s,sy*s]];
+  for(const i of [0,1,2, 0,2,3]){ a.pos.push(x+v[i][0],y+v[i][1],z); a.nor.push(0,0,1); a.col.push(c.r,c.g,c.b); }
+}
+function quadX(a, x,y,z, sy,sz, c){
+  const s=0.5;
+  const v=[[-sz*s,-sy*s],[sz*s,-sy*s],[sz*s,sy*s],[-sz*s,sy*s]];
+  for(const i of [0,2,1, 0,3,2]){ a.pos.push(x,y+v[i][1],z+v[i][0]); a.nor.push(1,0,0); a.col.push(c.r,c.g,c.b); }
+}
+function buildMesh(arr, mat){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(arr.pos,3));
+  g.setAttribute('normal',   new THREE.Float32BufferAttribute(arr.nor,3));
+  g.setAttribute('color',    new THREE.Float32BufferAttribute(arr.col,3));
+  const m = new THREE.Mesh(g, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+const MAT_LAMBERT = new THREE.MeshLambertMaterial({vertexColors:true});
+const MAT_BASIC   = new THREE.MeshBasicMaterial({vertexColors:true});
+
+/* ------------------------------------------------------------------ */
+/*  Terrain                                                            */
+/* ------------------------------------------------------------------ */
+const C_GRASS  = new THREE.Color(0x69a83f);
+const C_GRASS2 = new THREE.Color(0x7cb84a);
+const C_DIRT   = new THREE.Color(0x8a6a43);
+const C_STONE  = new THREE.Color(0x8f8f96);
+const C_SAND   = new THREE.Color(0xdccb8a);
+const C_WATER  = new THREE.Color(0x3f7fd0);
+const C_WATERD = new THREE.Color(0x2f5fa8);
+
+const terr = {pos:[],nor:[],col:[]};
+for(let z=0;z<N;z++)for(let x=0;x<N;x++){
+  const h = height[z*N+x];
+  let topC;
+  if(isWaterTop[z*N+x]) topC = C_WATERD;                 // river bed
+  else if(isSand[z*N+x]) topC = C_SAND;
+  else topC = ((x+z)&1)? C_GRASS : C_GRASS2;             // subtle grass checker
+  // top voxel
+  pushBox(terr, x+0.5, h-0.5, z+0.5, 1,1,1, topC);
+  // one stone/dirt voxel below (cheap depth hint), skip under water/sand tops
+  if(!isWaterTop[z*N+x] && h>1){
+    const under = (h>9)? C_STONE : C_DIRT;
+    pushBox(terr, x+0.5, h-1.5, z+0.5, 1,1,1, under.clone().multiplyScalar(0.9));
+  }
+}
+// water surface plane (merged quads, slightly translucent look via basic mat)
+const wat = {pos:[],nor:[],col:[]};
+for(let z=0;z<N;z++)for(let x=0;x<N;x++){
+  if(!isWaterTop[z*N+x]) continue;
+  const y = WATER_LEVEL - 0.12;
+  const c = C_WATER.clone().multiplyScalar(((x+z)&1)?1:0.92);
+  const s=0.5;
+  const v=[[-s,0,-s],[s,0,-s],[s,0,s],[-s,0,s]];
+  for(const i of [0,2,1, 0,3,2]){ wat.pos.push(x+0.5+v[i][0],y,z+0.5+v[i][1]); wat.nor.push(0,1,0); wat.col.push(c.r,c.g,c.b); }
+}
+const waterMesh = buildMesh(wat, new THREE.MeshLambertMaterial({vertexColors:true, transparent:true, opacity:0.85}));
+waterMesh.castShadow = false;
+scene.add(buildMesh(terr, MAT_LAMBERT));
+scene.add(waterMesh);
+
+/* ------------------------------------------------------------------ */
+/*  Village: plots, buildings, path                                    */
+/* ------------------------------------------------------------------ */
+function flatPlot(cx,cz,w,d,base){
+  for(let z=cz-d;z<=cz+d;z++)for(let x=cx-w;x<=cx+w;x++){
+    if(x<1||z<1||x>=N-1||z>=N-1) continue;
+    const i=z*N+x;
+    if(isWaterTop[i]) return -1;
+    height[i]=base;
+    isSand[i]=0;
+  }
+  return base;
+}
+// choose 14 plots near centre, avoiding the river
+const plots=[];
+let tries=0;
+while(plots.length<14 && tries<4000){
+  tries++;
+  const a = rnd()*Math.PI*2;
+  const r = 6 + rnd()*16;
+  const cx = Math.round(N/2 + Math.cos(a)*r);
+  const cz = Math.round(N/2 + Math.sin(a)*r);
+  if(cx<6||cz<6||cx>N-7||cz>N-7) continue;
+  if(Math.abs(cx-riverX(cz)) < RIVER_HALF+5) continue;
+  let ok=true;
+  for(const p of plots) if(Math.abs(p.x-cx)<7 && Math.abs(p.z-cz)<7){ ok=false; break; }
+  if(!ok) continue;
+  const base = Math.max(WATER_LEVEL+2, groundH(cx,cz));
+  if(flatPlot(cx,cz,3,3,base)<0) continue;
+  plots.push({x:cx,z:cz,y:base});
+}
+
+/* palette */
+const WALLS = [0xe8dcc0, 0xd8b28a, 0xc9d4d8, 0xe0c8b0, 0xbfa98a];
+const ROOFS = [0xa8402f, 0x5a6a78, 0x8a5a30, 0x704838, 0x4a6a4a];
+const WOOD  = new THREE.Color(0x7a5230);
+const STONEP= new THREE.Color(0x9a948c);
+const WIN   = new THREE.Color(0xffd98a);
+
+const bld = {pos:[],nor:[],col:[]};   // solid parts
+const win = {pos:[],nor:[],col:[]};   // glowing windows (basic mat)
+
+function addWindow(x,y,z, sx,sy,sz, night){
+  // always built; material swapped day/night (dim vs warm)
+  pushBox(win, x,y,z, sx,sy,sz, WIN, 1,1,1);
+}
+// roof styles: 0=gabled stepped, 1=pyramid, 2=flat parapet, 3=hipped stepped
+function addRoof(arr, cx,y,cz, w,d, style, color){
+  const c = new THREE.Color(color);
+  if(style===0){ // gable: stepped slabs shrinking in depth
+    let ww=w, zz=d, yy=y;
+    let step=0;
+    while(ww>0 && zz>0){
+      pushBox(arr, cx+0.5, yy+0.5, cz+0.5, ww,1,zz, c.clone().multiplyScalar(step%2?0.94:1));
+      yy++; ww-=2; zz-= (step%2)?2:0; step++;
+      if(step>6) break;
+    }
+  } else if(style===1){ // pyramid
+    let ww=w, zz=d, yy=y;
+    while(ww>0 && zz>0){
+      pushBox(arr, cx+0.5, yy+0.5, cz+0.5, ww,1,zz, c.clone().multiplyScalar(1-yy*0.02));
+      yy++; ww-=2; zz-=2;
+      if(yy>y+7) break;
+    }
+  } else if(style===2){ // flat with parapet
+    pushBox(arr, cx+0.5, y+0.5, cz+0.5, w,1,d, c.clone().multiplyScalar(0.9));
+    pushBox(arr, cx+0.5, y+1.5, cz+0.5, w,1,1, c);
+    pushBox(arr, cx+0.5, y+1.5, cz+0.5, 1,1,d, c);
+    pushBox(arr, cx+0.5, y+1.5, cz+d-0.5, w,1,1, c);
+    pushBox(arr, cx+w-0.5, y+1.5, cz+0.5, 1,1,d, c);
+  } else { // hipped stepped
+    let ww=w, zz=d, yy=y, step=0;
+    while(ww>0 && zz>0){
+      pushBox(arr, cx+0.5, yy+0.5, cz+0.5, ww,1,zz, c.clone().multiplyScalar(step%2?0.9:1));
+      yy++; ww-=2; zz-=2; step++;
+      if(step>6) break;
+    }
+  }
+}
+
+const buildingCenters = [];
+plots.forEach((p,i)=>{
+  const style = i%3;
+  const w = [5,7,4][style] + (i%2);       // footprint variety
+  const d = [7,5,4][style] + ((i>>1)%2);
+  const wallH = [4,3,6][style] + (i%2?1:0);
+  const roofStyle = [0,1,2][style===0? (i%2?0:3) : style===1? 1:2];
+  const wallC = new THREE.Color(WALLS[i%WALLS.length]);
+  const roofC = ROOFS[(i*2+1)%ROOFS.length];
+  const x0 = p.x - Math.floor(w/2), z0 = p.z - Math.floor(d/2);
+  const baseY = p.y;
+
+  // foundation slab
+  pushBox(bld, x0+w/2, baseY+0.5, z0+d/2, w,1,d, new THREE.Color(0x8a8578));
+
+  // walls: hollow box built as 4 wall slabs
+  for(let lvl=1; lvl<=wallH; lvl++){
+    const y = baseY + lvl - 0.5;
+    const shade = 1 - (lvl%2)*0.05;
+    pushBox(bld, x0+w/2, y, z0+0.5, w,1,1, wallC.clone().multiplyScalar(shade));      // front
+    pushBox(bld, x0+w/2, y, z0+d-0.5, w,1,1, wallC.clone().multiplyScalar(shade*0.9)); // back
+    pushBox(bld, x0+0.5, y, z0+d/2, 1,1,d-2, wallC.clone().multiplyScalar(shade*0.95)); // sides
+    pushBox(bld, x0+w-0.5, y, z0+d/2, 1,1,d-2, wallC.clone().multiplyScalar(shade*0.95));
+  }
+  // corner posts
+  for(const [px,pz] of [[x0,z0],[x0+w-1,z0],[x0,z0+d-1],[x0+w-1,z0+d-1]])
+    pushBox(bld, px+0.5, baseY+wallH/2, pz+0.5, 1,wallH,1, WOOD);
+
+  // windows on front & sides (warm glow at night)
+  const wy = baseY + Math.floor(wallH/2) + 0.1;
+  const nWin = Math.max(1, Math.floor(w/3));
+  for(let k=0;k<nWin;k++){
+    const wx = x0 + 1 + Math.round((w-3) * (nWin===1?0.5:k/(nWin-1)));
+    addWindow(wx+0.5, wy, z0-0.02, 0.9,0.9,0.15, true);
+    addWindow(wx+0.5, wy, z0+d+0.02, 0.9,0.9,0.15, true);
+  }
+  const nWinZ = Math.max(1, Math.floor(d/3));
+  for(let k=0;k<nWinZ;k++){
+    const wz = z0 + 1 + Math.round((d-3) * (nWinZ===1?0.5:k/(nWinZ-1)));
+    addWindow(x0-0.02, wy, wz+0.5, 0.15,0.9,0.9, true);
+    addWindow(x0+w+0.02, wy, wz+0.5, 0.15,0.9,0.9, true);
+  }
+  // door on front
+  pushBox(bld, x0+Math.floor(w/2)+0.5, baseY+1.5, z0-0.03, 1,2,0.18, WOOD.clone().multiplyScalar(0.8));
+
+  // roof
+  addRoof(bld, x0, baseY+wallH, z0, w, d, roofStyle, roofC);
+
+  // chimney on some houses
+  if(i%3===0){
+    pushBox(bld, x0+1.5, baseY+wallH+2.2, z0+1.5, 1,3,1, new THREE.Color(0x8a7a70));
+  }
+  buildingCenters.push(new THREE.Vector3(x0+w/2, baseY, z0+d/2));
+});
+
+/* stone path connecting buildings (MST-ish: connect each to nearest already-linked) */
+const path = {pos:[],nor:[],col:[]};
+const linked = [0];
+const unlinked = plots.map((_,i)=>i).slice(1);
+while(unlinked.length){
+  let best=-1, bd=1e9, from=-1;
+  for(const u of unlinked) for(const l of linked){
+    const dx=plots[u].x-plots[l].x, dz=plots[u].z-plots[l].z;
+    const dist=dx*dx+dz*dz;
+    if(dist<bd){bd=dist;best=u;from=l;}
+  }
+  // L-shaped path from plots[from] to plots[best]
+  const a=plots[from], b=plots[best];
+  const stepX = Math.sign(b.x-a.x)||1;
+  let x=a.x, z=a.z;
+  while(x!==b.x){ x+=stepX; layPathTile(x,z); }
+  const stepZ = Math.sign(b.z-a.z)||1;
+  while(z!==b.z){ z+=stepZ; layPathTile(x,z); }
+  layPathTile(b.x,b.z);
+  linked.push(best);
+  unlinked.splice(unlinked.indexOf(best),1);
+}
+function layPathTile(x,z){
+  if(x<0||z<0||x>=N||z>=N) return;
+  const i=z*N+x;
+  if(isWaterTop[i]) return;                 // don't pave the river
+  const h=height[i];
+  if(isSand[i]||h<=WATER_LEVEL) return;
+  const c = STONEP.clone().multiplyScalar(0.85+((x*7+z*13)%5)*0.05);
+  pushBox(path, x+0.5, h-0.35, z+0.5, 1,0.3,1, c);
+  // side pebbles occasionally
+  if(((x*31+z*17)%11)===0) pushBox(path, x+0.5+(x%2?0.3:-0.3), h-0.15, z+0.5, 0.4,0.3,0.4, c.clone().multiplyScalar(0.8));
+}
+scene.add(buildMesh(bld, MAT_LAMBERT));
+scene.add(buildMesh(path, MAT_LAMBERT));
+
+/* window glow mesh — basic material so it ignores lighting */
+const winMesh = buildMesh(win, MAT_BASIC.clone());
+winMesh.castShadow=false;
+scene.add(winMesh);
+
+/* ------------------------------------------------------------------ */
+/*  Trees (>=20) via InstancedMesh                                     */
+/* ------------------------------------------------------------------ */
+const trunkGeo = new THREE.BoxGeometry(0.8,3,0.8);
+const leafGeo  = new THREE.BoxGeometry(2.6,2.2,2.6);
+const trunkMat = new THREE.MeshLambertMaterial({color:0x6b4a2a});
+const leafMat  = new THREE.MeshLambertMaterial({color:0x3f7d33});
+const MAXT = 34;
+const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, MAXT);
+const leaves = new THREE.InstancedMesh(leafGeo, leafMat, MAXT);
+leaves.castShadow = trunks.castShadow = true;
+leaves.receiveShadow = true;
+const m4 = new THREE.Matrix4();
+let ti=0, guard=0;
+while(ti<MAXT && guard<6000){
+  guard++;
+  const x = 1+Math.floor(rnd()*(N-2)), z = 1+Math.floor(rnd()*(N-2));
+  const i=z*N+x;
+  if(isWaterTop[i]||isSand[i]) continue;
+  if(height[i]<=WATER_LEVEL) continue;
+  // avoid plots & path
+  let near=false;
+  for(const p of plots) if(Math.abs(p.x-x)<5 && Math.abs(p.z-z)<5){near=true;break;}
+  if(near) continue;
+  const h=height[i];
+  const s = 0.8+rnd()*0.5;
+  m4.makeScale(1,s,1); m4.setPosition(x+0.5, h+1.5*s, z+0.5);
+  trunks.setMatrixAt(ti, m4);
+  // canopy: two stacked leaf boxes via second instance scaled
+  m4.makeScale(s, s*0.9, s); m4.setPosition(x+0.5, h+3*s+1.1*s, z+0.5);
+  leaves.setMatrixAt(ti, m4);
+  ti++;
+}
+trunks.count = leaves.count = ti;
+scene.add(trunks); scene.add(leaves);
+
+// extra canopy layer for lusher look: one more instanced mesh reusing positions
+const leaf2 = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8,1.4,1.8), leafMat, ti);
+for(let k=0;k<ti;k++){
+  trunks.getMatrixAt(k,m4);
+  const p=new THREE.Vector3(), q=new THREE.Quaternion(), s=new THREE.Vector3();
+  m4.decompose(p,q,s);
+  m4.makeScale(s.x*0.85, s.y*0.7, s.z*0.85);
+  m4.setPosition(p.x, p.y + 1.6*s.y, p.z);
+  leaf2.setMatrixAt(k, m4);
+}
+leaf2.castShadow = true;
+scene.add(leaf2);
+
+/* ------------------------------------------------------------------ */
+/*  Day / night toggle (key N)                                         */
+/* ------------------------------------------------------------------ */
+let night = false;
+const skyDay = new THREE.Color(0x87b5d8);
+const skyNight = new THREE.Color(0x0a0e22);
+const winDim = new THREE.Color(0x55504a);
+const winWarm = new THREE.Color(0xffc95e);
+
+function applyMode(){
+  scene.background = night? skyNight : skyDay;
+  scene.fog = new THREE.Fog(night?0x0a0e22:0x9cc0dd, 70, 190);
+  hemi.intensity = night? 0.22 : 0.9;
+  hemi.color.set(night?0x2a3560:0xbdd8ff);
+  sun.intensity = night? 0.0 : 1.5;
+  moonLight.intensity = night? 0.5 : 0;
+  // recolor window quads: rebuild color attribute
+  const colAttr = winMesh.geometry.getAttribute('color');
+  const c = night? winWarm : winDim;
+  for(let i=0;i<colAttr.count;i++) colAttr.setXYZ(i, c.r, c.g, c.b);
+  colAttr.needsUpdate = true;
+  renderer.shadowMap.enabled = true;
+}
+applyMode();
+addEventListener('keydown', e=>{
+  if(e.code==='KeyN' || e.key==='n' || e.key==='N'){ night=!night; applyMode(); }
+});
+
+/* ------------------------------------------------------------------ */
+/*  Orbit camera: slow auto-rotation, drag to override                 */
+/* ------------------------------------------------------------------ */
+let theta = 0.6, phi = 0.62, radius = 78;
+let dragging=false, px=0, py=0, autoTimer=0;
+const dom = renderer.domElement;
+dom.addEventListener('pointerdown', e=>{dragging=true;px=e.clientX;py=e.clientY;});
+addEventListener('pointerup', ()=>dragging=false);
+addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  theta -= (e.clientX-px)*0.005;
+  phi   = Math.min(1.35, Math.max(0.18, phi - (e.clientY-py)*0.004));
+  px=e.clientX; py=e.clientY;
+});
+dom.addEventListener('wheel', e=>{
+  radius = Math.min(150, Math.max(35, radius + e.deltaY*0.05));
+},{passive:true});
+
+function updateCamera(dt){
+  if(!dragging){
+    autoTimer += dt;
+    if(autoTimer > 2.2){ theta += dt*0.09; }   // gentle auto-orbit after brief pause
+  }
+  const cy = CENTER.y + 4;
+  camera.position.set(
+    CENTER.x + Math.sin(theta)*Math.cos(phi)*radius,
+    cy + Math.sin(phi)*radius,
+    CENTER.z + Math.cos(theta)*Math.cos(phi)*radius
+  );
+  camera.lookAt(CENTER.x, cy, CENTER.z);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Loop                                                               */
+/* ------------------------------------------------------------------ */
+const clock = new THREE.Clock();
+function tick(){
+  const dt = Math.min(clock.getDelta(), 0.05);
+  updateCamera(dt);
+  // subtle water shimmer: bob the water plane
+  waterMesh.position.y = Math.sin(clock.elapsedTime*1.4)*0.05;
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>

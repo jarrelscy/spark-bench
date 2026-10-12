@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar System</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #05060a;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<script>
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("sky");
+  var ctx = canvas.getContext("2d");
+
+  var W, H, CX, CY;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    CX = W / 2;
+    CY = H / 2;
+    buildStars();
+  }
+  window.addEventListener("resize", resize);
+
+  // ---------- Starfield ----------
+  var stars = [];
+
+  function buildStars() {
+    stars = [];
+    var count = Math.floor((W * H) / 2600);
+    for (var i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.3 + 0.3,
+        base: 0.35 + Math.random() * 0.5,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 1.5,
+        hue: Math.random()
+      });
+    }
+  }
+
+  function drawStars(t) {
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      var tw = s.base + 0.3 * Math.sin(s.phase + t * 0.001 * s.speed);
+      if (tw < 0.05) tw = 0.05;
+      if (tw > 1) tw = 1;
+      var col;
+      if (s.hue < 0.15) col = "rgba(170,200,255," + tw + ")";
+      else if (s.hue > 0.85) col = "rgba(255,220,180," + tw + ")";
+      else col = "rgba(235,235,245," + tw + ")";
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = col;
+      ctx.fill();
+    }
+  }
+
+  // ---------- Planets ----------
+  // name, orbit radius (fraction of min dimension), planet radius, orbital
+  // period (seconds, scaled), colors [body, shading], ring?
+  var planets = [
+    { name: "Mercury", rf: 0.10, pr: 4,  period: 4.8,  c0: "#b7a48a", c1: "#6e5f4c" },
+    { name: "Venus",   rf: 0.16, pr: 7,  period: 9.0,  c0: "#e8c37e", c1: "#9a7434" },
+    { name: "Earth",   rf: 0.23, pr: 8,  period: 14.0, c0: "#5aa9e6", c1: "#1c4d80", moon: true },
+    { name: "Mars",    rf: 0.30, pr: 6,  period: 22.0, c0: "#d1603d", c1: "#7a2f1c" },
+    { name: "Jupiter", rf: 0.42, pr: 16, period: 40.0, c0: "#d9a066", c1: "#8a5a2b", bands: true },
+    { name: "Saturn",  rf: 0.55, pr: 13, period: 62.0, c0: "#e3c98f", c1: "#9c7c3f", ring: true }
+  ];
+
+  // ---------- Sun ----------
+  function drawSun(t) {
+    var pulse = 1 + 0.04 * Math.sin(t * 0.0018);
+
+    // outer corona
+    var corona = ctx.createRadialGradient(CX, CY, 0, CX, CY, 110 * pulse);
+    corona.addColorStop(0, "rgba(255,190,80,0.55)");
+    corona.addColorStop(0.4, "rgba(255,140,40,0.22)");
+    corona.addColorStop(1, "rgba(255,100,20,0)");
+    ctx.beginPath();
+    ctx.arc(CX, CY, 110 * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = corona;
+    ctx.fill();
+
+    // sun body
+    var body = ctx.createRadialGradient(
+      CX - 8, CY - 8, 4,
+      CX, CY, 34 * pulse
+    );
+    body.addColorStop(0, "#fff8dc");
+    body.addColorStop(0.45, "#ffd75e");
+    body.addColorStop(0.8, "#ff9b2f");
+    body.addColorStop(1, "#e85d04");
+    ctx.beginPath();
+    ctx.arc(CX, CY, 34 * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = body;
+    ctx.fill();
+  }
+
+  // ---------- Planet rendering ----------
+  function drawPlanet(p, x, y, t) {
+    // shadow side: light always comes from the sun (center), so the
+    // lit limb faces the center. Compute angle from sun to planet.
+    var ang = Math.atan2(y - CY, x - CX);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Saturn ring behind planet
+    if (p.ring) {
+      ctx.save();
+      ctx.rotate(-0.45);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.pr * 2.1, p.pr * 0.75, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(210,190,140,0.75)";
+      ctx.lineWidth = p.pr * 0.42;
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(120,100,70,0.5)";
+      ctx.lineWidth = p.pr * 0.14;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // body with day/night terminator via radial gradient offset toward sun
+    var lx = -Math.cos(ang) * p.pr * 0.45;
+    var ly = -Math.sin(ang) * p.pr * 0.45;
+    var g = ctx.createRadialGradient(lx, ly, p.pr * 0.1, 0, 0, p.pr * 1.5);
+    g.addColorStop(0, p.c0);
+    g.addColorStop(0.55, p.c0);
+    g.addColorStop(1, p.c1);
+    ctx.beginPath();
+    ctx.arc(0, 0, p.pr, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // Jupiter bands
+    if (p.bands) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, p.pr, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.globalAlpha = 0.28;
+      for (var i = -2; i <= 2; i++) {
+        ctx.fillStyle = i % 2 === 0 ? "#a86a35" : "#f0c98f";
+        ctx.fillRect(-p.pr, i * p.pr * 0.42 - 2, p.pr * 2, 4);
+      }
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    // Saturn ring in front of planet
+    if (p.ring) {
+      ctx.save();
+      ctx.rotate(-0.45);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.pr * 2.1, p.pr * 0.75, 0, Math.PI * 0.02, Math.PI * 0.98);
+      ctx.strokeStyle = "rgba(230,210,160,0.9)";
+      ctx.lineWidth = p.pr * 0.42;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Earth moon
+    if (p.moon) {
+      var ma = t * 0.001 * 2.2;
+      var mx = Math.cos(ma) * (p.pr + 7);
+      var my = Math.sin(ma) * (p.pr + 7) * 0.5;
+      ctx.beginPath();
+      ctx.arc(mx, my, 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = "#cfcfcf";
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // ---------- Main loop ----------
+  var start = null;
+
+  function frame(ts) {
+    if (start === null) start = ts;
+    var t = ts - start;
+
+    // background
+    ctx.fillStyle = "#05060a";
+    ctx.fillRect(0, 0, W, H);
+
+    drawStars(t);
+
+    // orbit paths
+    var minD = Math.min(W, H);
+    ctx.lineWidth = 1;
+    for (var i = 0; i < planets.length; i++) {
+      ctx.beginPath();
+      ctx.arc(CX, CY, planets[i].rf * minD * 0.5, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(120,140,190,0.16)";
+      ctx.stroke();
+    }
+
+    drawSun(t);
+
+    // planets (angle based on elapsed seconds / period)
+    for (var j = 0; j < planets.length; j++) {
+      var p = planets[j];
+      var a = (t / 1000) * (Math.PI * 2 / p.period) + j * 1.7;
+      var R = p.rf * minD * 0.5;
+      var px = CX + Math.cos(a) * R;
+      var py = CY + Math.sin(a) * R;
+      drawPlanet(p, px, py, t);
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

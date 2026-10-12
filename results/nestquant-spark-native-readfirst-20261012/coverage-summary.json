@@ -1,0 +1,16 @@
+{
+  "updated": 1791817963.4778564,
+  "completed_pairs": 80,
+  "matched_usable_pairs": 72,
+  "aggregation": "Unweighted task means, not pooled activation or salience percentages",
+  "spark_mean_hot_pct": 50.60288262553707,
+  "local_mean_hot_pct": 52.35515366818422,
+  "spark_mean_salience_pct": 69.16812303013069,
+  "local_mean_salience_pct": 70.60989755909104,
+  "limitations": [
+    "Periodic timestamps approximate task boundaries, including scorer delay",
+    "Same tasks and seeds do not imply identical generated trajectories",
+    "Local reference has usable windows for 72 of 80 tasks; unavailable windows remain explicit",
+    "Official full-run scorer remains authoritative for TrueScore"
+  ]
+}

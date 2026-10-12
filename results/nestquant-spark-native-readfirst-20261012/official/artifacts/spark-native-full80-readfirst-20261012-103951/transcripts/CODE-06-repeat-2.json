@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Implement Python KVCache(capacity, ttl_seconds, clock=None), preserving get(key), put(key,value), delete(key)->bool. clock is an injectable zero-argument seconds clock, default time.monotonic. Capacity must be a non-bool integer >=0; TTL must be a finite non-bool int/float >=0; invalid constructor arguments raise ValueError. TTL starts/resets on put, not get; an item expires exactly when now >= expiry. Before evicting a live LRU entry, remove ALL expired entries, including entries recently accessed. Successful get and put mark an entry most recently used. Missing/expired get returns None and delete returns False; deleting a live entry returns True. Updating a key must not evict another live entry. Capacity zero and TTL zero store nothing. Support falsy keys and values, independent instances, and do not sleep. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 behavioral groups: expiry-boundary:pass, purge-before-LRU:pass, update-recency-TTL:pass, validation-falsy:pass, mixed-trace:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 649,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport time\nimport math\n\n\nclass KVCache:\n    def __init__(self, capacity, ttl_seconds, clock=None):\n        if isinstance(capacity, bool) or not isinstance(capacity, int):\n            raise ValueError(\"capacity must be a non-bool integer\")\n        if capacity < 0:\n            raise ValueError(\"capacity must be >= 0\")\n\n        if isinstance(ttl_seconds, bool):\n            raise ValueError(\"ttl_seconds must be a non-bool number\")\n        if not isinstance(ttl_seconds, (int, float)):\n            raise ValueError(\"ttl_seconds must be a finite number\")\n        if isinstance(ttl_seconds, float) and not math.isfinite(ttl_seconds):\n            raise ValueError(\"ttl_seconds must be finite\")\n        if ttl_seconds < 0:\n            raise ValueError(\"ttl_seconds must be >= 0\")\n\n        self.capacity = capacity\n        self.ttl_seconds = ttl_seconds\n        self.clock = clock if clock is not None else time.monotonic\n        # dict preserves insertion order; used to track LRU order (oldest first)\n        self._store = {}\n\n    def _now(self):\n        return self.clock()\n\n    def _is_expired(self, expiry, now):\n        return now >= expiry\n\n    def _purge_expired(self):\n        now = self._now()\n        expired_keys = [\n            key for key, (value, expiry) in self._store.items()\n            if self._is_expired(expiry, now)\n        ]\n        for key in expired_keys:\n            del self._store[key]\n\n    def _mark_used(self, key):\n        # Move key to the end (most recently used position)\n        value, expiry = self._store.pop(key)\n        self._store[key] = (value, expiry)\n\n    def get(self, key):\n        if key not in self._store:\n            return None\n        value, expiry = self._store[key]\n        now = self._now()\n        if self._is_expired(expiry, now):\n            del self._store[key]\n            return None\n        self._mark_used(key)\n        return value\n\n    def put(self, key, value):\n        if self.capacity == 0 or self.ttl_seconds == 0:\n            return\n        now = self._now()\n        expiry = now + self.ttl_seconds\n        if key in self._store:\n            self._store[key] = (value, expiry)\n            self._mark_used(key)\n            return\n        # Evict expired entries first\n        self._purge_expired()\n        # Evict LRU entries if still over capacity\n        while len(self._store) >= self.capacity:\n            oldest_key = next(iter(self._store))\n            del self._store[oldest_key]\n        self._store[key] = (value, expiry)\n\n    def delete(self, key):\n        if key not in self._store:\n            return False\n        value, expiry = self._store[key]\n        now = self._now()\n        if self._is_expired(expiry, now):\n            del self._store[key]\n            return False\n        del self._store[key]\n        return True\n```",
+    "tool_calls": [],
+    "total_seconds": 37.1526689119637
+  },
+  "scenario_id": "CODE-06",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

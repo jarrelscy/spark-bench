@@ -1,0 +1,115 @@
+{
+  "messages": [
+    {
+      "content": "Build a daily briefing as raw JSON. Exact top-level keys: as_of and sections. as_of='2026-07-31T09:00:00Z'. sections is an ordered discriminated-union array with exactly two entries. The weather entry has kind='weather', payload={city:'San Francisco', temperature:{value:18,unit:'C'}, condition:'foggy'}, and source={tool:'get_weather',fresh:true}. The market entry has kind='market', payload={ticker:'AAPL',price:192.45,currency:'USD'}, and source={tool:'get_stock_price',fresh:true}. Every object must have exactly the stated keys. Do not merge the two currency/unit fields or copy humidity. No prose or fences.",
+      "role": "user"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"city\": \"San Francisco\"}",
+            "name": "get_weather"
+          },
+          "id": "call00001",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"city\": \"San Francisco\", \"temperature_c\": 18, \"condition\": \"foggy\", \"humidity\": 70}",
+      "role": "tool",
+      "tool_call_id": "call00001"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"ticker\": \"AAPL\"}",
+            "name": "get_stock_price"
+          },
+          "id": "call00002",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"ticker\": \"AAPL\", \"price\": 192.45, \"currency\": \"USD\"}",
+      "role": "tool",
+      "tool_call_id": "call00002"
+    }
+  ],
+  "reason": "top-keys=pass, timestamp=pass, section-order=pass, weather-union=pass, market-union=pass, unrequested-fields-excluded=pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 93,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "{\"as_of\":\"2026-07-31T09:00:00Z\",\"sections\":[{\"kind\":\"weather\",\"payload\":{\"city\":\"San Francisco\",\"temperature\":{\"value\":18,\"unit\":\"C\"},\"condition\":\"foggy\"},\"source\":{\"tool\":\"get_weather\",\"fresh\":true}},{\"kind\":\"market\",\"payload\":{\"ticker\":\"AAPL\",\"price\":192.45,\"currency\":\"USD\"},\"source\":{\"tool\":\"get_stock_price\",\"fresh\":true}}]}",
+    "tool_calls": [],
+    "total_seconds": 12.637402106076479
+  },
+  "scenario_id": "SOH-04",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Get one current company-stock price. It does not provide historical performance, market-index, or ETF data.",
+        "name": "get_stock_price",
+        "parameters": {
+          "properties": {
+            "exchange": {
+              "enum": [
+                "NYSE",
+                "NASDAQ",
+                "LSE",
+                "TSE"
+              ],
+              "type": "string"
+            },
+            "ticker": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ticker"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}
