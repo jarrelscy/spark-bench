@@ -29,3 +29,13 @@ python -u spark_bench.py eval --endpoint http://127.0.0.1:18975/v1 \
 This selects all80 scenarios and repeat seeds43/44. GPU inference and asynchronous delivery can produce different trajectories despite matched settings. Latencies include the SSH tunnel. The dedicated throughput sweep was skipped: median positive serving-log generation interval was17.2tokens/s, maximum22.2tokens/s; these are not isolated decode-kernel throughput measurements.
 
 Coverage comparisons use approximate periodic telemetry boundaries and different generated trajectories. See the saved summaries rather than treating every selected expert as delivered hot.
+
+## Published serving recipe
+
+The validated ARM64 runtime is published as `docker.io/jarrelscy/nestquant:spark-flash-jt75-g1-20261011`, pinned by digest:
+
+```
+docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364
+```
+
+[Complete checkpoint preparation, guarded startup and benchmark instructions](https://github.com/jarrelscy/nestquant/blob/5de4a33/spark/flash/README.md). The portable launcher is tagged `spark-readfirst-recipe-20261012`; the original measured runtime source remains tagged `spark-readfirst-full80-20261012`. The image excludes model weights and benchmark traces. Prepare weights using the pinned checkpoint and documented commands.
