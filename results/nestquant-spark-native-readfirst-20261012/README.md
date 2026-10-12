@@ -38,4 +38,4 @@ The validated ARM64 runtime is published as `docker.io/jarrelscy/nestquant:spark
 docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364
 ```
 
-[Complete checkpoint preparation, guarded startup and benchmark instructions](https://github.com/jarrelscy/nestquant/blob/5de4a33/spark/flash/README.md). The portable launcher is tagged `spark-readfirst-recipe-20261012`; the original measured runtime source remains tagged `spark-readfirst-full80-20261012`. The image excludes model weights and benchmark traces. Prepare weights using the pinned checkpoint and documented commands.
+[Complete checkpoint preparation, guarded startup and benchmark instructions](https://github.com/jarrelscy/nestquant/blob/7cd890e/spark/flash/README.md). The portable launcher is tagged `spark-readfirst-recipe-20261012-v2`; the original measured runtime source remains tagged `spark-readfirst-full80-20261012`. The image excludes model weights and benchmark traces. Prepare weights using the pinned checkpoint and documented commands.
