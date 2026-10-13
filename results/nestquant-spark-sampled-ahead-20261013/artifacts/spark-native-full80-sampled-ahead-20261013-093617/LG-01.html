@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voxel Village</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #87b5d8; }
+  #hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    font-family: Georgia, serif; font-size: 14px; letter-spacing: 1px;
+    color: rgba(255,255,255,0.85); text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    pointer-events: none; user-select: none; transition: opacity 1s;
+  }
+</style>
+</head>
+<body>
+<div id="hint">Press N to switch day / night</div>
+<script type="module">
+import * as THREE from './three.module.js';
+
+// ---------------------------------------------------------------- settings
+const SIZE = 64;              // voxel grid 64 x 64
+const WATER_LEVEL = 5;        // water surface voxel height
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 400);
+
+// ---------------------------------------------------------------- heightmap
+// value-noise style rolling hills + a carved diagonal valley for the river
+function smooth(t){ return t*t*(3-2*t); }
+function hash2(x, z){
+  let h = Math.sin(x*127.1 + z*311.7) * 43758.5453;
+  return h - Math.floor(h);
+}
+function vnoise(x, z){
+  const xi = Math.floor(x), zi = Math.floor(z);
+  const xf = smooth(x - xi), zf = smooth(z - zi);
+  const a = hash2(xi, zi),     b = hash2(xi+1, zi);
+  const c = hash2(xi, zi+1),   d = hash2(xi+1, zi+1);
+  return a + (b-a)*xf + (c-a)*zf + (a-b-c+d)*xf*zf;
+}
+
+const height = new Int8Array(SIZE*SIZE);
+const isWaterCol = new Uint8Array(SIZE*SIZE);
+const riverCenter = new Float32Array(SIZE); // river z-centre per x column
+
+// river winds from x=0 edge to x=SIZE-1 edge
+for (let x = 0; x < SIZE; x++){
+  riverCenter[x] = SIZE*0.5
+    + Math.sin(x*0.09)*9
+    + Math.sin(x*0.23 + 2.0)*4.5;
+}
+
+for (let x = 0; x < SIZE; x++){
+  for (let z = 0; z < SIZE; z++){
+    let h = 4
+      + vnoise(x*0.055, z*0.055) * 14
+      + vnoise(x*0.15 + 40, z*0.15 + 40) * 4
+      + vnoise(x*0.4 + 80, z*0.4 + 80) * 1.5;
+    // gentle bowl so edges rise a bit
+    const dx = (x - SIZE/2)/(SIZE/2), dz = (z - SIZE/2)/(SIZE/2);
+    h += (dx*dx + dz*dz) * 3.5;
+    // carve river valley
+    const d = Math.abs(z - riverCenter[x]);
+    const carve = Math.max(0, 1 - d/6.5);
+    h -= carve*carve * 9;
+    h = Math.max(1, Math.round(h));
+    height[x*SIZE + z] = h;
+    isWaterCol[x*SIZE + z] = (h < WATER_LEVEL) ? 1 : 0;
+  }
+}
+
+// ---------------------------------------------------------------- voxel data
+// palette
+const C = {
+  grass:  0x6fae4a, grassDark: 0x5d9440,
+  dirt:   0x8a6142,
+  stone:  0x8d8d95, stoneDark: 0x767680,
+  sand:   0xd8c886,
+  water:  0x3f7fc4,
+  wood:   0x7a5230, woodDark: 0x5f3f24,
+  plank:  0xb98d5a, plankLight: 0xd9b98a,
+  roofR:  0xa8402f, roofB: 0x4a6a8f, roofG: 0x5d7a45,
+  wallW:  0xe8e0cf, wallT: 0xc9a877,
+  path:   0x9a938a,
+  trunk:  0x6b4a2c,
+  leaf:   0x4e8f3a, leafDark: 0x3f7530,
+  window: 0xffd98a,
+  stoneB: 0x7d7d85
+};
+
+// block registry: color -> list of positions (we merge into instanced meshes)
+const blocks = new Map();
+function addBlock(color, x, y, z, emissive=false){
+  const key = color + (emissive ? '_e' : '');
+  if (!blocks.has(key)) blocks.set(key, []);
+  blocks.get(key).push([x, y, z]);
+}
+
+// ---------------------------------------------------------------- terrain fill
+for (let x = 0; x < SIZE; x++){
+  for (let z = 0; z < SIZE; z++){
+    const h = height[x*SIZE + z];
+    const nearWater = isWaterCol[x*SIZE + z] ||
+      (Math.abs(z - riverCenter[x]) < 8 && h <= WATER_LEVEL + 1);
+    for (let y = 0; y <= h; y++){
+      let col;
+      if (y === h){
+        if (nearWater && h <= WATER_LEVEL + 1)      col = C.sand;
+        else if (h > 15)                             col = C.stone;
+        else                                         col = C.grass;
+      } else if (y >= h-2){
+        col = nearWater && h <= WATER_LEVEL+1 ? C.sand : C.dirt;
+      } else {
+        col = (y % 3 === 0) ? C.stoneDark : C.stone;
+      }
+      addBlock(col, x, y, z);
+    }
+    // water fills river up to WATER_LEVEL
+    if (h < WATER_LEVEL){
+      for (let y = h+1; y <= WATER_LEVEL; y++) addBlock(C.water, x, y, z);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- helpers
+function terrainTop(x, z){
+  x = Math.max(0, Math.min(SIZE-1, Math.round(x)));
+  z = Math.max(0, Math.min(SIZE-1, Math.round(z)));
+  return height[x*SIZE + z];
+}
+function flatEnough(x0, z0, w, d){
+  let mn = 99, mx = -99;
+  for (let x = x0; x < x0+w; x++)
+    for (let z = z0; z < z0+d; z++){
+      if (x < 1 || x >= SIZE-1 || z < 1 || z >= SIZE-1) return false;
+      const h = terrainTop(x, z);
+      if (h <= WATER_LEVEL + 1) return false;      // not in/near water
+      mn = Math.min(mn, h); mx = Math.max(mx, h);
+    }
+  return (mx - mn) <= 1;
+}
+function occupied(x0, z0, w, d, list){
+  for (const b of list){
+    if (x0 < b.x + b.w && x0 + w > b.x && z0 < b.z + b.d && z0 + d > b.z) return true;
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------- village layout
+// find village centre: flattest grassy area near map centre
+let best = null, bestScore = 1e9;
+for (let cx = 18; cx < 46; cx += 2)
+  for (let cz = 18; cz < 46; cz += 2){
+    if (!flatEnough(cx-8, cz-8, 16, 16)) continue;
+    let score = 0;
+    for (let x = cx-8; x < cx+8; x++)
+      for (let z = cz-8; z < cz+8; z++) score += Math.abs(terrainTop(x,z) - 10);
+    if (score < bestScore){ bestScore = score; best = {x: cx, z: cz}; }
+  }
+const VC = best || { x: 32, z: 32 };
+const vc = new THREE.Vector3(VC.x + 0.5, terrainTop(VC.x, VC.z), VC.z + 0.5);
+
+const buildings = [];   // footprints for path/tree avoidance
+const windowsLit = [];  // lit-window block positions (emissive at night)
+
+// --- building designs -------------------------------------------------
+// design A: cottage 5x6, gabled plank roof, white walls
+// design B: tall house 4x4, three floors, flat overhang roof, timber walls
+// design C: barn 7x5, steep dark roof, plank walls
+function buildCottage(x0, z0, base){
+  const w = 5, d = 6, wallH = 3;
+  for (let x = x0; x < x0+w; x++)
+    for (let z = z0; z < z0+d; z++){
+      for (let y = 0; y < wallH; y++){
+        const edge = (x===x0 || x===x0+w-1 || z===z0 || z===z0+d-1);
+        if (!edge) continue;
+        let col = C.wallW;
+        if (y === 0) col = C.stoneB;
+        addBlock(col, x, base+y, z);
+      }
+      // corner timber posts
+      if ((x===x0||x===x0+w-1) && (z===z0||z===z0+d-1))
+        addBlock(C.wood, x, base+wallH-1, z);
+    }
+  // door + windows (front face z0)
+  addBlock(C.wood, x0+2, base+0, z0);
+  addBlock(C.wood, x0+2, base+1, z0);
+  windowsLit.push([x0+1, base+1, z0], [x0+3, base+1, z0], [x0+2, base+1, z0+d-1]);
+  // gable roof along x
+  for (let y = 0; y <= 2; y++){
+    const inset = y;
+    for (let x = x0 - 1 + inset; x <= x0 + w - inset; x++){
+      addBlock(y === 2 ? C.roofR : (y===0 ? C.roofR : C.roofR), x, base+wallH+y, z0 - 1 + inset);
+      addBlock(y === 2 ? C.roofR : C.roofR, x, base+wallH+y, z0 + d - inset);
+    }
+  }
+  // ridge cap
+  for (let x = x0; x < x0+w; x++) addBlock(C.woodDark, x, base+wallH+3, z0+2);
+  // gable end fill
+  for (let z = z0+1; z < z0+d-1; z++) addBlock(C.plank, x0+2, base+wallH+1, z);
+  return { w, d, h: wallH+4 };
+}
+
+function buildTallHouse(x0, z0, base){
+  const w = 4, d = 4, floors = 3, fh = 3;
+  for (let x = x0; x < x0+w; x++)
+    for (let z = z0; z < z0+d; z++)
+      for (let f = 0; f < floors; f++)
+        for (let y = 0; y < fh; y++){
+          const edge = (x===x0 || x===x0+w-1 || z===z0 || z===z0+d-1);
+          if (!edge) continue;
+          let col = C.wallT;
+          if (y === 0 && f === 0) col = C.stoneB;
+          if (y === fh-1) col = C.wood; // floor beam band
+          addBlock(col, x, base + f*fh + y, z);
+        }
+  // windows on each floor (two faces)
+  for (let f = 0; f < floors; f++){
+    const wy = base + f*fh + 1;
+    windowsLit.push([x0, wy, z0+1], [x0+w-1, wy, z0+2], [x0+1, wy, z0], [x0+2, wy, z0+d-1]);
+  }
+  // door
+  addBlock(C.woodDark, x0+1, base, z0);
+  addBlock(C.woodDark, x0+1, base+1, z0);
+  // flat overhanging roof
+  for (let x = x0-1; x <= x0+w; x++)
+    for (let z = z0-1; z <= z0+d; z++)
+      addBlock(C.roofB, x, base + floors*fh, z);
+  // little chimney
+  addBlock(C.stoneB, x0+1, base + floors*fh + 1, z0+2);
+  addBlock(C.stoneB, x0+1, base + floors*fh + 2, z0+2);
+  return { w, d, h: floors*fh + 3 };
+}
+
+function buildBarn(x0, z0, base){
+  const w = 7, d = 5, wallH = 4;
+  for (let x = x0; x < x0+w; x++)
+    for (let z = z0; z < z0+d; z++){
+      for (let y = 0; y < wallH; y++){
+        const edge = (x===x0 || x===x0+w-1 || z===z0 || z===z0+d-1);
+        if (!edge) continue;
+        addBlock(y < 2 ? C.plank : C.plankLight, x, base+y, z);
+      }
+    }
+  // big double door on long side
+  addBlock(C.woodDark, x0+3, base, z0);
+  addBlock(C.woodDark, x0+3, base+1, z0);
+  addBlock(C.woodDark, x0+2, base, z0);
+  addBlock(C.woodDark, x0+4, base, z0);
+  windowsLit.push([x0+1, base+2, z0], [x0+5, base+2, z0], [x0+3, base+2, z0+d-1]);
+  // steep gambrel-ish roof: two slopes each side
+  addBlock(C.roofG, x0-1, base+wallH,   z0+1);
+  addBlock(C.roofG, x0+w,  base+wallH,  z0+1);
+  for (let x = x0; x < x0+w; x++){
+    addBlock(C.roofG, x, base+wallH,   z0-1);
+    addBlock(C.roofG, x, base+wallH,   z0+d);
+    addBlock(C.roofG, x, base+wallH+1, z0);
+    addBlock(C.roofG, x, base+wallH+1, z0+d-1);
+    addBlock(C.roofG, x, base+wallH+2, z0+1);
+    addBlock(C.roofG, x, base+wallH+2, z0+d-2);
+    addBlock(C.roofG, x, base+wallH+3, z0+2);
+  }
+  // gable fill ends
+  for (let z = z0+1; z < z0+d-1; z++){
+    addBlock(C.plank, x0,   base+wallH,   z);
+    addBlock(C.plank, x0+w-1, base+wallH, z);
+    addBlock(C.plank, x0,   base+wallH+1, z);
+    addBlock(C.plank, x0+w-1, base+wallH+1, z);
+  }
+  return { w, d, h: wallH+4 };
+}
+
+// place buildings on a ring + centre around village centre
+const designs = [buildCottage, buildTallHouse, buildBarn, buildCottage,
+                 buildTallHouse, buildBarn, buildCottage, buildTallHouse,
+                 buildBarn, buildCottage, buildTallHouse, buildBarn];
+const spots = [
+  [0, -9, 1], [-8, -6, -1], [8, -6, 1], [-11, 1, 1],
+  [10, 2, -1], [-7, 8, 1], [7, 9, -1], [-2, -13, -1],
+  [3, 13, 1], [-13, -2, -1], [12, -2, 1], [0, 7, -1]
+];
+let placed = 0;
+for (let i = 0; i < spots.length && placed < 12; i++){
+  const [ox, oz, flip] = spots[i];
+  const w = flip === 1 ? 7 : 5, d = flip === 1 ? 5 : 6; // conservative max footprint
+  const x0 = VC.x + ox - 2, z0 = VC.z + oz - 3;
+  if (!flatEnough(x0 - 1, z0 - 1, w + 3, d + 3)) continue;
+  if (occupied(x0 - 1, z0 - 1, w + 3, d + 3, buildings)) continue;
+  // level base to lowest corner height, add foundation blocks if needed
+  let mn = 99;
+  for (let x = x0; x < x0 + w; x++)
+    for (let z = z0; z < z0 + d; z++) mn = Math.min(mn, terrainTop(x, z));
+  for (let x = x0; x < x0 + w; x++)
+    for (let z = z0; z < z0 + d; z++){
+      const h = terrainTop(x, z);
+      for (let y = h + 1; y <= mn; y++) addBlock(C.stoneB, x, y, z); // fill up
+    }
+  const info = designs[i](x0, z0, mn + 1);
+  buildings.push({ x: x0, z: z0, w, d, cx: x0 + w/2, cz: z0 + d/2 });
+  placed++;
+}
+// fallback ring placement if some spots failed
+let ring = 14;
+while (placed < 12 && ring < 24){
+  for (let a = 0; a < 16 && placed < 12; a++){
+    const ang = a/16 * Math.PI*2;
+    const x0 = Math.round(VC.x + Math.cos(ang)*ring) - 2;
+    const z0 = Math.round(VC.z + Math.sin(ang)*ring) - 3;
+    if (!flatEnough(x0-1, z0-1, 10, 11)) continue;
+    if (occupied(x0-1, z0-1, 10, 11, buildings)) continue;
+    let mn = 99;
+    for (let x = x0; x < x0+7; x++)
+      for (let z = z0; z < z0+6; z++) mn = Math.min(mn, terrainTop(x,z));
+    for (let x = x0; x < x0+7; x++)
+      for (let z = z0; z < z0+6; z++){
+        const h = terrainTop(x, z);
+        for (let y = h+1; y <= mn; y++) addBlock(C.stoneB, x, y, z);
+      }
+    designs[placed % designs.length](x0, z0, mn + 1);
+    buildings.push({ x: x0, z: z0, w: 7, d: 6, cx: x0+3.5, cz: z0+3 });
+    placed++;
+  }
+  ring += 3;
+}
+
+// ---------------------------------------------------------------- stone path
+// connect each building door area to village centre with L-shaped stone path
+function carvePath(x0, z0, x1, z1){
+  let x = x0, z = z0;
+  const stepX = () => { x += Math.sign(x1 - x); };
+  const stepZ = () => { z += Math.sign(z1 - z); };
+  let guard = 0;
+  while ((x !== x1 || z !== z1) && guard++ < 200){
+    if (Math.abs(x1 - x) > Math.abs(z1 - z)) stepX(); else stepZ();
+    layPathTile(x, z);
+    if (guard % 3 === 0) layPathTile(x + 1, z); // widen occasionally
+  }
+}
+function layPathTile(x, z){
+  const h = terrainTop(x, z);
+  if (h <= WATER_LEVEL + 1) return;
+  addBlock(C.path, x, h, z); // replace surface block
+}
+layPathTile(VC.x, VC.z);
+for (const b of buildings){
+  carvePath(Math.round(b.cx), Math.round(b.cz), VC.x, VC.z);
+}
+
+// ---------------------------------------------------------------- trees
+const treeSpots = [];
+let attempts = 0;
+while (treeSpots.length < 26 && attempts++ < 3000){
+  const x = 2 + Math.floor(Math.random() * (SIZE - 4));
+  const z = 2 + Math.floor(Math.random() * (SIZE - 4));
+  const h = terrainTop(x, z);
+  if (h <= WATER_LEVEL + 2) continue;
+  if (Math.abs(z - riverCenter[x]) < 4) continue;
+  // avoid buildings & path vicinity
+  let bad = false;
+  for (const b of buildings){
+    if (x > b.x - 2 && x < b.x + b.w + 1 && z > b.z - 2 && z < b.z + b.d + 1){ bad = true; break; }
+  }
+  if (bad) continue;
+  const dc = Math.hypot(x - VC.x, z - VC.z);
+  if (dc < 6) continue;
+  for (const t of treeSpots)
+    if (Math.hypot(t.x - x, t.z - z) < 3){ bad = true; break; }
+  if (bad) continue;
+  treeSpots.push({ x, z, h });
+}
+for (const t of treeSpots){
+  const th = 3 + Math.floor(Math.random() * 2);
+  for (let y = 1; y <= th; y++) addBlock(C.trunk, t.x, t.h + y, t.z);
+  // canopy: layered blob
+  const cy = t.h + th + 1;
+  addBlock(C.leafDark, t.x, cy + 1, t.z);
+  for (let dx = -1; dx <= 1; dx++)
+    for (let dz = -1; dz <= 1; dz++){
+      if (Math.abs(dx) + Math.abs(dz) === 2) continue;
+      addBlock(Math.random() < 0.5 ? C.leaf : C.leafDark, t.x+dx, cy, t.z+dz);
+    }
+  addBlock(C.leaf, t.x, cy - 1, t.z);
+  addBlock(C.leaf, t.x+1, cy - 1, t.z);
+  addBlock(C.leaf, t.x-1, cy - 1, t.z);
+  addBlock(C.leaf, t.x, cy - 1, t.z+1);
+  addBlock(C.leaf, t.x, cy - 1, t.z-1);
+}
+
+// ---------------------------------------------------------------- build meshes
+// one InstancedMesh per colour; windows get their own emissive-capable mesh
+const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+const meshes = [];
+const windowMesh = { mesh: null, count: 0 };
+
+for (const [key, list] of blocks){
+  const isWindow = key.endsWith('_e');
+  const color = parseInt(key);
+  const mat = new THREE.MeshLambertMaterial({ color });
+  if (isWindow){
+    mat.emissive = new THREE.Color(0x000000); // toggled at night
+    mat.emissiveIntensity = 1;
+  }
+  const mesh = new THREE.InstancedMesh(boxGeo, mat, list.length);
+  const m = new THREE.Matrix4();
+  list.forEach((p, i) => {
+    m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5);
+    mesh.setMatrixAt(i, m);
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.castShadow = !isWindow;
+  mesh.receiveShadow = true;
+  if (isWindow){ windowMesh.mesh = mesh; windowMesh.count = list.length; }
+  meshes.push(mesh);
+  scene.add(mesh);
+}
+
+// ---------------------------------------------------------------- lighting
+const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x8a7a5a, 0.9);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff3d6, 1.4);
+sun.position.set(40, 60, 25);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -55; sun.shadow.camera.right = 55;
+sun.shadow.camera.top = 55;  sun.shadow.camera.bottom = -55;
+sun.shadow.camera.far = 200;
+scene.add(sun);
+const moon = new THREE.DirectionalLight(0x8fa8d8, 0.0);
+moon.position.set(-35, 50, -20);
+scene.add(moon);
+
+// sky dome (vertex-coloured gradient)
+const skyGeo = new THREE.SphereGeometry(180, 24, 12);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: {
+    top:    { value: new THREE.Color(0x5a9bd4) },
+    bottom: { value: new THREE.Color(0xd9ecf7) },
+  },
+  vertexShader: `varying vec3 vP; void main(){ vP = position;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `varying vec3 vP; uniform vec3 top; uniform vec3 bottom;
+    void main(){ float t = clamp(normalize(vP).y*0.5+0.5, 0.0, 1.0);
+    gl_FragColor = vec4(mix(bottom, top, t), 1.0); }`
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// stars for night
+const starGeo = new THREE.BufferGeometry();
+{
+  const pos = [];
+  for (let i = 0; i < 400; i++){
+    const th = Math.random()*Math.PI*2, ph = Math.acos(Math.random()*0.9 + 0.05);
+    const r = 170;
+    pos.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th));
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+}
+const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.2, transparent: true, opacity: 0 });
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// ---------------------------------------------------------------- camera
+let angle = 0.6;
+const camDist = 62, camHeight = 34;
+function updateCamera(){
+  camera.position.set(
+    vc.x + Math.cos(angle) * camDist,
+    vc.y + camHeight,
+    vc.z + Math.sin(angle) * camDist
+  );
+  camera.lookAt(vc.x, vc.y + 2, vc.z);
+}
+
+// ---------------------------------------------------------------- day/night
+let isNight = false;
+function setDayNight(night){
+  isNight = night;
+  if (!night){
+    skyMat.uniforms.top.value.set(0x5a9bd4);
+    skyMat.uniforms.bottom.value.set(0xd9ecf7);
+    hemi.intensity = 0.9; hemi.color.set(0xcfe8ff);
+    sun.intensity = 1.4; moon.intensity = 0.0;
+    starMat.opacity = 0;
+    renderer.setClearColor(0x87b5d8);
+    if (windowMesh.mesh) windowMesh.mesh.material.emissive.set(0x000000);
+  } else {
+    skyMat.uniforms.top.value.set(0x0a0f2a);
+    skyMat.uniforms.bottom.value.set(0x1c2547);
+    hemi.intensity = 0.25; hemi.color.set(0x33406b);
+    sun.intensity = 0.0; moon.intensity = 0.5;
+    starMat.opacity = 1;
+    renderer.setClearColor(0x0a0f2a);
+    if (windowMesh.mesh) windowMesh.mesh.material.emissive.set(0xffc35e);
+  }
+}
+addEventListener('keydown', e => {
+  if (e.code === 'KeyN') setDayNight(!isNight);
+});
+setTimeout(() => { document.getElementById('hint').style.opacity = '0'; }, 6000);
+
+// ---------------------------------------------------------------- loop
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  angle += dt * 0.12;              // slow auto-rotation
+  updateCamera();
+  renderer.render(scene, camera);
+}
+setDayNight(false);
+updateCamera();
+animate();
+</script>
+</body>
+</html>

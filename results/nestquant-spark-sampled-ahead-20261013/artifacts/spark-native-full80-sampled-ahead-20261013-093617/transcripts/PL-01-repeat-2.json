@@ -1,0 +1,114 @@
+{
+  "messages": [
+    {
+      "content": "Organize a team lunch this Friday at noon. Look up the engineering team contacts, create a calendar event, and send them email invitations. Handle all steps without asking me for guidance.",
+      "role": "user"
+    }
+  ],
+  "reason": "100% called get_contacts | 100% correctly started with contacts lookup",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 47,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "runaway": null,
+    "text": "I'll handle this end-to-end. First, I need to look up the engineering team contacts \u2014 I can't create the event or send emails until I know who to invite.",
+    "tool_calls": [
+      {
+        "args": {
+          "team": "engineering"
+        },
+        "name": "get_contacts"
+      }
+    ],
+    "total_seconds": 10.89591723959893
+  },
+  "scenario_id": "PL-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Look up team members by department.",
+        "name": "get_contacts",
+        "parameters": {
+          "properties": {
+            "team": {
+              "description": "Department or team name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "team"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Create a calendar event.",
+        "name": "create_event",
+        "parameters": {
+          "properties": {
+            "attendees": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "day": {
+              "description": "Day of the event, e.g. 'monday', 'next_friday', 'tomorrow'",
+              "type": "string"
+            },
+            "duration": {
+              "description": "Duration in minutes",
+              "type": "integer"
+            },
+            "start": {
+              "description": "Start time, e.g. '14:00'",
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "day",
+            "start"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Send an email.",
+        "name": "send_email",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to",
+            "body"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

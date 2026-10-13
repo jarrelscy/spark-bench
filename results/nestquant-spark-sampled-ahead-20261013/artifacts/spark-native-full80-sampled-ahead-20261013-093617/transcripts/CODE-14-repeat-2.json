@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python generator function `merge_sorted_streams(*streams)` that takes zero or more positional iterables, each yielding (key, value) tuples in sorted order by key. Merge them into a single sorted output. If the same key appears in multiple streams, keep only the LAST value seen for that key (later streams override earlier ones). If the same key appears multiple times within the same stream, keep the last occurrence.\n\nThe function must be a generator (use yield, not return a list). It must handle empty streams and streams of different lengths. Keys are comparable integers.\n\nExample:\n  list(merge_sorted_streams([(1,'a'),(3,'b')], [(2,'c'),(3,'d')]))\n  \u2192 [(1,'a'), (2,'c'), (3,'d')]\n\nOutput only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 505,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport heapq\n\n\ndef merge_sorted_streams(*streams):\n    \"\"\"Merge sorted (key, value) streams into one sorted stream.\n\n    Later streams override earlier ones for duplicate keys, and within a\n    stream the last occurrence of a key wins.\n    \"\"\"\n    # Prepare each stream as an independent iterator with a stream index.\n    # Stream index is used for tie-breaking so later streams override\n    # earlier ones when keys are equal.\n    iterators = [(idx, iter(stream)) for idx, stream in enumerate(streams)]\n\n    # Heap entries: (key, stream_index, value, iterator)\n    heap = []\n    for idx, it in iterators:\n        try:\n            key, value = next(it)\n        except StopIteration:\n            continue\n        heapq.heappush(heap, (key, idx, value, it))\n\n    while heap:\n        key, idx, value, it = heapq.heappop(heap)\n\n        # Drain all entries with the same key (across streams and within\n        # a stream), keeping the one with the largest stream index; among\n        # entries from the same stream, the last pulled one wins.\n        while True:\n            try:\n                nxt_key, nxt_value = next(it)\n            except StopIteration:\n                break\n            if nxt_key == key:\n                # Same stream repeats the key: later occurrence wins.\n                value = nxt_value\n                continue\n            # Push the next (different) key from this stream back.\n            heapq.heappush(heap, (nxt_key, idx, nxt_value, it))\n            break\n\n        # Check other streams for the same key; the highest stream index\n        # (popped last among equal keys) provides the final value.\n        while heap and heap[0][0] == key:\n            _, other_idx, other_value, other_it = heapq.heappop(heap)\n            if other_idx >= idx:\n                value = other_value\n            # Advance that stream to its next key, discarding any further\n            # duplicates of the current key within it.\n            while True:\n                try:\n                    nxt_key, nxt_value = next(other_it)\n                except StopIteration:\n                    break\n                if nxt_key == key:\n                    if other_idx >= idx:\n                        value = nxt_value\n                    continue\n                heapq.heappush(heap, (nxt_key, other_idx, nxt_value, other_it))\n                break\n\n        yield (key, value)\n```",
+    "tool_calls": [],
+    "total_seconds": 32.109739675186574
+  },
+  "scenario_id": "CODE-14",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

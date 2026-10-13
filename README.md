@@ -1,4 +1,16 @@
-> **Fork experiment:** [NestQuant Flash75/25 completed80-task SM120 results](results/experiments/nestquant-flash-U2630-FP4-SM120/README.md). This is not a native Spark result or an official leaderboard entry.
+# NestQuant on one DGX Spark — TrueScore 86.69
+
+**Canonical result: GLM-5.3-Flash-NestQuant-1.5-4bit · thinking off · 80 tasks × 2 repeats · validity PASS.**
+
+| TrueScore | Quality | Hardware | Completed runs |
+|---:|---:|---|---:|
+| **86.69** | **84.37** | **1 × DGX Spark GB10** | **160/160** |
+
+[**Full results and all response transcripts**](results/nestquant-spark-sampled-ahead-20261013/README.md) · [**Docker quick-start / serving recipe**](https://github.com/jarrelscy/nestquant/tree/spark-flash/spark/flash/sampled_ahead_sentinel) · [**Hugging Face model**](https://huggingface.co/jarrelscy/GLM-5.3-Flash-NestQuant-1.5-4bit)
+
+Native ARM64, MTP2, uncapped, 75%jT/25%EMA, 2630 active hot slots with20%fixed. Official scorer `f2ac787`; runtime `9adf4beb`. The Docker recipe's prepared-weight reuse path was tested on Spark through authenticated generation. **Thinking-on evaluation is in progress; no thinking-on score is claimed.** This is a fork-published result, separate from the upstream comparison cohorts below.
+
+---
 
 # spark-bench
 

@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Implement Python KVCache(capacity, ttl_seconds, clock=None), preserving get(key), put(key,value), delete(key)->bool. clock is an injectable zero-argument seconds clock, default time.monotonic. Capacity must be a non-bool integer >=0; TTL must be a finite non-bool int/float >=0; invalid constructor arguments raise ValueError. TTL starts/resets on put, not get; an item expires exactly when now >= expiry. Before evicting a live LRU entry, remove ALL expired entries, including entries recently accessed. Successful get and put mark an entry most recently used. Missing/expired get returns None and delete returns False; deleting a live entry returns True. Updating a key must not evict another live entry. Capacity zero and TTL zero store nothing. Support falsy keys and values, independent instances, and do not sleep. Output only Python code.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 behavioral groups: expiry-boundary:pass, purge-before-LRU:pass, update-recency-TTL:pass, validation-falsy:pass, mixed-trace:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 653,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport time\nimport heapq\n\n\nclass KVCache:\n    def __init__(self, capacity, ttl_seconds, clock=None):\n        if isinstance(capacity, bool) or not isinstance(capacity, int):\n            raise ValueError(\"capacity must be a non-bool integer >= 0\")\n        if capacity < 0:\n            raise ValueError(\"capacity must be a non-bool integer >= 0\")\n        if isinstance(ttl_seconds, bool):\n            raise ValueError(\"ttl_seconds must be a finite non-bool number >= 0\")\n        if not isinstance(ttl_seconds, (int, float)):\n            raise ValueError(\"ttl_seconds must be a finite non-bool number >= 0\")\n        if ttl_seconds != ttl_seconds or ttl_seconds in (float(\"inf\"), float(\"-inf\")):\n            raise ValueError(\"ttl_seconds must be a finite non-bool number >= 0\")\n        if ttl_seconds < 0:\n            raise ValueError(\"ttl_seconds must be a finite non-bool number >= 0\")\n\n        self._capacity = capacity\n        self._ttl = ttl_seconds\n        self._clock = clock if clock is not None else time.monotonic\n        self._data = {}       # key -> [value, expiry, counter]\n        self._counter = 0     # monotonic usage counter for LRU ordering\n\n    def _now(self):\n        return self._clock()\n\n    def _purge_expired(self, now):\n        expired = [k for k, (v, exp, c) in self._data.items() if now >= exp]\n        for k in expired:\n            del self._data[k]\n\n    def get(self, key):\n        now = self._now()\n        self._purge_expired(now)\n        item = self._data.get(key)\n        if item is None:\n            return None\n        item[2] = self._counter\n        self._counter += 1\n        return item[0]\n\n    def put(self, key, value):\n        now = self._now()\n        self._purge_expired(now)\n\n        if self._capacity == 0 or self._ttl == 0:\n            # Nothing is stored.\n            if key in self._data:\n                del self._data[key]\n            return\n\n        if key in self._data:\n            # Updating an existing live entry: refresh value, TTL, and recency.\n            self._data[key] = [value, now + self._ttl, self._counter]\n            self._counter += 1\n            return\n\n        # Evict LRU if at capacity (all expired entries already removed above).\n        while len(self._data) >= self._capacity:\n            lru_key = min(self._data, key=lambda k: self._data[k][2])\n            del self._data[lru_key]\n\n        self._data[key] = [value, now + self._ttl, self._counter]\n        self._counter += 1\n\n    def delete(self, key):\n        now = self._now()\n        self._purge_expired(now)\n        if key in self._data:\n            del self._data[key]\n            return True\n        return False\n```",
+    "tool_calls": [],
+    "total_seconds": 37.5313224112615
+  },
+  "scenario_id": "CODE-06",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

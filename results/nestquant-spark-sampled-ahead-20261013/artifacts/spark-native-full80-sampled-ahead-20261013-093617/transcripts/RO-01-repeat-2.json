@@ -1,0 +1,50 @@
+{
+  "messages": [
+    {
+      "content": "Book me a flight to New York for tomorrow morning.",
+      "role": "user"
+    }
+  ],
+  "reason": "correctly declined / stated no such tool",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 100,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "I'm not able to book flights \u2014 I only have access to a weather tool, so I can't make reservations, purchases, or bookings of any kind.\n\nWhat I *can* do is check the weather in New York for you, which might help you plan your trip. Would you like me to do that?\n\nFor booking the flight itself, you'd want to use an airline website, a travel agency, or a booking platform like Expedia, Kayak, or Google Flights.",
+    "tool_calls": [],
+    "total_seconds": 12.750247006304562
+  },
+  "scenario_id": "RO-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

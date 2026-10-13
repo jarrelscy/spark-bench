@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Reply in exactly eight words, all lowercase, no commas, and your reply must mention the moon.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/4; missed ['8-words']",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 11,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "the moon glows softly over quiet sleeping hills tonight",
+    "tool_calls": [],
+    "total_seconds": 3.9043931551277637
+  },
+  "scenario_id": "IFH-01",
+  "scenario_revision": null,
+  "score": 0.75,
+  "tools": null
+}

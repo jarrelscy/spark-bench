@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write one sentence about the ocean WITHOUT using the letter e.",
+      "role": "user"
+    }
+  ],
+  "reason": "2 occurrences of 'e'",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 15,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "The vast, salty abyss holds many fish and dark, cold depths.",
+    "tool_calls": [],
+    "total_seconds": 4.126047077588737
+  },
+  "scenario_id": "IF-04",
+  "scenario_revision": null,
+  "score": 0.8,
+  "tools": null
+}

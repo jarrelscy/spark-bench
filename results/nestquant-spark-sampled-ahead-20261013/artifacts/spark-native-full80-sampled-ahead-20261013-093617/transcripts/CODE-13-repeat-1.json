@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python class `APIClient` that wraps a simple HTTP API. Requirements:\n1. Constructor takes `base_url` and `timeout=10`.\n2. Method `get(path)` makes a GET request to `base_url + path` using only `urllib.request` (no `requests` library).\n3. On HTTP 429 (rate limit), retry up to 3 times with exponential backoff (0.5s, 1s, 2s). Raise `RateLimitError` if still failing.\n4. On HTTP 5xx, retry once after 1s. Raise `ServerError` if still failing.\n5. On HTTP 4xx (except 429), raise `ClientError` immediately.\n6. On network errors (URLError), retry once after 1s. Raise `ConnectionError` if still failing.\n7. `get()` returns the response body as a string.\nDefine all custom exceptions as subclasses of Exception.\nOutput only the code. Do NOT make real network calls.",
+      "role": "user"
+    }
+  ],
+  "reason": "7/7 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass, t6:pass, t7:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 574,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport time\nimport urllib.request\nimport urllib.error\n\n\nclass RateLimitError(Exception):\n    \"\"\"Raised when the API keeps returning HTTP 429 after retries.\"\"\"\n    pass\n\n\nclass ServerError(Exception):\n    \"\"\"Raised when the API keeps returning HTTP 5xx after retries.\"\"\"\n    pass\n\n\nclass ClientError(Exception):\n    \"\"\"Raised when the API returns an HTTP 4xx (other than 429).\"\"\"\n    pass\n\n\nclass ConnectionError(Exception):\n    \"\"\"Raised when a network error persists after retries.\"\"\"\n    pass\n\n\nclass APIClient:\n    def __init__(self, base_url, timeout=10):\n        self.base_url = base_url\n        self.timeout = timeout\n\n    def get(self, path):\n        url = self.base_url + path\n\n        # Rate-limit (429): up to 3 retries with exponential backoff.\n        backoffs_429 = [0.5, 1.0, 2.0]\n        # Server errors (5xx): 1 retry after 1s.\n        backoffs_5xx = [1.0]\n        # Network errors: 1 retry after 1s.\n        backoffs_net = [1.0]\n\n        attempt_429 = 0\n        attempt_5xx = 0\n        attempt_net = 0\n\n        while True:\n            try:\n                with urllib.request.urlopen(url, timeout=self.timeout) as response:\n                    return response.read().decode(\"utf-8\")\n\n            except urllib.error.HTTPError as exc:\n                status = exc.code\n\n                if status == 429:\n                    if attempt_429 < len(backoffs_429):\n                        time.sleep(backoffs_429[attempt_429])\n                        attempt_429 += 1\n                        continue\n                    raise RateLimitError(\n                        \"Rate limited (429) after {} retries: {}\".format(attempt_429, url)\n                    ) from exc\n\n                elif 500 <= status < 600:\n                    if attempt_5xx < len(backoffs_5xx):\n                        time.sleep(backoffs_5xx[attempt_5xx])\n                        attempt_5xx += 1\n                        continue\n                    raise ServerError(\n                        \"Server error ({}) after {} retry: {}\".format(status, attempt_5xx, url)\n                    ) from exc\n\n                else:\n                    raise ClientError(\n                        \"Client error ({}): {}\".format(status, url)\n                    ) from exc\n\n            except urllib.error.URLError as exc:\n                if attempt_net < len(backoffs_net):\n                    time.sleep(backoffs_net[attempt_net])\n                    attempt_net += 1\n                    continue\n                raise ConnectionError(\n                    \"Connection failed after {} retry: {}\".format(attempt_net, url)\n                ) from exc\n```",
+    "tool_calls": [],
+    "total_seconds": 34.716307040303946
+  },
+  "scenario_id": "CODE-13",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

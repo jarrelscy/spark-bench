@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Refactor the legacy functions below to use _apply_discount(price, discount_type, value), with discount_type \"percentage\", \"fixed\", or \"bogo\". Preserve EXACT legacy results and exceptions for finite int/float inputs (including negative discounts, percentages above100, fractional quantities and Python round behavior). Unknown discount_type raises ValueError. Each public wrapper must dynamically call the shared helper, not copy the calculations. Add chained_discounts(price, steps), where steps is any iterable of (discount_type,value): apply the helper in order, rounding at EACH step as the legacy functions do; an empty chain returns price unchanged after the same negative-price validation. Do not mutate inputs. Output only Python code.\n\ndef percentage_discount(price, percent):\n    if price < 0: raise ValueError('negative price')\n    return round(price * (1 - percent / 100), 2)\ndef fixed_discount(price, amount):\n    if price < 0: raise ValueError('negative price')\n    result = price - amount\n    return round(max(result, 0), 2)\ndef bogo_discount(price, quantity):\n    if price < 0: raise ValueError('negative price')\n    if quantity < 1: return 0\n    paid = (quantity // 2 + quantity % 2) * price\n    return round(paid, 2)",
+      "role": "user"
+    }
+  ],
+  "reason": "3/4 behavioral groups: legacy-edge-and-random-matrix:pass, helper-validation:pass, real-helper-delegation:pass, ordered-chains-and-rounding:fail(AssertionError)",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 223,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\ndef _apply_discount(price, discount_type, value):\n    if price < 0:\n        raise ValueError('negative price')\n    if discount_type == 'percentage':\n        return round(price * (1 - value / 100), 2)\n    if discount_type == 'fixed':\n        return round(max(price - value, 0), 2)\n    if discount_type == 'bogo':\n        if value < 1:\n            return 0\n        return round((value // 2 + value % 2) * price, 2)\n    raise ValueError('unknown discount type')\n\n\ndef percentage_discount(price, percent):\n    return _apply_discount(price, 'percentage', percent)\n\n\ndef fixed_discount(price, amount):\n    return _apply_discount(price, 'fixed', amount)\n\n\ndef bogo_discount(price, quantity):\n    return _apply_discount(price, 'bogo', quantity)\n\n\ndef chained_discounts(price, steps):\n    result = price\n    for discount_type, value in steps:\n        result = _apply_discount(result, discount_type, value)\n    return result\n```",
+    "tool_calls": [],
+    "total_seconds": 17.83668734971434
+  },
+  "scenario_id": "CODE-11",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 0.75,
+  "tools": null
+}

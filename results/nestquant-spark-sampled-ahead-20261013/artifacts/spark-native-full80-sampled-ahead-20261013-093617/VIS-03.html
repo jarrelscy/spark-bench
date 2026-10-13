@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA Double Helix</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0a0a12;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<canvas id="dna"></canvas>
+<script>
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("dna");
+  var ctx = canvas.getContext("2d");
+  var W, H, CX, CY, dpr;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    CX = W / 2;
+    CY = H / 2;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // Helix parameters
+  var NODES_PER_STRAND = 60;   // nodes along each strand
+  var SEGMENTS = 3.5;          // number of full twists over the visible height
+  var AMP_BASE = 90;           // base horizontal amplitude (scaled to screen)
+  var VERTICAL_SPACING;        // computed per frame
+  var ROTATION_SPEED = 0.6;    // radians per second
+  var phase = 0;
+
+  var lastTime = null;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function drawNode(x, y, r, color, glow) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    if (glow) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function draw(t) {
+    if (lastTime === null) lastTime = t;
+    var dt = (t - lastTime) / 1000;
+    lastTime = t;
+    phase += ROTATION_SPEED * dt;
+
+    ctx.fillStyle = "#0a0a12";
+    ctx.fillRect(0, 0, W, H);
+
+    // scale amplitude to viewport
+    var amp = AMP_BASE * Math.min(W / 700, 1.4);
+    amp = Math.max(amp, 40);
+    var helixHeight = H * 0.8;
+    var top = CY - helixHeight / 2;
+    var step = helixHeight / (NODES_PER_STRAND - 1);
+
+    // Precompute node positions for both strands
+    var strandA = [], strandB = [];
+    var i, ang, x, y, depth;
+
+    for (i = 0; i < NODES_PER_STRAND; i++) {
+      y = top + i * step;
+      ang = phase + (i / NODES_PER_STRAND) * SEGMENTS * Math.PI * 2;
+
+      // Strand A
+      x = CX + Math.cos(ang) * amp;
+      depth = Math.sin(ang); // -1 (back) .. 1 (front)
+      strandA.push({ x: x, y: y, depth: depth, ang: ang });
+
+      // Strand B (half turn offset)
+      ang2 = ang + Math.PI;
+      x = CX + Math.cos(ang2) * amp;
+      depth = Math.sin(ang2);
+      strandB.push({ x: x, y: y, depth: depth, ang: ang2 });
+    }
+
+    // Draw rungs first (behind nodes), sorted so back rungs render first
+    var rungs = [];
+    for (i = 0; i < NODES_PER_STRAND; i += 2) {
+      rungs.push({
+        i: i,
+        z: (strandA[i].depth + strandB[i].depth) / 2
+      });
+    }
+    rungs.sort(function (a, b) { return a.z - b.z; });
+
+    var a, b, j, depthT, alpha, width, hueA, hueB;
+
+    for (j = 0; j < rungs.length; j++) {
+      i = rungs[j].i;
+      a = strandA[i];
+      b = strandB[i];
+      depthT = (a.depth + 1) / 2; // 0 back .. 1 front
+
+      alpha = lerp(0.25, 0.85, depthT);
+      width = lerp(1, 2.5, depthT);
+
+      // Gradient across the rung between the two strand colors
+      var grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+      hueA = 175 + Math.sin(phase + i * 0.15) * 25; // teal-ish for strand A
+      hueB = 320 + Math.sin(phase * 1.3 + i * 0.15) * 25; // magenta-ish for strand B
+      grad.addColorStop(0, "hsla(" + hueA + ", 80%, 60%, " + alpha + ")");
+      grad.addColorStop(1, "hsla(" + hueB + ", 80%, 60%, " + alpha + ")");
+
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+
+      // small tick marks at rung ends (base pair hint)
+      ctx.fillStyle = "hsla(" + hueA + ", 80%, 70%, " + alpha + ")";
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, lerp(1.5, 3, depthT), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "hsla(" + hueB + ", 80%, 70%, " + alpha + ")";
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, lerp(1.5, 3, depthT), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw strands as connected polylines with depth-based styling
+    // Draw back-to-front: split into segments and sort by depth
+    var segs = [];
+    for (i = 0; i < NODES_PER_STRAND - 1; i++) {
+      segs.push({ s: 0, i: i, z: (strandA[i].depth + strandA[i + 1].depth) / 2 });
+      segs.push({ s: 1, i: i, z: (strandB[i].depth + strandB[i + 1].depth) / 2 });
+    }
+    segs.sort(function (p, q) { return p.z - q.z; });
+
+    var p1, p2, hue, light, rad, glow;
+    for (j = 0; j < segs.length; j++) {
+      var sg = segs[j];
+      var strand = sg.s === 0 ? strandA : strandB;
+      p1 = strand[sg.i];
+      p2 = strand[sg.i + 1];
+      depthT = (p1.depth + 1) / 2;
+
+      alpha = lerp(0.3, 1, depthT);
+      width = lerp(1.5, 4, depthT);
+      hue = sg.s === 0
+        ? 175 + Math.sin(phase + sg.i * 0.15) * 25
+        : 320 + Math.sin(phase * 1.3 + sg.i * 0.15) * 25;
+      light = lerp(45, 65, depthT);
+
+      ctx.strokeStyle = "hsla(" + hue + ", 80%, " + light + "%, " + alpha + ")";
+      ctx.lineWidth = width;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    // Draw nodes on top, back-to-front
+    var nodes = [];
+    for (i = 0; i < NODES_PER_STRAND; i++) {
+      nodes.push({ s: 0, i: i, z: strandA[i].depth });
+      nodes.push({ s: 1, i: i, z: strandB[i].depth });
+    }
+    nodes.sort(function (p, q) { return p.z - q.z; });
+
+    for (j = 0; j < nodes.length; j++) {
+      var nd = nodes[j];
+      var strandN = nd.s === 0 ? strandA : strandB;
+      var pt = strandN[nd.i];
+      depthT = (pt.depth + 1) / 2;
+      var hueN = nd.s === 0
+        ? 175 + Math.sin(phase + nd.i * 0.15) * 25
+        : 320 + Math.sin(phase * 1.3 + nd.i * 0.15) * 25;
+      var r = lerp(2, 4.5, depthT);
+      var col = "hsla(" + hueN + ", 85%, " + lerp(50, 70, depthT) + "%, " + lerp(0.5, 1, depthT) + ")";
+      drawNode(pt.x, pt.y, r, col, depthT > 0.75);
+    }
+
+    // Subtle central axis
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(CX, top - 20);
+    ctx.lineTo(CX, top + helixHeight + 20);
+    ctx.stroke();
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

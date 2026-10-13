@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Return raw JSON for order ord-204 using this exact contract. Top-level keys: order_id, lines, payments. lines is exactly [{sku:'GPU-7', qty:2, unit_price:1499.5}] using valid JSON strings/numbers. payments contains exactly two discriminated variants:\n1. card: exactly type='card', token='tok_live_7', last4='0042', capture=true. It must not contain bank fields.\n2. bank_transfer: exactly type='bank_transfer', iban_last4='9911', reference='PO-88', scheduled_date='2026-08-03'. It must not contain card fields.\nPreserve last4 values as four-character strings. No extra keys, prose, or Markdown fences.",
+      "role": "user"
+    }
+  ],
+  "reason": "top-keys=pass, order-id=pass, line-nested=pass, union-count=pass, card-variant=pass, bank-variant=pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 84,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "{\"order_id\":\"ord-204\",\"lines\":[{\"sku\":\"GPU-7\",\"qty\":2,\"unit_price\":1499.5}],\"payments\":[{\"type\":\"card\",\"token\":\"tok_live_7\",\"last4\":\"0042\",\"capture\":true},{\"type\":\"bank_transfer\",\"iban_last4\":\"9911\",\"reference\":\"PO-88\",\"scheduled_date\":\"2026-08-03\"}]}",
+    "tool_calls": [],
+    "total_seconds": 10.251464145258069
+  },
+  "scenario_id": "SOH-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

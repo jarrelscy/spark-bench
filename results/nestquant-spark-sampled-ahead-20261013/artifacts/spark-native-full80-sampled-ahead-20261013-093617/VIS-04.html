@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Red vs Blue — Drag Race</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; }
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 40px;
+    padding: 14px 0;
+    font-family: "Courier New", monospace;
+    font-size: 22px; font-weight: bold; letter-spacing: 2px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    pointer-events: none; user-select: none;
+  }
+  #redLabel { color: #ff4444; }
+  #blueLabel { color: #4488ff; }
+  #status {
+    position: fixed; bottom: 24px; left: 0; right: 0;
+    text-align: center;
+    font-family: "Courier New", monospace;
+    font-size: 20px; font-weight: bold; letter-spacing: 3px;
+    color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    pointer-events: none; user-select: none;
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <span id="redLabel">RED</span>
+  <span id="blueLabel">BLUE</span>
+</div>
+<div id="status">GET READY…</div>
+
+<script type="module">
+import * as THREE from './three.module.js';
+
+// ---------- Renderer / Scene / Camera ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9ecbe8);
+scene.fog = new THREE.Fog(0x9ecbe8, 120, 420);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+// ---------- Lighting ----------
+const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x556644, 0.9);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.4);
+sun.position.set(40, 60, 30);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -80;
+sun.shadow.camera.right = 80;
+sun.shadow.camera.top = 200;
+sun.shadow.camera.bottom = -40;
+sun.shadow.camera.far = 300;
+scene.add(sun);
+
+// ---------- Ground ----------
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(2000, 2000),
+  new THREE.MeshLambertMaterial({ color: 0x6faa4e })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ---------- Track (long strip along Z) ----------
+const TRACK_HALF_WIDTH = 9;
+const TRACK_LENGTH = 400;
+const track = new THREE.Mesh(
+  new THREE.PlaneGeometry(TRACK_HALF_WIDTH * 2, TRACK_LENGTH),
+  new THREE.MeshLambertMaterial({ color: 0x3a3a42 })
+);
+track.rotation.x = -Math.PI / 2;
+track.position.set(0, 0.02, TRACK_LENGTH / 2 - 40);
+track.receiveShadow = true;
+scene.add(track);
+
+// Lane divider dashes
+const dashMat = new THREE.MeshBasicMaterial({ color: 0xf5f0d0 });
+const dashGeo = new THREE.PlaneGeometry(0.4, 3);
+for (let z = -38; z < TRACK_LENGTH - 40; z += 8) {
+  const dash = new THREE.Mesh(dashGeo, dashMat);
+  dash.rotation.x = -Math.PI / 2;
+  dash.position.set(0, 0.03, z + 1.5);
+  scene.add(dash);
+}
+// Edge lines
+const edgeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+[-TRACK_HALF_WIDTH + 0.4, TRACK_HALF_WIDTH - 0.4].forEach(x => {
+  const line = new THREE.Mesh(new THREE.PlaneGeometry(0.35, TRACK_LENGTH), edgeMat);
+  line.rotation.x = -Math.PI / 2;
+  line.position.set(x, 0.03, TRACK_LENGTH / 2 - 40);
+  scene.add(line);
+});
+
+// ---------- Finish line ----------
+const FINISH_Z = 300;
+const finishGroup = new THREE.Group();
+// Checkered strip
+const checkerCols = 12, checkerRows = 2, cell = (TRACK_HALF_WIDTH * 2) / checkerCols;
+for (let c = 0; c < checkerCols; c++) {
+  for (let r = 0; r < checkerRows; r++) {
+    const sq = new THREE.Mesh(
+      new THREE.PlaneGeometry(cell, 1.2),
+      new THREE.MeshBasicMaterial({ color: (c + r) % 2 === 0 ? 0xffffff : 0x111111 })
+    );
+    sq.rotation.x = -Math.PI / 2;
+    sq.position.set(-TRACK_HALF_WIDTH + cell * (c + 0.5), 0.05, FINISH_Z - 0.6 + r * 1.2);
+    finishGroup.add(sq);
+  }
+}
+// Gantry posts + banner
+const postMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+const postGeo = new THREE.BoxGeometry(0.6, 8, 0.6);
+[-TRACK_HALF_WIDTH - 0.6, TRACK_HALF_WIDTH + 0.6].forEach(x => {
+  const post = new THREE.Mesh(postGeo, postMat);
+  post.position.set(x, 4, FINISH_Z);
+  post.castShadow = true;
+  finishGroup.add(post);
+});
+const banner = new THREE.Mesh(
+  new THREE.BoxGeometry(TRACK_HALF_WIDTH * 2 + 1.6, 1.8, 0.3),
+  new THREE.MeshLambertMaterial({ color: 0xe8e8e8 })
+);
+banner.position.set(0, 8, FINISH_Z);
+banner.castShadow = true;
+finishGroup.add(banner);
+const bannerText = new THREE.Mesh(
+  new THREE.PlaneGeometry(TRACK_HALF_WIDTH * 2 + 1.4, 1.4),
+  new THREE.MeshBasicMaterial({ color: 0x111111 })
+);
+bannerText.position.set(0, 8, FINISH_Z - 0.18);
+finishGroup.add(bannerText);
+scene.add(finishGroup);
+
+// ---------- Car factory ----------
+function makeCar(bodyColor) {
+  const g = new THREE.Group();
+
+  const bodyMat = new THREE.MeshPhongMaterial({ color: bodyColor, shininess: 90, specular: 0x888888 });
+  // Lower chassis
+  const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.6), bodyMat);
+  chassis.position.y = 0.75;
+  chassis.castShadow = true;
+  g.add(chassis);
+  // Cabin
+  const cabin = new THREE.Mesh(
+    new THREE.BoxGeometry(1.7, 0.65, 2.2),
+    new THREE.MeshPhongMaterial({ color: 0x1a1a22, shininess: 120 })
+  );
+  cabin.position.set(0, 1.4, -0.2);
+  cabin.castShadow = true;
+  g.add(cabin);
+  // Spoiler
+  const spoiler = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.12, 0.6), bodyMat);
+  spoiler.position.set(0, 1.6, -2.2);
+  spoiler.castShadow = true;
+  g.add(spoiler);
+  [-0.9, 0.9].forEach(x => {
+    const strut = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.12), bodyMat);
+    strut.position.set(x, 1.35, -2.2);
+    g.add(strut);
+  });
+  // Nose wedge
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 1.0), bodyMat);
+  nose.position.set(0, 0.62, 2.6);
+  nose.castShadow = true;
+  g.add(nose);
+
+  // Wheels
+  const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.42, 18);
+  const wheelMat = new THREE.MeshPhongMaterial({ color: 0x151515, shininess: 30 });
+  const hubGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.46, 12);
+  const hubMat = new THREE.MeshPhongMaterial({ color: 0xbbbbbb, shininess: 100 });
+  const wheels = [];
+  [[-1.15, 1.55], [1.15, 1.55], [-1.15, -1.55], [1.15, -1.55]].forEach(([x, z]) => {
+    const w = new THREE.Mesh(wheelGeo, wheelMat);
+    w.rotation.z = Math.PI / 2;
+    w.position.set(x, 0.55, z);
+    w.castShadow = true;
+    const hub = new THREE.Mesh(hubGeo, hubMat);
+    hub.rotation.z = Math.PI / 2;
+    w.add(hub);
+    g.add(w);
+    wheels.push(w);
+  });
+
+  // Headlights
+  const lightMat = new THREE.MeshBasicMaterial({ color: 0xfff2b0 });
+  [-0.7, 0.7].forEach(x => {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.18, 0.1), lightMat);
+    hl.position.set(x, 0.95, 3.05);
+    g.add(hl);
+  });
+  // Taillights
+  const tailMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+  [-0.75, 0.75].forEach(x => {
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.1), tailMat);
+    tl.position.set(x, 1.05, -2.45);
+    g.add(tl);
+  });
+
+  g.userData.wheels = wheels;
+  return g;
+}
+
+const LANE_X = 3.2;
+const redCar = makeCar(0xff1a1a);
+redCar.position.set(LANE_X, 0, -30);
+scene.add(redCar);
+
+const blueCar = makeCar(0x1a66ff);
+blueCar.position.set(-LANE_X, 0, -30);
+scene.add(blueCar);
+
+// ---------- Race logic ----------
+const START_Z = -30;
+const race = {
+  phase: 'countdown',   // countdown -> racing -> finished -> reset
+  t: 0,
+  redS: 0, blueS: 0,    // speeds
+  redZ: START_Z, blueZ: START_Z,
+  redX: LANE_X, blueX: -LANE_X,
+  winner: null,
+  resetTimer: 0
+};
+
+const statusEl = document.getElementById('status');
+
+function resetRace() {
+  race.phase = 'countdown';
+  race.t = 0;
+  race.redS = 0; race.blueS = 0;
+  race.redZ = START_Z; race.blueZ = START_Z;
+  race.winner = null;
+  redCar.position.set(LANE_X, 0, START_Z);
+  blueCar.position.set(-LANE_X, 0, START_Z);
+}
+
+resetRace();
+
+// ---------- Camera follow ----------
+function updateCamera(dt) {
+  const leadZ = Math.max(race.redZ, race.blueZ);
+  const targetZ = leadZ - 16;
+  const targetY = 7.5;
+  const targetLookZ = leadZ + 14;
+
+  camera.position.z += (targetZ - camera.position.z) * Math.min(1, dt * 3.5);
+  camera.position.y += (targetY - camera.position.y) * Math.min(1, dt * 3.5);
+
+  // Gentle lateral sway following midpoint of the cars
+  const midX = (race.redX + race.blueX) / 2;
+  camera.position.x += (midX * 0.5 - camera.position.x) * Math.min(1, dt * 2.5);
+
+  camera.lookAt(midX * 0.5, 1.2, targetLookZ);
+}
+camera.position.set(0, 7.5, START_Z - 16);
+camera.lookAt(0, 1.2, START_Z + 14);
+
+// ---------- Animation loop ----------
+const clock = new THREE.Clock();
+
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  if (race.phase === 'countdown') {
+    race.t += dt;
+    const n = Math.ceil(3 - race.t);
+    statusEl.textContent = race.t < 3 ? (n > 0 ? String(n) : 'GO!') : 'GO!';
+    if (race.t >= 3) {
+      race.phase = 'racing';
+      race.t = 0;
+    }
+  } else if (race.phase === 'racing') {
+    race.t += dt;
+    const t = race.t;
+
+    // BLUE: quick launch, then plateaus
+    const blueAccel = t < 1.2 ? 26 : (t < 2.5 ? 6 : 0);
+    race.blueS = Math.min(race.blueS + blueAccel * dt, 30);
+
+    // RED: slower launch, then strong mid-race surge, then holds
+    let redAccel;
+    if (t < 1.0) redAccel = 14;
+    else if (t < 4.0) redAccel = 20;
+    else if (t < 6.5) redAccel = 8;
+    else redAccel = 0;
+    race.redS = Math.min(race.redS + redAccel * dt, 40);
+
+    race.blueZ += race.blueS * dt;
+    race.redZ += race.redS * dt;
+
+    // Red drifts slightly toward center while overtaking for drama
+    const gap = race.redZ - race.blueZ;
+    const drift = THREE.MathUtils.clamp(gap / 12, -1, 1);
+    race.redX = LANE_X - drift * 0.9;
+    race.blueX = -LANE_X + THREE.MathUtils.clamp(-gap / 12, -1, 1) * 0.9;
+
+    statusEl.textContent = gap > 0.5 ? 'RED LEADS!' : (gap < -0.5 ? 'BLUE LEADS!' : 'NECK AND NECK!');
+
+    // Finish detection
+    if (race.redZ >= FINISH_Z || race.blueZ >= FINISH_Z) {
+      race.phase = 'finished';
+      race.winner = race.redZ >= FINISH_Z ? 'red' : 'blue';
+      race.resetTimer = 0;
+      statusEl.textContent = race.winner === 'red' ? '🏆 RED WINS!' : 'BLUE WINS!';
+    }
+  } else if (race.phase === 'finished') {
+    race.resetTimer += dt;
+    // Winner keeps rolling, loser decelerates
+    if (race.winner === 'red') {
+      race.redZ += race.redS * dt;
+      race.redS = Math.max(race.redS - 6 * dt, 12);
+      race.blueZ += race.blueS * dt;
+      race.blueS = Math.max(race.blueS - 14 * dt, 0);
+    } else {
+      race.blueZ += race.blueS * dt;
+      race.blueS = Math.max(race.blueS - 6 * dt, 12);
+      race.redZ += race.redS * dt;
+      race.redS = Math.max(race.redS - 14 * dt, 0);
+    }
+    if (race.resetTimer > 2.2) {
+      resetRace();
+    }
+  }
+
+  // Apply transforms
+  redCar.position.z = race.redZ;
+  redCar.position.x = race.redX;
+  blueCar.position.z = race.blueZ;
+  blueCar.position.x = race.blueX;
+
+  // Wheel spin based on speed
+  redCar.userData.wheels.forEach(w => { w.rotation.x -= race.redS * dt * 1.8; });
+  blueCar.userData.wheels.forEach(w => { w.rotation.x -= race.blueS * dt * 1.8; });
+
+  // Slight body lean under acceleration
+  redCar.rotation.x = THREE.MathUtils.clamp((race.redS - 20) * 0.002, -0.03, 0.05);
+  blueCar.rotation.x = THREE.MathUtils.clamp((race.blueS - 20) * 0.002, -0.03, 0.05);
+
+  updateCamera(dt);
+  renderer.render(scene, camera);
+}
+animate();
+
+// ---------- Resize ----------
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

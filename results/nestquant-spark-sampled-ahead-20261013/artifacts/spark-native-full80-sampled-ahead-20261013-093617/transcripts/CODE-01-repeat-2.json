@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python function called `parse_csv_typed` that takes a CSV string (with a header row) and returns a list of dictionaries. Values should be type-inferred: 'true'/'false' become booleans, integers become int, floats become float, 'null'/'None' become None, everything else stays string. Handle quoted fields with commas inside them. Empty rows should be skipped. Numeric-looking values with leading zeroes (for example '007') must remain strings. Output only the code in a code block.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:pass",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 258,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport csv\nimport io\n\n\ndef parse_csv_typed(csv_string):\n    def infer(value):\n        if value == '' or value == 'null' or value == 'None':\n            return None\n        if value == 'true':\n            return True\n        if value == 'false':\n            return False\n        # Numeric-looking values with leading zeroes stay strings.\n        if value[0] == '0' and len(value) > 1 and value.isdigit():\n            return value\n        if value.isdigit():\n            return int(value)\n        # Handle negative integers/floats.\n        if value[0] == '-' and len(value) > 1 and value[1:].replace('.', '', 1).isdigit():\n            return float(value) if '.' in value else int(value)\n        if value.replace('.', '', 1).isdigit():\n            return float(value)\n        return value\n\n    reader = csv.reader(io.StringIO(csv_string))\n    rows = [row for row in reader if any(field.strip() for field in row)]\n    if not rows:\n        return []\n\n    headers = rows[0]\n    return [\n        {header: infer(value) for header, value in zip(headers, row)}\n        for row in rows[1:]\n    ]\n```",
+    "tool_calls": [],
+    "total_seconds": 18.447211207821965
+  },
+  "scenario_id": "CODE-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python function called `parse_csv_typed` that takes a CSV string (with a header row) and returns a list of dictionaries. Values should be type-inferred: 'true'/'false' become booleans, integers become int, floats become float, 'null'/'None' become None, everything else stays string. Handle quoted fields with commas inside them. Empty rows should be skipped. Numeric-looking values with leading zeroes (for example '007') must remain strings. Output only the code in a code block.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/5 tests: t1:pass, t2:pass, t3:pass, t4:pass, t5:fail(007 should be str, got [{'id': 7.0}, {'id': 123}])",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 478,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport csv\nimport io\nimport re\n\n_INT_RE = re.compile(r'^[+-]?\\d+$')\n_FLOAT_RE = re.compile(r'^[+-]?(\\d+\\.\\d*|\\.\\d+|\\d+)([eE][+-]?\\d+)?$')\n\n\ndef _infer(value):\n    if value in ('null', 'None'):\n        return None\n    if value == 'true':\n        return True\n    if value == 'false':\n        return False\n    # Leading zeros (e.g. '007') must stay strings; also reject bare '-'/'+'.\n    if _INT_RE.match(value) and not (len(value.lstrip('+-')) > 1 and value.lstrip('+-')[0] == '0'):\n        return int(value)\n    if _FLOAT_RE.match(value):\n        stripped = value.lstrip('+-')\n        # Reject pure-integer floats with leading zeros like '007.5' -> keep string.\n        mantissa = stripped.split('e')[0].split('E')[0]\n        if '.' in mantissa:\n            digits = mantissa.replace('.', '').lstrip('0')\n            whole = mantissa.split('.')[0].lstrip('+-')\n            if len(whole) > 1 and whole[0] == '0':\n                return value  # leading zero in integer part -> string\n            if digits == '':\n                return 0.0 if float(value) == 0 else value\n            return float(value)\n        else:\n            # Exponent-only form like '1e5' is fine; leading-zero ints already handled.\n            return float(value)\n    return value\n\n\ndef parse_csv_typed(csv_string):\n    reader = csv.reader(io.StringIO(csv_string))\n    rows = [row for row in reader if any(cell.strip() != '' for cell in row)]\n    if not rows:\n        return []\n    header = [h.strip() for h in rows[0]]\n    result = []\n    for row in rows[1:]:\n        # Pad or trim row to match header length\n        row = row + [''] * (len(header) - len(row))\n        record = {}\n        for key, raw in zip(header, row):\n            record[key] = _infer(raw.strip())\n        result.append(record)\n    return result\n```",
+    "tool_calls": [],
+    "total_seconds": 31.418619565665722
+  },
+  "scenario_id": "CODE-01",
+  "scenario_revision": null,
+  "score": 0.8,
+  "tools": null
+}

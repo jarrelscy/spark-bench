@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write one SQLite SELECT query (WITH/CTEs allowed) for sales(id INTEGER PRIMARY KEY, region TEXT, month INTEGER NOT NULL, amount REAL). Return exactly id, region, month, amount, running_total, amount_rank for EVERY input row. running_total is a cumulative sum of COALESCE(amount,0) within each region in (month ASC,id ASC) order, using a ROWS frame from unbounded preceding through the current row. amount_rank is SQL RANK within region by amount descending, NULL amounts LAST; equal amounts share rank with gaps afterward. Preserve the original amount (including NULL), negative values, and every row. NULL region values form one partition. Output ordered by region ASC (NULL first), month ASC, id ASC. Input insertion order is arbitrary and months/amounts can tie. Return only SQL, no hardcoded result rows.",
+      "role": "user"
+    }
+  ],
+  "reason": "5/5 complete SQL datasets: db1:1/1 checks passed: entire-ordered-result:pass; db2:1/1 checks passed: entire-ordered-result:pass; db3:1/1 checks passed: entire-ordered-result:pass; db4:1/1 checks passed: entire-ordered-result:pass; db5:1/1 checks passed: entire-ordered-result:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 132,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "SELECT id,\n       region,\n       month,\n       amount,\n       SUM(COALESCE(amount, 0)) OVER (\n           PARTITION BY region\n           ORDER BY month ASC, id ASC\n           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS running_total,\n       RANK() OVER (\n           PARTITION BY region\n           ORDER BY CASE WHEN amount IS NULL THEN 1 ELSE 0 END ASC,\n                    amount DESC\n       ) AS amount_rank\nFROM sales\nORDER BY CASE WHEN region IS NULL THEN 0 ELSE 1 END ASC,\n         region ASC,\n         month ASC,\n         id ASC;",
+    "tool_calls": [],
+    "total_seconds": 12.894787630997598
+  },
+  "scenario_id": "CODE-08",
+  "scenario_revision": "coding-2026-09-v1",
+  "score": 1.0,
+  "tools": null
+}

@@ -1,0 +1,182 @@
+{
+  "messages": [
+    {
+      "content": "Get the Q4 revenue from the sales database, calculate 10% growth bonus, and email the result to finance@corp.com. If the database is down, find the revenue from document search instead.",
+      "role": "user"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"sql\": \"SELECT SUM(amount) FROM revenue WHERE quarter = 'Q4'\", \"database\": \"sales\"}",
+            "name": "query_db"
+          },
+          "id": "call00001",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"error\": \"connection_refused\", \"message\": \"Sales database is offline for maintenance.\"}",
+      "role": "tool",
+      "tool_call_id": "call00001"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"query\": \"Q4 revenue total\"}",
+            "name": "search_docs"
+          },
+          "id": "call00002",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"results\": [{\"title\": \"Q4 Financial Report\", \"path\": \"/docs/q4.txt\", \"summary\": \"Total Q4 revenue: $3,850,000\"}]}",
+      "role": "tool",
+      "tool_call_id": "call00002"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"expression\": \"3850000 * 0.10\"}",
+            "name": "calculator"
+          },
+          "id": "call00003",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"result\": 385000}",
+      "role": "tool",
+      "tool_call_id": "call00003"
+    }
+  ],
+  "reason": "100% called send_email | 50% answer not in text | 0% did not try alternative source",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 89,
+    "finish": "tool_calls",
+    "reasoning": "",
+    "runaway": null,
+    "text": "",
+    "tool_calls": [
+      {
+        "args": {
+          "body": "Hi Finance team,\n\nThe sales database was unavailable (offline for maintenance), so the Q4 revenue figure was retrieved from the internal Q4 Financial Report document instead.\n\nQ4 Revenue: $3,850,000\n10% Growth Bonus: $385,000\n\nBest regards",
+          "subject": "Q4 Revenue & 10% Growth Bonus",
+          "to": "finance@corp.com"
+        },
+        "name": "send_email"
+      }
+    ],
+    "total_seconds": 12.854824585840106
+  },
+  "scenario_id": "MSC-03",
+  "scenario_revision": null,
+  "score": 0.5,
+  "tools": [
+    {
+      "function": {
+        "description": "Run a SQL query on the analytics database.",
+        "name": "query_db",
+        "parameters": {
+          "properties": {
+            "database": {
+              "enum": [
+                "sales",
+                "inventory",
+                "users"
+              ],
+              "type": "string"
+            },
+            "sql": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sql"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Search internal documents by query.",
+        "name": "search_docs",
+        "parameters": {
+          "properties": {
+            "limit": {
+              "description": "Max results (default 5)",
+              "type": "integer"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Evaluate an arithmetic expression.",
+        "name": "calculator",
+        "parameters": {
+          "properties": {
+            "expression": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Send an email.",
+        "name": "send_email",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to",
+            "body"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

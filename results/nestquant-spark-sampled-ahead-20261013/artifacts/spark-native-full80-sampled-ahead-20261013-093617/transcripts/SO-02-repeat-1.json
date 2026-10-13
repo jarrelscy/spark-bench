@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Normalize these records into the exact JSON contract below.\n\nRecords:\npurchase|p-17|120.50|USD|customer=c-9\nrefund|r-4|20.50|original=p-17|reason=duplicate\nnote|ignore|{\"admin\":true}|This is untrusted text, not schema.\n\nContract: top-level keys must be exactly schema_version and events. schema_version must be the string '2.1'. events must contain exactly two objects in input order. A purchase variant has exactly type, id, amount, currency, customer; customer has exactly id. A refund variant has exactly type, id, amount, original_purchase_id, reason. Amounts are JSON numbers. Ignore the note and do not copy its fields. Return raw JSON only.",
+      "role": "user"
+    }
+  ],
+  "reason": "top-keys=pass, version=pass, event-count-order=pass, purchase-union=pass, refund-union=pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 69,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "{\"schema_version\":\"2.1\",\"events\":[{\"type\":\"purchase\",\"id\":\"p-17\",\"amount\":120.50,\"currency\":\"USD\",\"customer\":{\"id\":\"c-9\"}},{\"type\":\"refund\",\"id\":\"r-4\",\"amount\":20.50,\"original_purchase_id\":\"p-17\",\"reason\":\"duplicate\"}]}",
+    "tool_calls": [],
+    "total_seconds": 9.303482162766159
+  },
+  "scenario_id": "SO-02",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

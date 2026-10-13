@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Write a Python function `parse_logs` that takes a list of log strings and returns a list of dicts with keys: timestamp (str), level (str: ERROR/WARN/INFO/DEBUG), message (str), and kv (dict of key=value pairs found in the message, empty if none). Log format: 'YYYY-MM-DD HH:MM:SS [LEVEL] message key1=val1 key2=val2'. Lines that don't match the format should be skipped. Handle messages containing brackets, equals signs in prose (only parse key=value at the END of the line, after the message text). Keys are alphanumeric, values are everything until the next space-delimited key= or end of line. Output only the code.",
+      "role": "user"
+    }
+  ],
+  "reason": "4/5 tests: t1:pass, t2:pass, t3:fail(kv={'port': '5432'}), t4:pass, t5:pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 911,
+    "finish": "stop",
+    "reasoning": "",
+    "runaway": null,
+    "text": "```python\nimport re\n\n_LOG_RE = re.compile(\n    r'^(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}) \\[(ERROR|WARN|INFO|DEBUG)\\] (.*)$'\n)\n\n_KV_START_RE = re.compile(r'([A-Za-z0-9]+)=')\n\n\ndef parse_kv(message):\n    \"\"\"Parse trailing key=value pairs from the end of a message.\n\n    Scanning from the end of the string, find space-delimited tokens of the\n    form key=... where key is alphanumeric. Everything between one key= and\n    the next key= (or end of line) is the value. If the message does not end\n    in a valid key=value chain, no pairs are extracted.\n    \"\"\"\n    # Find all potential key= starts (must be preceded by start-of-string or space)\n    starts = []\n    for m in _KV_START_RE.finditer(message):\n        pos = m.start()\n        if pos == 0 or message[pos - 1] == ' ':\n            starts.append((m.group(1), pos, m.end()))\n\n    # Walk from the last potential key backwards to build a valid chain.\n    # A chain is valid if each subsequent token start is preceded by a space\n    # (guaranteed above) and the first token in the chain begins exactly at\n    # the position right after the message text (i.e., chain reaches the end).\n    # We try each candidate start as the beginning of the kv section, from\n    # the last one backwards; the first candidate that produces a chain\n    # covering the rest of the string wins.\n    for i in range(len(starts) - 1, -1, -1):\n        key, pos, val_start = starts[i]\n        # Build the chain starting at this candidate\n        chain = []\n        cur_val_start = val_start\n        ok = True\n        for j in range(i + 1, len(starts)):\n            next_key, next_pos, next_val_start = starts[j]\n            value = message[cur_val_start:next_pos].rstrip()\n            if value == '':\n                ok = False\n                break\n            chain.append((key, value))\n            key = next_key\n            cur_val_start = next_val_start\n        if not ok:\n            continue\n        # Final value runs to end of string\n        value = message[cur_val_start:].rstrip()\n        if value == '':\n            # A key with an empty trailing value is only acceptable if it's\n            # not the only token (e.g., \"msg key=\" -> treat as no kv).\n            if len(chain) == 0 and i == len(starts) - 1:\n                continue\n            chain.append((key, value))\n        else:\n            chain.append((key, value))\n        # The chain must start immediately after the message text. The\n        # character before the first key must not be mid-word; since we\n        # required a space (or start) before each key, and we take the\n        # earliest valid chain start, everything before it is the message.\n        kv = {}\n        for k, v in chain:\n            kv[k] = v\n        return kv, pos\n    return {}, None\n\n\ndef parse_logs(logs):\n    \"\"\"Parse a list of log strings into structured dicts.\n\n    Format: 'YYYY-MM-DD HH:MM:SS [LEVEL] message key1=val1 key2=val2'\n    Lines that don't match are skipped. Trailing key=value pairs (keys\n    alphanumeric) are extracted into the 'kv' dict; the message text is\n    everything before the first pair in the trailing chain.\n    \"\"\"\n    result = []\n    for line in logs:\n        line = line.rstrip('\\n')\n        m = _LOG_RE.match(line)\n        if not m:\n            continue\n        timestamp, level, rest = m.group(1), m.group(2), m.group(3)\n\n        kv, kv_start = parse_kv(rest)\n        if kv_start is not None:\n            message = rest[:kv_start].rstrip()\n        else:\n            message = rest.rstrip()\n\n        result.append({\n            'timestamp': timestamp,\n            'level': level,\n            'message': message,\n            'kv': kv,\n        })\n    return result\n```",
+    "tool_calls": [],
+    "total_seconds": 55.90518611762673
+  },
+  "scenario_id": "CODE-04",
+  "scenario_revision": null,
+  "score": 0.8,
+  "tools": null
+}
