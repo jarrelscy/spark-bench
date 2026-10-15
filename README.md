@@ -8,6 +8,16 @@
 
 [**Full result and all 160 response transcripts**](results/nestquant-spark-thinking-on-20261015/README.md) · [**Docker quick-start / serving recipe**](https://github.com/jarrelscy/nestquant/tree/spark-flash/spark/flash/sampled_ahead_sentinel) · [**Hugging Face model**](https://huggingface.co/jarrelscy/GLM-5.3-Flash-NestQuant-1.5-4bit)
 
+### Reproduce on one DGX Spark with one command
+
+Run this on a separate scorer workstation with SSH access to an idle native ARM64 DGX Spark. It securely prompts for the serving API key, downloads and prepares the pinned model and ARM64 image on the Spark, launches the accepted configuration, opens an SSH tunnel, installs the pinned official scorer, and runs all 80 tasks twice:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/jarrelscy/spark-bench/d09cc5d1b5e36e723b2499613f2d41a3211c2c6a/scripts/reproduce_nestquant_single_spark.sh) --spark USER@SPARK_HOST --reasoning on
+```
+
+Use `--reasoning off` to reproduce the thinking-off result. The default is `--reasoning on`. Add `--smoke-test` for the official one-scenario validation path or `--reuse-serving` when the pinned service is already healthy on Spark port 8001. Run `--help` for output, SSH-key, tunnel-port, and keep-serving options. The launcher pins the Docker digest, model revision, recipe revision, and official grader revision; it writes those values beside the local benchmark evidence.
+
 Native ARM64, MTP2, uncapped, 75% jT / 25% EMA, 2,630 active hot slots with 20% fixed. Official scorer `f2ac787`; runtime `9adf4beb`. Fifteen late transport failures were rerun with exact scenario/repeat selectors and the same model configuration, then merged over their placeholders. The published manifest identifies every original and recovered transcript; the complete set has zero transport errors. This is a fork-published result, separate from the upstream comparison cohorts below.
 
 ---
