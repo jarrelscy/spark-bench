@@ -9,6 +9,7 @@ GRADER_REV='f2ac7876c1782047fe4ac37290a1466daa3a1c05'
 REASONING=on
 SPARK_TARGET=${SPARK_SSH:-}
 SSH_IDENTITY=${SPARK_SSH_IDENTITY:-}
+KNOWN_HOSTS=${SPARK_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}
 OUT_DIR=${OUT_DIR:-"$PWD/nestquant-spark-bench"}
 REMOTE_DATA=${REMOTE_DATA:-'$HOME/nq-flash'}
 REUSE=0
@@ -33,6 +34,7 @@ the official 80-task x 2-repeat Spark Bench scorer on this machine.
   --keep-serving       Leave a service started by this command running
   --out-dir PATH       Local evidence directory
   --identity PATH      SSH private-key path
+  --known-hosts PATH   SSH known_hosts file
   --local-port PORT    Local tunnel port (default: choose a free port)
   -h, --help           Show this help
 
@@ -49,6 +51,7 @@ while (($#)); do
     --keep-serving) KEEP=1; shift ;;
     --out-dir) OUT_DIR=${2:?missing output path}; shift 2 ;;
     --identity) SSH_IDENTITY=${2:?missing identity path}; shift 2 ;;
+    --known-hosts) KNOWN_HOSTS=${2:?missing known_hosts path}; shift 2 ;;
     --local-port) LOCAL_PORT=${2:?missing port}; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -68,7 +71,8 @@ fi
 [[ -n "$VLLM_API_KEY" ]] || { echo 'The serving API key cannot be empty.' >&2; exit 2; }
 
 SSH=(ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes
-  -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=6)
+  -o "UserKnownHostsFile=$KNOWN_HOSTS" -o ConnectTimeout=20
+  -o ServerAliveInterval=30 -o ServerAliveCountMax=6)
 [[ -z "$SSH_IDENTITY" ]] || SSH+=(-i "$SSH_IDENTITY")
 
 cleanup() {
@@ -76,7 +80,7 @@ cleanup() {
   [[ -z "$TUNNEL_PID" ]] || kill "$TUNNEL_PID" 2>/dev/null || true
   if ((STARTED)) && ((!KEEP)); then
     "${SSH[@]}" "$SPARK_TARGET" \
-      'cd "$HOME/nestquant-spark-bench-reproduce" && NQ_FLASH_DATA="$HOME/nq-flash" python3 spark/flash/sampled_ahead_sentinel/recipe.py down' \
+      "cd \"\$HOME/nestquant-spark-bench-reproduce\" && NQ_FLASH_DATA=\"\$HOME/nq-flash\" NQ_FLASH_CONTAINER=nq-spark-bench-${REASONING} NQ_THINKING=${REASONING} python3 spark/flash/sampled_ahead_sentinel/recipe.py down" \
       >/dev/null 2>&1 || true
   fi
   [[ -z "$TMP" ]] || rm -rf "$TMP"
@@ -138,7 +142,7 @@ echo "Opening authenticated local tunnel on port $LOCAL_PORT..."
 "${SSH[@]}" -N -L "127.0.0.1:${LOCAL_PORT}:127.0.0.1:8001" "$SPARK_TARGET" &
 TUNNEL_PID=$!
 for ((i=0; i<60; i++)); do
-  if curl -fsS -H "Authorization: Bearer $VLLM_API_KEY" "http://127.0.0.1:${LOCAL_PORT}/v1/models" >/dev/null; then break; fi
+  if curl -fsS -H "Authorization: Bearer $VLLM_API_KEY" "http://127.0.0.1:${LOCAL_PORT}/v1/models" >/dev/null 2>&1; then break; fi
   kill -0 "$TUNNEL_PID" 2>/dev/null || { echo 'SSH tunnel exited before readiness.' >&2; exit 1; }
   sleep 1
 done
