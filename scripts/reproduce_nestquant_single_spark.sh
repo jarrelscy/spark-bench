@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 IMAGE='docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364'
 MODEL_REV='4023870a6f2c6097e37fa5d2e54040db64b011e9'
-RECIPE_REV='a7b8135d1d3f45a0abed7916f3ba4cc57cf0be48'
+RECIPE_REV='d22b9b8cb79b6b4c41d8984e55e1ac0c8b4d1cf7'
 GRADER_REV='f2ac7876c1782047fe4ac37290a1466daa3a1c05'
 REASONING=on
 SPARK_TARGET=${SPARK_SSH:-}
@@ -99,13 +99,14 @@ if ((!REUSE)); then
   remote_script=$(cat <<'REMOTE'
 set -Eeuo pipefail
 reasoning=$1
+phase=$2
 repo="$HOME/nestquant-spark-bench-reproduce"
 data="$HOME/nq-flash"
 if [[ ! -d "$repo/.git" ]]; then
   git clone --filter=blob:none https://github.com/jarrelscy/nestquant.git "$repo"
 fi
-git -C "$repo" fetch --force origin a7b8135d1d3f45a0abed7916f3ba4cc57cf0be48
-git -C "$repo" checkout --detach --force a7b8135d1d3f45a0abed7916f3ba4cc57cf0be48
+git -C "$repo" fetch --force origin d22b9b8cb79b6b4c41d8984e55e1ac0c8b4d1cf7
+git -C "$repo" checkout --detach --force d22b9b8cb79b6b4c41d8984e55e1ac0c8b4d1cf7
 export NQ_SOURCE_ROOT="$repo"
 export NQ_FLASH_DATA="$data"
 export NQ_FLASH_IMAGE='docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364'
@@ -115,7 +116,14 @@ export VLLM_API_KEY
 docker pull "$NQ_FLASH_IMAGE"
 runner="$repo/spark/flash/sampled_ahead_sentinel/run_spark_kld.sh"
 bash "$runner" fetch
-[[ -f "$data/fp8-backbone/config.json" && -f "$data/repack-tp1/rank0.json" ]] || bash "$runner" prepare
+if [[ "$phase" == prepare ]]; then
+  if [[ ! -f "$data/fp8-backbone/config.json" || ! -f "$data/repack-tp1/rank0.json" ]]; then
+    bash "$runner" prepare
+    exit 75
+  fi
+  exit 0
+fi
+[[ "$phase" == up ]] || { echo 'Invalid remote phase.' >&2; exit 2; }
 python3 "$repo/spark/flash/sampled_ahead_sentinel/recipe.py" stage
 python3 "$repo/spark/flash/sampled_ahead_sentinel/recipe.py" up
 for ((i=0; i<720; i++)); do
@@ -128,8 +136,28 @@ echo 'Spark service did not become ready within two hours.' >&2
 exit 1
 REMOTE
 )
-  { printf '%s\n' "$VLLM_API_KEY"; printf '%s\n' "${HF_TOKEN:-}"; printf '%s\n' "$remote_script"; } | \
-    "${SSH[@]}" "$SPARK_TARGET" 'IFS= read -r VLLM_API_KEY; IFS= read -r HF_TOKEN; export VLLM_API_KEY HF_TOKEN; bash -s --' "$REASONING"
+  run_remote_phase() {
+    local phase=$1
+    { printf '%s\n' "$VLLM_API_KEY"; printf '%s\n' "${HF_TOKEN:-}"; printf '%s\n' "$remote_script"; } | \
+      "${SSH[@]}" "$SPARK_TARGET" 'IFS= read -r VLLM_API_KEY; IFS= read -r HF_TOKEN; export VLLM_API_KEY HF_TOKEN; bash -s --' "$REASONING" "$phase"
+  }
+  set +e
+  run_remote_phase prepare
+  prepare_rc=$?
+  set -e
+  if ((prepare_rc == 75)); then
+    echo 'Preparation completed; rebooting the idle Spark to release unified-memory file cache...'
+    "${SSH[@]}" "$SPARK_TARGET" 'sudo -n reboot' >/dev/null 2>&1 || true
+    ready=0
+    for ((i=0; i<90; i++)); do
+      sleep 10
+      if "${SSH[@]}" "$SPARK_TARGET" true >/dev/null 2>&1; then ready=1; break; fi
+    done
+    ((ready)) || { echo 'Spark did not return after the preparation reboot.' >&2; exit 1; }
+  elif ((prepare_rc != 0)); then
+    exit "$prepare_rc"
+  fi
+  run_remote_phase up
   STARTED=1
 fi
 
