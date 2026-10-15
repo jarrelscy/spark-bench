@@ -1,0 +1,1141 @@
+{
+  "official_aggregation_source": "/tmp/nestquant/spark-bench-results/eval_suite.py",
+  "grader_git": "f2ac787",
+  "methodology": "v7.0-full-uncapped merged exact tail recovery",
+  "valid": true,
+  "error_rate_percent": 0.0,
+  "completed_scenarios": 80,
+  "completed_repeats": 160,
+  "recovered_repeats": 15,
+  "truescore": 89.21513449211312,
+  "components": {
+    "quality": 94.18839660624123,
+    "calibration": 87.88006756756756,
+    "reliability": 93.68070064445209,
+    "efficiency": 41.980679197467424,
+    "responsiveness": 21.705262347392075
+  },
+  "created": 1792031859.7264078,
+  "manifest": [
+    {
+      "scenario": "AG-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-01-repeat-1.json",
+      "sha256": "71f7bb9804b12ef9baf9f133197a2a1328a1045eb693b64b6f87ea4eb8c6e530"
+    },
+    {
+      "scenario": "AG-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-01-repeat-2.json",
+      "sha256": "5d6ab1598a42d5fed9823db2727e1cd4843f65851eee0e94e4076cbe1d9e9e23"
+    },
+    {
+      "scenario": "AG-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-02-repeat-1.json",
+      "sha256": "fd763eeb4c4562c655b6948fcbd328cb45147c42a9d862c9d3e1326c0294c7c7"
+    },
+    {
+      "scenario": "AG-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-02-repeat-2.json",
+      "sha256": "f5cf5e13b4847cb7b16fba71c79311722e18717ab658fd14b3139fe895ce3477"
+    },
+    {
+      "scenario": "AG-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-03-repeat-1.json",
+      "sha256": "ff568ddc248cac57bdd24d1ba0c8ff13c613fff30686490d3d27f6a2f95de484"
+    },
+    {
+      "scenario": "AG-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-03-repeat-2.json",
+      "sha256": "448fe4eda0eae0efdc01f3def6d5d3d8ad21cf996845371b6e7a4401a6ec707e"
+    },
+    {
+      "scenario": "IF-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IF-01-repeat-1.json",
+      "sha256": "245b59ef14947aaf5dd287f42013e305605ad0dfb1972840d6f8019490b93748"
+    },
+    {
+      "scenario": "IF-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IF-01-repeat-2.json",
+      "sha256": "bcd97c5a7f38995fb74c49acc3ffae666016c2a541b49c2151a69449111d98b8"
+    },
+    {
+      "scenario": "AG-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-04-repeat-1.json",
+      "sha256": "c699b04406be8defe1cad75d69a408782dd29a1ec9d9680468eede19eeb0807f"
+    },
+    {
+      "scenario": "AG-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-04-repeat-2.json",
+      "sha256": "799382bda9631a74dcc0166567a5d59547bc0db28034257164275409b1d4ee11"
+    },
+    {
+      "scenario": "IF-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IF-03-repeat-1.json",
+      "sha256": "3147d64056e797071c0272d098f18622e394e87e8835e45e068b53eeceaa2307"
+    },
+    {
+      "scenario": "IF-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IF-03-repeat-2.json",
+      "sha256": "76bab7f8fc3a051e388fe6ba72ba06d945be7e965855caa292e39e7d549ef508"
+    },
+    {
+      "scenario": "IF-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IF-04-repeat-1.json",
+      "sha256": "3801a6a846aad7740c669314fbe478eee598f6724f6f07047232721cc80a23f6"
+    },
+    {
+      "scenario": "IF-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IF-04-repeat-2.json",
+      "sha256": "3e6424a6df7f5da3219d7a9abb023d6a57f78e772a89d963d3b4e239a4d080c7"
+    },
+    {
+      "scenario": "AG-05",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-05-repeat-1.json",
+      "sha256": "5f4bae19f20ed7f5de6b0f8a9b6ed79993676d1e36063db52e2f576ee821655f"
+    },
+    {
+      "scenario": "AG-05",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-05-repeat-2.json",
+      "sha256": "dd5aabc7ce75d2b4327e31e54fa689bcdff0c60868bc402e312e86ef2bf0bc3f"
+    },
+    {
+      "scenario": "AG-06",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-06-repeat-1.json",
+      "sha256": "2c31ffb90c007e7ba44cb73aa800661ad4fe1ad65dde32b7489e79f567658792"
+    },
+    {
+      "scenario": "AG-06",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AG-06-repeat-2.json",
+      "sha256": "0cd2f062e5b66c6a7232f1bba1425898a877d3c4e7fcc39cf6a5a04838ae426b"
+    },
+    {
+      "scenario": "SO-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SO-02-repeat-1.json",
+      "sha256": "4fa1d8e8da8439a491e8ef6ecbebbcc056599f6b8296329946d81b34e7a2c926"
+    },
+    {
+      "scenario": "SO-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SO-02-repeat-2.json",
+      "sha256": "e08990ca45e7ab205e4a556588ea88c1b1a35cdd3b13c28266824f4cee54c139"
+    },
+    {
+      "scenario": "LC-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LC-03-repeat-1.json",
+      "sha256": "a230928a1ceda05e1190acac3ec41749daf389c5ed2f51df09f086f0727bae32"
+    },
+    {
+      "scenario": "LC-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LC-03-repeat-2.json",
+      "sha256": "5f178346feb09081e8e71a469f837a3e0d2765f7aee4f698ba819bfa14641b3b"
+    },
+    {
+      "scenario": "CODE-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-01-repeat-1.json",
+      "sha256": "11cb7c9d7c68c25cb690daa2d79ec4c75413d809849133f7ea9b0e5e21a7e596"
+    },
+    {
+      "scenario": "CODE-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-01-repeat-2.json",
+      "sha256": "c0ce7e9cda26e456a41b510aa38b54d6c53659376ee22f5e6763bd1abab662b5"
+    },
+    {
+      "scenario": "CODE-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-02-repeat-1.json",
+      "sha256": "fb64cc2bd42d0ed9bd848061f570a8e1ce161f4f6829dbf87870147eb40ced71"
+    },
+    {
+      "scenario": "CODE-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-02-repeat-2.json",
+      "sha256": "7b2b8db610aa5574aaf58204ee77632c87720e7de4233901e8f630561d8dff0b"
+    },
+    {
+      "scenario": "CODE-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-03-repeat-1.json",
+      "sha256": "e61849d6bb7dde982dea09c5fc519011b93f99856d7cf3e587e9989498395006"
+    },
+    {
+      "scenario": "CODE-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-03-repeat-2.json",
+      "sha256": "a2597b27257a2a68af660b98c5f9bbd32c97c6fcc52068695f9a671ab779fc2c"
+    },
+    {
+      "scenario": "CODE-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-04-repeat-1.json",
+      "sha256": "6cfa37f852f3946893a8082e8dfe4caa8b7821ba39580c196013ad99916e9b53"
+    },
+    {
+      "scenario": "CODE-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-04-repeat-2.json",
+      "sha256": "c6290fec9b8fd84cd6c434b4b3ecfed0268d6ce72c8cb35e66aa481594403cf8"
+    },
+    {
+      "scenario": "CODE-05",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-05-repeat-1.json",
+      "sha256": "7d3e4a6d3e5e126a275fc5d2a433b796ce883153ba860ec497b1508953974e78"
+    },
+    {
+      "scenario": "CODE-05",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-05-repeat-2.json",
+      "sha256": "d26024c2245ab411acb9d016b86f42d117ef1c22752f72da17524719d2e0a3d3"
+    },
+    {
+      "scenario": "SA-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-01-repeat-1.json",
+      "sha256": "7eb7e166ca643f401ee2516dc153326f63a6ede8980828d100c6ba9b3f00ee95"
+    },
+    {
+      "scenario": "SA-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-01-repeat-2.json",
+      "sha256": "fb3e7861c51910203b16d7af2f79faa53293b972475294729f11dd8707021a91"
+    },
+    {
+      "scenario": "SA-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-02-repeat-1.json",
+      "sha256": "0b308f5df317c9187f5545b2ac2a28e6f9eeda8cba090c5d4fc4117536627f6d"
+    },
+    {
+      "scenario": "SA-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-02-repeat-2.json",
+      "sha256": "5e77f075fd0249506bd3f38647992c1950f06ff7468bf6fd856050db8b01fd56"
+    },
+    {
+      "scenario": "SA-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-03-repeat-1.json",
+      "sha256": "008cc6afcae47feb06b0028b079262dbb108ffb8828cc8125a22b2c9649bc961"
+    },
+    {
+      "scenario": "SA-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-03-repeat-2.json",
+      "sha256": "7357b265a026695f0c6c25ae178060c523b7223f9919967329c8cab08fa87993"
+    },
+    {
+      "scenario": "SA-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-04-repeat-1.json",
+      "sha256": "5026a2674d868173746dc3b4cbe13e0b06058f2a6043a00fe4f894c7beeec65a"
+    },
+    {
+      "scenario": "SA-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SA-04-repeat-2.json",
+      "sha256": "3c0a37adc46c7a3c2c8420c5b2616a1072d39cf906771b2e1fa17213b16ea281"
+    },
+    {
+      "scenario": "RO-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-01-repeat-1.json",
+      "sha256": "037bedbed35b555fa0586f9291913f451aa9199a59d26977fc34b066c4ca41a9"
+    },
+    {
+      "scenario": "RO-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-01-repeat-2.json",
+      "sha256": "b6c69a6e41cd5eb19a871d679ecaab28be0c4104f0c4197114f4dc978628baa0"
+    },
+    {
+      "scenario": "RO-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-02-repeat-1.json",
+      "sha256": "6e2bdddd9c550b42a0c5ec38caaebeaf8602da07ff41b281a04562a5050b513d"
+    },
+    {
+      "scenario": "RO-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-02-repeat-2.json",
+      "sha256": "393a715dc406d2b5f698d4c4e8b2510835eecf4df7b4d353e567aac9b8eac447"
+    },
+    {
+      "scenario": "RO-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-03-repeat-1.json",
+      "sha256": "352cd92c01970fee0b9b5d2a43be21589924d33950918aed922e8373a11a0c1a"
+    },
+    {
+      "scenario": "RO-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-03-repeat-2.json",
+      "sha256": "abf5f95e5a8b0c661ac700b68b50ea3f10a070e4dc0bf981a3bc0db0a80f2e09"
+    },
+    {
+      "scenario": "RO-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-04-repeat-1.json",
+      "sha256": "bd641abf907ef700d779a2ebbf08a91a53fbeef0f0b9fc65ab7ae98e23cd8f19"
+    },
+    {
+      "scenario": "RO-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RO-04-repeat-2.json",
+      "sha256": "8c6c780aaa46e773d40a2b6951fcc0a357c8a8adebe2c34399fa52795ef7bb16"
+    },
+    {
+      "scenario": "IFH-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFH-01-repeat-1.json",
+      "sha256": "360b7aa78dfab29e87453747b6529ddc0cec1bb5187b9e385c9bc292cfd0121e"
+    },
+    {
+      "scenario": "IFH-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFH-01-repeat-2.json",
+      "sha256": "0f425e7eca100d40783c18108d95123f25fed779288084277d1c3522f2d2c5db"
+    },
+    {
+      "scenario": "IFH-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFH-02-repeat-1.json",
+      "sha256": "84f6049838449583f0401f5c53dae7d6b7501df74031f53bfa3a3c818d347420"
+    },
+    {
+      "scenario": "IFH-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFH-02-repeat-2.json",
+      "sha256": "7695411c4fe25f8843bff61b9d882d37d864d592500cc1d88d61631c06147392"
+    },
+    {
+      "scenario": "LCH-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LCH-01-repeat-1.json",
+      "sha256": "22d7231764abec71fda9b957fba2d773176bab545e8dfa7ed333cd0fa2abaa25"
+    },
+    {
+      "scenario": "LCH-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LCH-01-repeat-2.json",
+      "sha256": "8792d3531f2bf2e3a0c42f5c2fed12bbb09a5706f9e19178dc200a91349480dc"
+    },
+    {
+      "scenario": "SOH-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-01-repeat-1.json",
+      "sha256": "6aa9902a6a48dc51982bf59550b65a82cba26edc96e4faee75ade4b086add5b0"
+    },
+    {
+      "scenario": "SOH-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-01-repeat-2.json",
+      "sha256": "0dd9d2cc88104a377b0f2522e2c3f69fba23f9f5ec300da1a5268775abbb5b7c"
+    },
+    {
+      "scenario": "VIS-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-01-repeat-1.json",
+      "sha256": "80bd1d69c428f340b266fef252e871f50234cc252b8c5334eabead9b0c2e2df1"
+    },
+    {
+      "scenario": "VIS-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-01-repeat-2.json",
+      "sha256": "a0c09489de70b218660be5beab8b8df4acb7f27f0497b82e895dce52a028e3ff"
+    },
+    {
+      "scenario": "VIS-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-02-repeat-1.json",
+      "sha256": "97f2d0e48d4a020888f4fa409e087f016a4b9e40bb1143e3234af92985ca38d8"
+    },
+    {
+      "scenario": "VIS-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-02-repeat-2.json",
+      "sha256": "952421b4c21595d14d1b5e6df6f9266f72895a57837fa5a2aa3ec3f4909cf45e"
+    },
+    {
+      "scenario": "TUH-05",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/TUH-05-repeat-1.json",
+      "sha256": "f41485afa21bf771ad61a99d89663e9c8d8b662d37bfc73758ebf667a8634179"
+    },
+    {
+      "scenario": "TUH-05",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/TUH-05-repeat-2.json",
+      "sha256": "cff7bdd2203751637e8d0ebd392b033312796bad116f569ff7ce544b8c67c5db"
+    },
+    {
+      "scenario": "SAH-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SAH-01-repeat-1.json",
+      "sha256": "899f1a4289ad050b13db8ffea027437a1d95c54fdac5ee919403fbe41397a249"
+    },
+    {
+      "scenario": "SAH-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SAH-01-repeat-2.json",
+      "sha256": "bcd1f84c1543f6e80c59e19464f82097b33fbe79f825bf1ff039adc324bc74e4"
+    },
+    {
+      "scenario": "IFH-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFH-03-repeat-1.json",
+      "sha256": "fe229c07ffc1559535220c48bb5f6e08cebd489e0f3336ff4eb76d0578f2c00a"
+    },
+    {
+      "scenario": "IFH-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFH-03-repeat-2.json",
+      "sha256": "a2f1d08531986bf0e8cbe8acbb7b27519148636215c7162f5f558e995f289fbc"
+    },
+    {
+      "scenario": "SOH-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-02-repeat-1.json",
+      "sha256": "c0accb5f17e5b8c170974265b28524ed407bd2963bdf7af5dc62afb021239571"
+    },
+    {
+      "scenario": "SOH-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-02-repeat-2.json",
+      "sha256": "f6d3c6b71035f374235fc64809b834066f36ee2f3fb0e10841c27a510dc3fefe"
+    },
+    {
+      "scenario": "VIS-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-03-repeat-1.json",
+      "sha256": "014d63f78df5a78f5a66f81f6591c1aee2803e7f525e4332b784f7283df6c3bd"
+    },
+    {
+      "scenario": "VIS-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-03-repeat-2.json",
+      "sha256": "3ccfc3bdb3a84c3409971aed40fa3ac227da758e6acb2837dd4ab4f224432740"
+    },
+    {
+      "scenario": "VIS-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-04-repeat-1.json",
+      "sha256": "145b690225e628a7312573b505b4d6e6a5e11cdc023d4e5f1c99d0aaa102c773"
+    },
+    {
+      "scenario": "VIS-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-04-repeat-2.json",
+      "sha256": "e804424a0b96249d28728f62a8de4ba9c4a8221df30e83e30ea3a7bbcd62e4a8"
+    },
+    {
+      "scenario": "VIS-05",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-05-repeat-1.json",
+      "sha256": "0cd338abe8ff8dda9ab82393f1bf3b2a1eda140e2c7317f9de7b0106a35d3e1c"
+    },
+    {
+      "scenario": "VIS-05",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/VIS-05-repeat-2.json",
+      "sha256": "f46cc6dae477d3c855034f79c6d6d586936c1c84cad9dda6a00910debdc16d2e"
+    },
+    {
+      "scenario": "PL-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/PL-01-repeat-1.json",
+      "sha256": "55c383db6d76821ae03afd3a4189316add5e0186dc076e6bbc7f5059caaf8ea9"
+    },
+    {
+      "scenario": "PL-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/PL-01-repeat-2.json",
+      "sha256": "3d4d2465a3a27f79f52933363875f620c37a9c1b6930631c571d5848590e7e42"
+    },
+    {
+      "scenario": "PL-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/PL-02-repeat-1.json",
+      "sha256": "15be8d85ba1f78d9dc6fc170f57e252e1f8ac5678a4dbba09b96ebcda69718e7"
+    },
+    {
+      "scenario": "PL-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/PL-02-repeat-2.json",
+      "sha256": "3247efff73dccb4b2b82e72a791a8639964fa8720bd7dcc787b6ab97a1e5f98c"
+    },
+    {
+      "scenario": "PL-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/PL-03-repeat-1.json",
+      "sha256": "070e2e630dca28288fb4be8b85ee1578d380499721394bde1b18ff71975a289e"
+    },
+    {
+      "scenario": "PL-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/PL-03-repeat-2.json",
+      "sha256": "cc558a5a1de492041b2cea8db2a205cd74a63f23c4f7e82d79056f9f7db6f98f"
+    },
+    {
+      "scenario": "CP-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CP-01-repeat-1.json",
+      "sha256": "b2213f329c5bcd5d6cfa060d39723a2c0ade1b31c57001b03266a4333bfcef4f"
+    },
+    {
+      "scenario": "CP-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CP-01-repeat-2.json",
+      "sha256": "d53f3fe7a61317b8815cc285bf07053849b5911758dedad2f5e76f2d21671031"
+    },
+    {
+      "scenario": "CP-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CP-02-repeat-1.json",
+      "sha256": "c12f3d5ff45fd68f90ab11db8e0f32a16c3ca65dcf24da980a6ae4f13a7e2ca8"
+    },
+    {
+      "scenario": "CP-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CP-02-repeat-2.json",
+      "sha256": "924c2b76d268b88fa03046d36f4aea1e2186cf9a7c25a684116113839164cc99"
+    },
+    {
+      "scenario": "SOH-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-03-repeat-1.json",
+      "sha256": "b80cadd7005e54cc5aa9c27f4bf651aeb3f3695f35215ac840815aa5a10733df"
+    },
+    {
+      "scenario": "SOH-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-03-repeat-2.json",
+      "sha256": "b9b7c4afb2a9b524c0c27cf37488b6aa6e399a9a22c76f76906faa83d92a2cc7"
+    },
+    {
+      "scenario": "SOH-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-04-repeat-1.json",
+      "sha256": "f09fe0298116c6ff5cda167b6597da0974fda2460c1192c1a3d840115e31b502"
+    },
+    {
+      "scenario": "SOH-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SOH-04-repeat-2.json",
+      "sha256": "d339487e780fc9778c91bdb5489c16f4af700aef957ff5238e4afc7c557cd8c1"
+    },
+    {
+      "scenario": "SAH-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SAH-02-repeat-1.json",
+      "sha256": "051ac9f10c0c9d022b3769d7eb5cc1f9836a4a5a7f74da93b4f1e74313dba075"
+    },
+    {
+      "scenario": "SAH-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SAH-02-repeat-2.json",
+      "sha256": "1357ecd132f33c889b39c2b7814d52dfe26b8e6801ebdc7d12b0cdb12f53e594"
+    },
+    {
+      "scenario": "SAH-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SAH-03-repeat-1.json",
+      "sha256": "26fcf0a69b6d921b9c8b9aa2841b8652e735c397ff1d13ebfab33248adfd218c"
+    },
+    {
+      "scenario": "SAH-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/SAH-03-repeat-2.json",
+      "sha256": "93a703b47a927c26a452dc40da250d7ff7bed058c971d9fc5ba333ace7e2ebfe"
+    },
+    {
+      "scenario": "TUH-08",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/TUH-08-repeat-1.json",
+      "sha256": "9506a91b277a397d10e9246818ed781dfb7c4b9ad5743495184e283ffae87367"
+    },
+    {
+      "scenario": "TUH-08",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/TUH-08-repeat-2.json",
+      "sha256": "f8c9c6d1c51eade1923dccd4b4964b7f8194763d4a8ff21b1fd42b6dc912d3e7"
+    },
+    {
+      "scenario": "TUH-10",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/TUH-10-repeat-1.json",
+      "sha256": "4b8cc8d72d299d4cbce1ad443decdc6713feb4835f474912f8d1ac0dd8166996"
+    },
+    {
+      "scenario": "TUH-10",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/TUH-10-repeat-2.json",
+      "sha256": "fa820ab2a273f99ac1d194be69fb4669b0da5b510b0e7451b4f413e6e716bbe6"
+    },
+    {
+      "scenario": "CL-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CL-01-repeat-1.json",
+      "sha256": "7e54345302677d5bbe95f5c055f7863c79988e23f5bb1e0edd0ed20f5e447f68"
+    },
+    {
+      "scenario": "CL-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CL-01-repeat-2.json",
+      "sha256": "f72dd111405393aa37342de9a8d971f1b7ba7cca55c21bb0cea0ef3ba4bdb838"
+    },
+    {
+      "scenario": "MSC-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/MSC-01-repeat-1.json",
+      "sha256": "3d9d1b3095b94b0d9088100e02a9ea42b8adb98b4efd8ffac378a19aa2c7c619"
+    },
+    {
+      "scenario": "MSC-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/MSC-01-repeat-2.json",
+      "sha256": "5fdac66a84bf61b77872c857835699dec20b2f4381a30a40b70238aab5bffede"
+    },
+    {
+      "scenario": "MSC-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/MSC-02-repeat-1.json",
+      "sha256": "7de348e5aff06f555b240714d92cab8e6c8e56ad10376c9d22a4973e2151b7fd"
+    },
+    {
+      "scenario": "MSC-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/MSC-02-repeat-2.json",
+      "sha256": "c84d0ded7c1a9e48a69ebd40978de6931fa22d7f05f3f1b1a802fa1c9fc379b2"
+    },
+    {
+      "scenario": "MSC-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/MSC-03-repeat-1.json",
+      "sha256": "34ed9f4d74d5de6712b719fba859b2fc80e6be307b4173942dbab98487709d62"
+    },
+    {
+      "scenario": "MSC-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/MSC-03-repeat-2.json",
+      "sha256": "3c744f738fd40bac4989b08f21bd3cc362b815b07db190dce3fe6b573646f915"
+    },
+    {
+      "scenario": "RR-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-01-repeat-1.json",
+      "sha256": "b6c594908b0f24d221cee1b4e113f18ec1d24b0f6a53a12d0a87a480cf087cf2"
+    },
+    {
+      "scenario": "RR-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-01-repeat-2.json",
+      "sha256": "059a0722d3aeb3eaffa6a0195ac66e6b0beae26435effc2e8faef861711371a0"
+    },
+    {
+      "scenario": "RR-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-02-repeat-1.json",
+      "sha256": "8901e3f5ad229993d259732cbf3a6752ce29aff31876c79f746db63cb5de247f"
+    },
+    {
+      "scenario": "RR-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-02-repeat-2.json",
+      "sha256": "642219c7f94559f2c87c668d7387e7bec90c26c5be837da34b0c90765391c6d5"
+    },
+    {
+      "scenario": "RR-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-03-repeat-1.json",
+      "sha256": "72a8f094576b49d456a65e50aa77b5c785c036bdd1a145e5cb3294af13c14487"
+    },
+    {
+      "scenario": "RR-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-03-repeat-2.json",
+      "sha256": "1b9908551724e9e21290c84423b575b9554f4106d97348d7859b02c0ebfc1634"
+    },
+    {
+      "scenario": "RR-04",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-04-repeat-1.json",
+      "sha256": "4b2ea6b2efd9c8634760ec431209f22600b6a8797a430f264880d2564f7de9e0"
+    },
+    {
+      "scenario": "RR-04",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/RR-04-repeat-2.json",
+      "sha256": "a266a60ff23a059969b5c21092a4c9df99ec7d1b758e498205bec00153a72e75"
+    },
+    {
+      "scenario": "AP-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AP-01-repeat-1.json",
+      "sha256": "01913a909a489d5e1e505f70da809057a1becc1f72e3eff0921f4a99cb480a94"
+    },
+    {
+      "scenario": "AP-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AP-01-repeat-2.json",
+      "sha256": "0046183e26d762d9b2e6acc4b462c42ed86c86e117e3c95eb5b2f15a12b79067"
+    },
+    {
+      "scenario": "AP-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AP-02-repeat-1.json",
+      "sha256": "b1e7848b16f6b8e18c868d341a3cebf152100407a718b5e8253a640c5f5919d4"
+    },
+    {
+      "scenario": "AP-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/AP-02-repeat-2.json",
+      "sha256": "2c64e494f3a7b65a4dcb34a28add3319ad568e141e205fc1cde7a25d211e8bc0"
+    },
+    {
+      "scenario": "IFS-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFS-01-repeat-1.json",
+      "sha256": "c12db2fcb1e6e826ec21bba58cda7ba3652d5946340c994a47ae3a47f6cbb4c5"
+    },
+    {
+      "scenario": "IFS-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFS-01-repeat-2.json",
+      "sha256": "e53d72b302bcf26bf5a0852fc30622a9c16ea6fac96b96f1feef31a8309e2dc7"
+    },
+    {
+      "scenario": "IFS-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFS-02-repeat-1.json",
+      "sha256": "07c3a16196301f93b55743b7845f97f91861ef5ee5f904e8d35315d7094cf37b"
+    },
+    {
+      "scenario": "IFS-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFS-02-repeat-2.json",
+      "sha256": "5506b32562ed1dc7fd334cfe7e5bee875cd4215abdfb52e8c5345687be319c21"
+    },
+    {
+      "scenario": "IFS-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFS-03-repeat-1.json",
+      "sha256": "70242a357fb813882c119edec08a137adf32bdc53eaa358192b03841c361a9de"
+    },
+    {
+      "scenario": "IFS-03",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/IFS-03-repeat-2.json",
+      "sha256": "fea10dbac181d666ebac0c77c0c9dd41e05cbed362076e95e31f14467556c1d0"
+    },
+    {
+      "scenario": "CODE-06",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-06-repeat-1.json",
+      "sha256": "0eb29c985e097b0ee1ce46bd6adf5dea00deabd31639d179883a489a49fc2b95"
+    },
+    {
+      "scenario": "CODE-06",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-06-repeat-2.json",
+      "sha256": "0e14b79f493c5e08b39d9eb304766cdf2400674011fd19e17437c200c28536ee"
+    },
+    {
+      "scenario": "CODE-07",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-07-repeat-1.json",
+      "sha256": "cf1712d0e0e314f7c819d01ef16875796e0b1973ed07eef9d99a014f0c9b084e"
+    },
+    {
+      "scenario": "CODE-07",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-07-repeat-2.json",
+      "sha256": "575092f9a38f39d7d9d710132a41dfc35c5a2d5edfdcc810a2c620b3d5e9fa52"
+    },
+    {
+      "scenario": "CODE-08",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-08-repeat-1.json",
+      "sha256": "ae11d242ea5fa9cb69dde74bf97c899d2736fdab00e321237a7492571e9b018d"
+    },
+    {
+      "scenario": "CODE-08",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-08-repeat-2.json",
+      "sha256": "199f8cab723e2fd91513034bd2795c0001cb457a7112b700f6eea74eca14905a"
+    },
+    {
+      "scenario": "CODE-09",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-09-repeat-1.json",
+      "sha256": "0912a35e39225fef2c69f1cb15de4fe9b5da2787e4fd87b2a86299675702c8bb"
+    },
+    {
+      "scenario": "CODE-09",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-09-repeat-2.json",
+      "sha256": "d65afbd8a4e6d53aff159bc4db1dc88a9fe5a8a43b3fbb0223b8b6b0d1f1eaa2"
+    },
+    {
+      "scenario": "CODE-10",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-10-repeat-1.json",
+      "sha256": "3e3d25774f3c293728fc85b0187d4f18edc6427d009ff8769e82cc3da8c04fbd"
+    },
+    {
+      "scenario": "CODE-10",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-10-repeat-2.json",
+      "sha256": "99acc9e6446ce9d42210420a22ea94e572f5af5bd99974d47323861a80390480"
+    },
+    {
+      "scenario": "CODE-11",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-11-repeat-1.json",
+      "sha256": "5e6a2240be10ec56e2bfd7c9f3f3ffb3725b3b9983d6d45e8fecdcfb680592bf"
+    },
+    {
+      "scenario": "CODE-11",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-11-repeat-2.json",
+      "sha256": "860e12c5a6ff88b79ae45cb80b9d9257f00fa5205dde9aa669776c2421d986e7"
+    },
+    {
+      "scenario": "CODE-12",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-12-repeat-1.json",
+      "sha256": "27bcafbcf1aa6335a2250f596223d32423865bf991664165a2676ad191a01390"
+    },
+    {
+      "scenario": "CODE-12",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-12-repeat-2.json",
+      "sha256": "ca0a786357999952baebd411e6bb94cc595714d1fc4a6741e2545f2450ce482f"
+    },
+    {
+      "scenario": "CODE-13",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-13-repeat-1.json",
+      "sha256": "2ebcbded1196dc07e1494b6d28df6a49d6a26187ba505533c1d8f185e7e04af3"
+    },
+    {
+      "scenario": "CODE-13",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-13-repeat-2.json",
+      "sha256": "84387214de3bf22d869cdbc2ee5b58b507917720ba7db3610ab1e4b25b0e4dfd"
+    },
+    {
+      "scenario": "CODE-14",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-14-repeat-1.json",
+      "sha256": "7002c772802879a98a08753412d1abc7d823afc0ae50081acb606c03108801d8"
+    },
+    {
+      "scenario": "CODE-14",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/CODE-14-repeat-2.json",
+      "sha256": "df7e9d03a3b083339bf28bbaa10608e34e1f71290e0f4d76ce35333c64175581"
+    },
+    {
+      "scenario": "LG-01",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LG-01-repeat-1.json",
+      "sha256": "037e0b31e92fa0ac4e2a411448e7ddfdd66dcd043fd1ba261aaa2bd826466252"
+    },
+    {
+      "scenario": "LG-01",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LG-01-repeat-2.json",
+      "sha256": "a85544a2591a585678144f663746e2eb6532c9a9d6c7cfcfb051b59288abe450"
+    },
+    {
+      "scenario": "LG-02",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LG-02-repeat-1.json",
+      "sha256": "472fcbb3af6d4902017bb45ad5f5d22064748e85749b561e4f003ca72db176a1"
+    },
+    {
+      "scenario": "LG-02",
+      "repeat": 2,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LG-02-repeat-2.json",
+      "sha256": "4f2bc8045fc4f10feb992e612c1d1d605494ea96e6cfbee78a2780e0380cb138"
+    },
+    {
+      "scenario": "LG-03",
+      "repeat": 1,
+      "source": "original",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/results/artifacts/spark-native-full80-sampled-ahead-thinking-20261013-211136/transcripts/LG-03-repeat-1.json",
+      "sha256": "165fe7948adf0b5f5c5c72cc1f1d626f097812194fddc66e2ee9aecef1d70842"
+    },
+    {
+      "scenario": "LG-03",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-lg03-r2-20261014-200918/transcripts/LG-03-repeat-2.json",
+      "sha256": "4665abb925a07873ae9652fca8acd5130724fb9245c03944ea9ae9b3c028ccc0"
+    },
+    {
+      "scenario": "LG-04",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-remaining-20261014-222954/transcripts/LG-04-repeat-1.json",
+      "sha256": "d4760afa7a69bfffcd4ea5944e64f2c6f3009d3a7ecbb1d470ffbe9b2adddbff"
+    },
+    {
+      "scenario": "LG-04",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-lg04-r2-resume-20261015-004958/transcripts/LG-04-repeat-2.json",
+      "sha256": "559018f3a5859bdd28384986cad2eb4183a18e37fb1521501ae6b247f60017a9"
+    },
+    {
+      "scenario": "AG-07",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-07-repeat-1.json",
+      "sha256": "f7f9fab39f3010cedcb6f0a4ed0418ed81388481bd387fa8a96557868a8fb95e"
+    },
+    {
+      "scenario": "AG-07",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-07-repeat-2.json",
+      "sha256": "0ce34e50ddfce9aaa64e4ea743a83668a68ce741cbb39715bd564513d5ba3dda"
+    },
+    {
+      "scenario": "AG-08",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-08-repeat-1.json",
+      "sha256": "a24535d4add92ff7107b3ab8b9074fd30eda22ce5902b2b16de523257e3f847c"
+    },
+    {
+      "scenario": "AG-08",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-08-repeat-2.json",
+      "sha256": "c73e41f8f9d0b327150beade0aa732ad24073bd633924271fd0443c21d1f2859"
+    },
+    {
+      "scenario": "AG-09",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-09-repeat-1.json",
+      "sha256": "4e01177c95f20a407ffb58c630dd1dffdbc79458180710a4e72d636c47155f44"
+    },
+    {
+      "scenario": "AG-09",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-09-repeat-2.json",
+      "sha256": "2355b613c439935fbc212132397e5cfb984e570f2c9fe21fd36508fe950236b1"
+    },
+    {
+      "scenario": "AG-10",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-10-repeat-1.json",
+      "sha256": "1b433a2fad6a067392fb64a7049a1c059334f60cb596717adf6f2841c16df14c"
+    },
+    {
+      "scenario": "AG-10",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-10-repeat-2.json",
+      "sha256": "e91805834aab0699a321683a3854e4b124f8664ac29d04d669d5ed5ae9703be9"
+    },
+    {
+      "scenario": "AG-11",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-11-repeat-1.json",
+      "sha256": "bf229a48c2040905ddfb277f45d88914692041d23d2cd04c2fa839486090aadd"
+    },
+    {
+      "scenario": "AG-11",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-11-repeat-2.json",
+      "sha256": "deb93d205f6d516076ac48b00dc66ada25f8c1dbe3174ddc59ddd4e46f0043a9"
+    },
+    {
+      "scenario": "AG-12",
+      "repeat": 1,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-12-repeat-1.json",
+      "sha256": "b900ac3d24791b74219baef15c5b02584bc3803e0c7a641c643a2f77c4cbe099"
+    },
+    {
+      "scenario": "AG-12",
+      "repeat": 2,
+      "source": "recovery",
+      "path": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking/recovery-results/artifacts/spark-native-thinking-tail-recovery-agentic-resume-20261015-011245/transcripts/AG-12-repeat-2.json",
+      "sha256": "63be6b058b51545de3e18ed75da52d2c3ceebe2b38a409272507a771319a3a5d"
+    }
+  ]
+}

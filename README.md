@@ -1,14 +1,14 @@
-# NestQuant on one DGX Spark — TrueScore 86.69
+# NestQuant on one DGX Spark — TrueScore 89.22
 
-**Canonical result: GLM-5.3-Flash-NestQuant-1.5-4bit · thinking off · 80 tasks × 2 repeats · validity PASS.**
+**Canonical result: GLM-5.3-Flash-NestQuant-1.5-4bit · thinking on · 80 tasks × 2 repeats · validity PASS.**
 
 | TrueScore | Quality | Hardware | Completed runs |
 |---:|---:|---|---:|
-| **86.69** | **84.37** | **1 × DGX Spark GB10** | **160/160** |
+| **89.2151** | **94.1884** | **1 × DGX Spark GB10** | **160/160** |
 
-[**Full results and all response transcripts**](results/nestquant-spark-sampled-ahead-20261013/README.md) · [**Docker quick-start / serving recipe**](https://github.com/jarrelscy/nestquant/tree/spark-flash/spark/flash/sampled_ahead_sentinel) · [**Hugging Face model**](https://huggingface.co/jarrelscy/GLM-5.3-Flash-NestQuant-1.5-4bit)
+[**Full result and all 160 response transcripts**](results/nestquant-spark-thinking-on-20261015/README.md) · [**Docker quick-start / serving recipe**](https://github.com/jarrelscy/nestquant/tree/spark-flash/spark/flash/sampled_ahead_sentinel) · [**Hugging Face model**](https://huggingface.co/jarrelscy/GLM-5.3-Flash-NestQuant-1.5-4bit)
 
-Native ARM64, MTP2, uncapped, 75%jT/25%EMA, 2630 active hot slots with20%fixed. Official scorer `f2ac787`; runtime `9adf4beb`. The Docker recipe's prepared-weight reuse path was tested on Spark through authenticated generation. **Thinking-on evaluation is in progress; no thinking-on score is claimed.** This is a fork-published result, separate from the upstream comparison cohorts below.
+Native ARM64, MTP2, uncapped, 75% jT / 25% EMA, 2,630 active hot slots with 20% fixed. Official scorer `f2ac787`; runtime `9adf4beb`. Fifteen late transport failures were rerun with exact scenario/repeat selectors and the same model configuration, then merged over their placeholders. The published manifest identifies every original and recovered transcript; the complete set has zero transport errors. This is a fork-published result, separate from the upstream comparison cohorts below.
 
 ---
 

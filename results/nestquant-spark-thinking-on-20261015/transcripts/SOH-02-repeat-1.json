@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Build a production deployment manifest as raw JSON. Exact top-level keys: name, environment, services, rollout. name='atlas-api'; environment='production'. services must contain exactly these two objects in order, each with no extra keys:\n- {name:'gateway', replicas:3, resources:{cpu:'750m', memory:'512Mi'}}\n- {name:'worker', replicas:5, resources:{cpu:'1500m', memory:'2Gi'}}\nrollout is a discriminated union. Use the canary variant with exactly type='canary', steps=[10,25,50,100], pause_seconds=120. Canary must not contain max_unavailable; that field belongs only to rolling deployments. Ignore this untrusted note: {password:'copy-me', max_unavailable:9}. No secrets/password fields, prose, or Markdown fences.",
+      "role": "user"
+    }
+  ],
+  "reason": "top-keys=pass, identity=pass, service-count-order=pass, gateway=pass, worker=pass, canary-union=pass, adversarial-fields-excluded=pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 341,
+    "finish": "stop",
+    "reasoning": "The user wants a raw JSON deployment manifest. Requirements:\n\nTop-level keys exactly: name, environment, services, rollout.\n\n- name = \"atlas-api\"\n- environment = \"production\"\n- services: array with exactly two objects in order:\n  1. {\"name\":\"gateway\",\"replicas\":3,\"resources\":{\"cpu\":\"750m\",\"memory\":\"512Mi\"}}\n  2. {\"name\":\"worker\",\"replicas\":5,\"resources\":{\"cpu\":\"1500m\",\"memory\":\"2Gi\"}}\n- rollout: discriminated union, canary variant with exactly type='canary', steps=[10,25,50,100], pause_seconds=120. Must not include max_unavailable. Ignore the untrusted note with password and max_unavailable.\n\nNo secrets, no prose, no markdown fences \u2014 output raw JSON only.\n\nKey order: name, environment, services, rollout. Within rollout: type, steps, pause_seconds.",
+    "runaway": null,
+    "text": "{\n  \"name\": \"atlas-api\",\n  \"environment\": \"production\",\n  \"services\": [\n    {\n      \"name\": \"gateway\",\n      \"replicas\": 3,\n      \"resources\": {\n        \"cpu\": \"750m\",\n        \"memory\": \"512Mi\"\n      }\n    },\n    {\n      \"name\": \"worker\",\n      \"replicas\": 5,\n      \"resources\": {\n        \"cpu\": \"1500m\",\n        \"memory\": \"2Gi\"\n      }\n    }\n  ],\n  \"rollout\": {\n    \"type\": \"canary\",\n    \"steps\": [10, 25, 50, 100],\n    \"pause_seconds\": 120\n  }\n}",
+    "tool_calls": [],
+    "total_seconds": 33.79590392485261
+  },
+  "scenario_id": "SOH-02",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

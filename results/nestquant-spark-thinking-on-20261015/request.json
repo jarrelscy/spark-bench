@@ -1,0 +1,19 @@
+{
+  "authorized": true,
+  "reference_truescore": 87.5,
+  "accepted_kld": 0.09006743684523977,
+  "accepted_speed_probe_tps": 21.246878852469393,
+  "source_run": "kld-sampled-ahead-sentinel",
+  "tasks": 80,
+  "repeats": 2,
+  "seeds": [
+    43,
+    44
+  ],
+  "publication_first": true,
+  "state": "preparing",
+  "created": 1791877726.6904597,
+  "thinking": "on",
+  "comparison": "full80-sampled-ahead thinking off",
+  "template_change": "generation prefix <think> instead of <think></think>"
+}

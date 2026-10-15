@@ -1,0 +1,8 @@
+{
+  "verified": true,
+  "time": 1792031878.1555989,
+  "source": "/home/jarrelscy/enverge-spark-watch/full80-sampled-ahead-thinking",
+  "destination": "/rawdata/nestquant-native-spark-results/wasted-watts-20261010/full80-thinking-on-recovered",
+  "files": 227,
+  "source_manifest_sha256": "f568fe908ed3d7b0906d2e57d5abbae2a2551f73aba3e1c62e24bd688bdac0e8"
+}

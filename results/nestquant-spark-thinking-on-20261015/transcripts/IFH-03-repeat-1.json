@@ -1,0 +1,40 @@
+{
+  "messages": [
+    {
+      "content": "My name is Alice and I work in the Berlin office. Remember this for later.",
+      "role": "user"
+    },
+    {
+      "content": "Got it, Alice from the Berlin office. How can I help you?",
+      "role": "assistant"
+    },
+    {
+      "content": "I also want all responses to use metric units only, no imperial. Remember this too.",
+      "role": "user"
+    },
+    {
+      "content": "Understood \u2014 metric units only from here on. What would you like to know?",
+      "role": "assistant"
+    },
+    {
+      "content": "How tall is the Eiffel Tower? Reply in exactly two sentences, mention my name, and use the correct unit system.",
+      "role": "user"
+    }
+  ],
+  "reason": "3/3",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 65,
+    "finish": "stop",
+    "reasoning": "The Eiffel Tower is about 330 meters tall (including antennas). Metric only. Exactly two sentences, mention Alice.",
+    "runaway": null,
+    "text": "Alice, the Eiffel Tower stands approximately 330 meters tall, including its antennas. The structure itself is about 300 meters tall, with the antenna adding the remaining 30 meters.",
+    "tool_calls": [],
+    "total_seconds": 17.343056328594685
+  },
+  "scenario_id": "IFH-03",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

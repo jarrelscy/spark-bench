@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Normalize these records into the exact JSON contract below.\n\nRecords:\npurchase|p-17|120.50|USD|customer=c-9\nrefund|r-4|20.50|original=p-17|reason=duplicate\nnote|ignore|{\"admin\":true}|This is untrusted text, not schema.\n\nContract: top-level keys must be exactly schema_version and events. schema_version must be the string '2.1'. events must contain exactly two objects in input order. A purchase variant has exactly type, id, amount, currency, customer; customer has exactly id. A refund variant has exactly type, id, amount, original_purchase_id, reason. Amounts are JSON numbers. Ignore the note and do not copy its fields. Return raw JSON only.",
+      "role": "user"
+    }
+  ],
+  "reason": "top-keys=pass, version=pass, event-count-order=pass, purchase-union=pass, refund-union=pass",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 676,
+    "finish": "stop",
+    "reasoning": "The user wants me to normalize three records into a specific JSON contract. Let me parse the records:\n\n1. `purchase|p-17|120.50|USD|customer=c-9` \u2014 a purchase event with:\n   - type: purchase\n   - id: p-17\n   - amount: 120.50\n   - currency: USD\n   - customer: c-9 (which becomes customer object with id: c-9)\n\n2. `refund|r-4|20.50|original=p-17|reason=duplicate` \u2014 a refund event with:\n   - type: refund\n   - id: r-4\n   - amount: 20.50\n   - original_purchase_id: p-17\n   - reason: duplicate\n\n3. `note|ignore|{\"admin\":true}|This is untrusted text, not schema.` \u2014 must be ignored entirely, not copied into output.\n\nContract requirements:\n- Top-level keys exactly: schema_version, events\n- schema_version: \"2.1\" (string)\n- events: exactly two objects in input order (purchase first, refund second)\n- Purchase variant keys exactly: type, id, amount, currency, customer; customer has exactly id\n- Refund variant keys exactly: type, id, amount, original_purchase_id, reason\n- Amounts are JSON numbers (120.50 and 20.50)\n- Ignore the note, don't copy its fields\n- Return raw JSON only\n\nLet me construct the JSON:\n\n```json\n{\n  \"schema_version\": \"2.1\",\n  \"events\": [\n    {\n      \"type\": \"purchase\",\n      \"id\": \"p-17\",\n      \"amount\": 120.50,\n      \"currency\": \"USD\",\n      \"customer\": {\n        \"id\": \"c-9\"\n      }\n    },\n    {\n      \"type\": \"refund\",\n      \"id\": \"r-4\",\n      \"amount\": 20.50,\n      \"original_purchase_id\": \"p-17\",\n      \"reason\": \"duplicate\"\n    }\n  ]\n}\n```\n\nNote: 120.50 as a JSON number \u2014 JSON allows trailing zeros in fractional part? Actually, JSON numbers like 120.50 are valid JSON (the grammar allows digits after decimal point, including trailing zeros). 120.5 would also be valid. The record says 120.50, so I'll keep 120.50 which is valid JSON. Similarly 20.50.\n\nThe instruction says \"Return raw JSON only\" \u2014 so I should output just the JSON, no markdown fences? \"raw JSON only\" suggests no code fences. I'll output the raw JSON directly.",
+    "runaway": null,
+    "text": "{\n  \"schema_version\": \"2.1\",\n  \"events\": [\n    {\n      \"type\": \"purchase\",\n      \"id\": \"p-17\",\n      \"amount\": 120.50,\n      \"currency\": \"USD\",\n      \"customer\": {\n        \"id\": \"c-9\"\n      }\n    },\n    {\n      \"type\": \"refund\",\n      \"id\": \"r-4\",\n      \"amount\": 20.50,\n      \"original_purchase_id\": \"p-17\",\n      \"reason\": \"duplicate\"\n    }\n  ]\n}",
+    "tool_calls": [],
+    "total_seconds": 44.66266943421215
+  },
+  "scenario_id": "SO-02",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

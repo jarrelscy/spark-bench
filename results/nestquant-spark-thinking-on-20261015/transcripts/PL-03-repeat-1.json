@@ -1,0 +1,153 @@
+{
+  "messages": [
+    {
+      "content": "Plan a team outing tomorrow. First check the weather \u2014 if it's raining, create an indoor event at the office and notify the team. If sunny, create a park event instead. Make the call yourself.",
+      "role": "user"
+    },
+    {
+      "content": null,
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"city\": \"San Francisco\"}",
+            "name": "get_weather"
+          },
+          "id": "call00001",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"city\": \"San Francisco\", \"temperature_c\": 14, \"condition\": \"rain\", \"humidity\": 85}",
+      "role": "tool",
+      "tool_call_id": "call00001"
+    }
+  ],
+  "reason": "100% called create_event | 100% all 2 tools called",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 300,
+    "finish": "tool_calls",
+    "reasoning": "It's raining, so create indoor event at office, then notify team. The email depends on the event being created? Not strictly, but the email should reference the event details. The event creation and email are somewhat dependent (email content references event). I could do them sequentially to be safe, but the email content is known regardless. Better to create event first, then send email. Actually they're independent in parameters \u2014 email doesn't need event output. But to be safe and accurate, I'll do them in one block since email content is predetermined.",
+    "runaway": null,
+    "text": "It's raining in San Francisco (14\u00b0C, rain, 85% humidity), so I'll plan an indoor event at the office and notify the team.",
+    "tool_calls": [
+      {
+        "args": {
+          "attendees": [
+            "team"
+          ],
+          "day": "tomorrow",
+          "duration": 120,
+          "start": "15:00",
+          "title": "Indoor Team Outing at the Office"
+        },
+        "name": "create_event"
+      },
+      {
+        "args": {
+          "body": "Hi team,\n\nDue to rain in the forecast, tomorrow's team outing will be held indoors at the office instead of the park.\n\nDetails:\n- What: Indoor Team Outing (games, snacks, and team activities)\n- When: Tomorrow, 3:00 PM \u2013 5:00 PM\n- Where: The office\n\nSee you there!\n\nBest,\nAssistant",
+          "subject": "Team Outing Tomorrow \u2014 Moved Indoors to the Office",
+          "to": "team@company.com"
+        },
+        "name": "send_email"
+      }
+    ],
+    "total_seconds": 43.796243018470705
+  },
+  "scenario_id": "PL-03",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": [
+    {
+      "function": {
+        "description": "Current weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "unit": {
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Create a calendar event.",
+        "name": "create_event",
+        "parameters": {
+          "properties": {
+            "attendees": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "day": {
+              "description": "Day of the event, e.g. 'monday', 'next_friday', 'tomorrow'",
+              "type": "string"
+            },
+            "duration": {
+              "description": "Duration in minutes",
+              "type": "integer"
+            },
+            "start": {
+              "description": "Start time, e.g. '14:00'",
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "day",
+            "start"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "description": "Send an email.",
+        "name": "send_email",
+        "parameters": {
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to",
+            "body"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

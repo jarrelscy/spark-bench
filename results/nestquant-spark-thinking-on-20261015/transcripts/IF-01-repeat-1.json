@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Reply with exactly the single word: PONG. No punctuation, no other text.",
+      "role": "user"
+    }
+  ],
+  "reason": "exact match",
+  "repeat": 1,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 157,
+    "finish": "stop",
+    "reasoning": "The user's instruction is crystal clear: respond with exactly the single word \"PONG\" and nothing else. No punctuation, no additional text. This is a straightforward request for a specific output format.\n\nI need to ensure my response strictly adheres to this constraint. The word \"PONG\" should be the entire message, with no leading or trailing characters, no explanations, and no deviations. \n\nThis appears to be a test of instruction-following precision, possibly to verify response handling in controlled scenarios. The requirement for absolute minimalism means I must not add any extra words or symbols that could violate the \"no other text\" clause.\n\nBy focusing solely on delivering the word \"PONG\" as instructed, I can meet the user's exact specification without ambiguity.",
+    "runaway": null,
+    "text": "PONG",
+    "tool_calls": [],
+    "total_seconds": 18.492899662815034
+  },
+  "scenario_id": "IF-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}

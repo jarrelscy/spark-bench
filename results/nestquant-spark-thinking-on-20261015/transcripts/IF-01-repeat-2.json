@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "content": "Reply with exactly the single word: PONG. No punctuation, no other text.",
+      "role": "user"
+    }
+  ],
+  "reason": "exact match",
+  "repeat": 2,
+  "response": {
+    "agentic_trace": null,
+    "completion_tokens": 41,
+    "finish": "stop",
+    "reasoning": "The user wants me to reply with exactly the single word \"PONG\" with no punctuation and no other text. This is a simple ping-pong test. I should comply exactly.",
+    "runaway": null,
+    "text": "PONG",
+    "tool_calls": [],
+    "total_seconds": 8.836219470016658
+  },
+  "scenario_id": "IF-01",
+  "scenario_revision": null,
+  "score": 1.0,
+  "tools": null
+}
