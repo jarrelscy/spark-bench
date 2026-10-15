@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 IMAGE='docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364'
 MODEL_REV='4023870a6f2c6097e37fa5d2e54040db64b011e9'
-RECIPE_REV='ebdb7087487d737e7d2431267665ce71f457366c'
+RECIPE_REV='927b360c58c6581a0c54235a8d16ad8ac0c7464f'
 GRADER_REV='f2ac7876c1782047fe4ac37290a1466daa3a1c05'
 REASONING=on
 SPARK_TARGET=${SPARK_SSH:-}
@@ -38,7 +38,9 @@ the official 80-task x 2-repeat Spark Bench scorer on this machine.
   --local-port PORT    Local tunnel port (default: choose a free port)
   -h, --help           Show this help
 
-Set VLLM_API_KEY in the environment or enter it at the hidden prompt.
+Set VLLM_API_KEY in the environment or enter it at the hidden prompt. An
+optional HF_TOKEN raises Hugging Face download rate limits and is sent only
+through protected standard input to the remote process.
 EOF
 }
 
@@ -102,8 +104,8 @@ data="$HOME/nq-flash"
 if [[ ! -d "$repo/.git" ]]; then
   git clone --filter=blob:none https://github.com/jarrelscy/nestquant.git "$repo"
 fi
-git -C "$repo" fetch --force origin ebdb7087487d737e7d2431267665ce71f457366c
-git -C "$repo" checkout --detach --force ebdb7087487d737e7d2431267665ce71f457366c
+git -C "$repo" fetch --force origin 927b360c58c6581a0c54235a8d16ad8ac0c7464f
+git -C "$repo" checkout --detach --force 927b360c58c6581a0c54235a8d16ad8ac0c7464f
 export NQ_SOURCE_ROOT="$repo"
 export NQ_FLASH_DATA="$data"
 export NQ_FLASH_IMAGE='docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364'
@@ -112,7 +114,7 @@ export NQ_THINKING="$reasoning"
 export VLLM_API_KEY
 docker pull "$NQ_FLASH_IMAGE"
 runner="$repo/spark/flash/sampled_ahead_sentinel/run_spark_kld.sh"
-[[ -f "$data/checkpoint/config.json" ]] || bash "$runner" fetch
+bash "$runner" fetch
 [[ -f "$data/fp8-backbone/config.json" && -f "$data/repack-tp1/rank0.json" ]] || bash "$runner" prepare
 python3 "$repo/spark/flash/sampled_ahead_sentinel/recipe.py" stage
 python3 "$repo/spark/flash/sampled_ahead_sentinel/recipe.py" up
@@ -126,8 +128,8 @@ echo 'Spark service did not become ready within two hours.' >&2
 exit 1
 REMOTE
 )
-  { printf '%s\n' "$VLLM_API_KEY"; printf '%s\n' "$remote_script"; } | \
-    "${SSH[@]}" "$SPARK_TARGET" 'IFS= read -r VLLM_API_KEY; export VLLM_API_KEY; bash -s --' "$REASONING"
+  { printf '%s\n' "$VLLM_API_KEY"; printf '%s\n' "${HF_TOKEN:-}"; printf '%s\n' "$remote_script"; } | \
+    "${SSH[@]}" "$SPARK_TARGET" 'IFS= read -r VLLM_API_KEY; IFS= read -r HF_TOKEN; export VLLM_API_KEY HF_TOKEN; bash -s --' "$REASONING"
   STARTED=1
 fi
 
