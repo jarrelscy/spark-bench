@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 IMAGE='docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364'
 MODEL_REV='4023870a6f2c6097e37fa5d2e54040db64b011e9'
-RECIPE_REV='2623106380655e5962ae19e8cb39b8e9ccb437f3'
+RECIPE_REV='a7b8135d1d3f45a0abed7916f3ba4cc57cf0be48'
 GRADER_REV='f2ac7876c1782047fe4ac37290a1466daa3a1c05'
 REASONING=on
 SPARK_TARGET=${SPARK_SSH:-}
@@ -104,8 +104,8 @@ data="$HOME/nq-flash"
 if [[ ! -d "$repo/.git" ]]; then
   git clone --filter=blob:none https://github.com/jarrelscy/nestquant.git "$repo"
 fi
-git -C "$repo" fetch --force origin 2623106380655e5962ae19e8cb39b8e9ccb437f3
-git -C "$repo" checkout --detach --force 2623106380655e5962ae19e8cb39b8e9ccb437f3
+git -C "$repo" fetch --force origin a7b8135d1d3f45a0abed7916f3ba4cc57cf0be48
+git -C "$repo" checkout --detach --force a7b8135d1d3f45a0abed7916f3ba4cc57cf0be48
 export NQ_SOURCE_ROOT="$repo"
 export NQ_FLASH_DATA="$data"
 export NQ_FLASH_IMAGE='docker.io/jarrelscy/nestquant@sha256:3859a4e0018ec915ca0d4a3f9488158026fc2525534051433e2b37a729102364'
